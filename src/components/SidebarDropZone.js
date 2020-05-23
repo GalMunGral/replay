@@ -53,7 +53,8 @@ const SidebarDropZone = (
         background: self$.canDrop ? "var(--theme)" : "",
         color: self$.canDrop ? "white" : "",
       }),
-      { collapsed, activated, ...eventListeners },
+      { collapsed, activated },
+      { ...eventListeners },
       // prettier-ignore
       [
         MenuIcon((className = "fas fa-trash")), 
