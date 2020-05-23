@@ -1,7 +1,4 @@
 import { withContext, Observable } from "lib";
-import router$ from "../observables/router";
-import selection$ from "../observables/selection";
-import editor$ from "../observables/editor";
 import {
   Menu,
   EditorButton,
@@ -27,7 +24,15 @@ const context = () => ({
 
 const Sidebar = (
   __,
-  { self$, editorPopup$, sideBar$, store$, router$: { folder } }
+  {
+    self$,
+    editorPopup$,
+    sideBar$,
+    store$,
+    editor$,
+    router$,
+    router$: { folder },
+  }
 ) => {
   const collapsed = sideBar$.collapsed && !self$.hovered;
 
@@ -37,7 +42,7 @@ const Sidebar = (
         dispatch({
           type: store$.T.DELETE_SELECTED,
           payload: {
-            folder: folder,
+            folder,
             selected: selection$.selected,
           },
         });
