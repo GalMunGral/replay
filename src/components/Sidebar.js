@@ -71,14 +71,14 @@ const Sidebar = (
             !collapsed && EditorButtonText("Compose"),
           ]
         ),
-        ...folders.map((_folder) =>
+        ...folders.map((flr) =>
           MenuItem(
             { collapsed },
-            (activated = folder === _folder),
-            (onclick = () => router$.navigate("/" + _folder)),
+            (activated = folder === flr),
+            (onclick = () => router$.navigate("/" + flr)),
             [
-              MenuIcon((className = `fas fa-${iconMap[_folder]}`)),
-              !collapsed && span(_folder),
+              MenuIcon((className = `fas fa-${iconMap[flr]}`)),
+              !collapsed && span(flr),
             ]
           )
         ),
