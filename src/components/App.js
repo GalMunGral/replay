@@ -21,9 +21,9 @@ const App = (__, { sideBar$, editorPopup$ }) => {
   return (
     // use-transform
     Container([
-      AppBar((toggle = () => (sideBar$.collapsed = !sideBar$.collapsed))),
-      Sidebar((folder = folder)),
-      id ? Detail((folder = folder), (id = id)) : Mailbox((folder = folder)),
+      AppBar({ toggle: () => (sideBar$.collapsed = !sideBar$.collapsed) }),
+      Sidebar({ folder }),
+      id ? Detail({ folder, id }) : Mailbox({ folder }),
       editorPopup$.open ? Editor() : null,
     ])
   );
