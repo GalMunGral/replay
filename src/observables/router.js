@@ -13,8 +13,8 @@ const router = Observable({
     const path = id ? `/${folder}/${id}` : `/${folder}`;
     document.title = `Mail - ${folder.toUpperCase()}`;
     replace
-      ? window.history.replaceState(null, "test", path)
-      : window.history.pushState(null, "test", path);
+      ? window.history.replaceState(null, "", path)
+      : window.history.pushState(null, "", path);
   },
   navigate(path) {
     this.updateStateWithPath(path);
