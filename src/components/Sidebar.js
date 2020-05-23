@@ -27,14 +27,14 @@ const Sidebar = (
   {
     self$,
     editorPopup$,
-    sideBar$,
+    sidebar$,
     store$,
     editor$,
     router$,
     router$: { folder },
   }
 ) => {
-  const collapsed = sideBar$.collapsed && !self$.hovered;
+  const collapsed = sidebar$.collapsed && !self$.hovered;
 
   const deleteAll = () => {
     store$.dispatch((dispatch) => {

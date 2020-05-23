@@ -9,11 +9,11 @@ import {
   SearchInput,
 } from "../elements/AppBar";
 
-const AppBar = (__, { sideBar$ }) =>
+const AppBar = (__, { sidebar$ }) =>
   // use-transform
   Container([
     Group([
-      MenuButton((onclick = () => (sideBar$.collapsed = !sideBar$.collapsed)), [
+      MenuButton((onclick = () => (sidebar$.collapsed = !sidebar$.collapsed)), [
         MenuIcon((className = "fas fa-bars")),
       ]),
       AppLogo((src = "/assets/images/logo.png"), (alt = "logo")),

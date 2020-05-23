@@ -19,7 +19,7 @@ const context = () => ({
     open: false,
     minimized: false,
   }),
-  sideBar$: Observable({
+  sidebar$: Observable({
     collapsed: false,
   }),
 });
