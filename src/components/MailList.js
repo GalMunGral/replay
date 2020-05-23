@@ -36,12 +36,12 @@ const MailList = (
     dragState$: { setCoordinates, setIsDragging },
     route$: { folder },
     mails$: { currentPage },
-    editorPopup$,
     store$,
+    editor$,
+    editorPopup$,
+    router$,
     selection$,
     selection$: { selected },
-    router$,
-    editor$,
   }
 ) =>
   // use-transform
