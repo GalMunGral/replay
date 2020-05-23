@@ -45,12 +45,12 @@ const MailboxToolbar = (
         Checkbox((checked = allSelected), (onchange = toggleAll)),
       Space(),
       PageRange([
-        PageRangeText(
-          (innerHTML = `${pageStart}&ndash;${pageEnd} of ${total}`)
-        ),
+        PageRangeText({
+          innerHTML: `${pageStart}&ndash;${pageEnd} of ${total}`,
+        }),
       ]),
-      IconButton((onclick = prevPage), (type = "angle-left")),
-      IconButton((onclick = nextPage), (type = "angle-right")),
+      IconButton((type = "angle-left"), (onclick = prevPage)),
+      IconButton((type = "angle-right"), (onclick = nextPage)),
     ]
   );
 };
