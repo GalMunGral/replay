@@ -26,34 +26,37 @@ const SidebarDropZone = (
     });
   };
 
+  const eventListeners = {
+    onclick: () => router$.navigate("/trash"),
+    ondragenter: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      self$.canDrop = true;
+    },
+    ondragover: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    ondragleave: () => {
+      self$.canDrop = false;
+    },
+    ondrop: () => {
+      deleteAll();
+      self$.canDrop = false;
+    },
+  };
+
   return (
     // use-transform
     MenuItem(
-      {
-        collapsed,
-        activated,
-        style: {
-          background: self$.canDrop ? "var(--theme)" : "",
-          color: self$.canDrop ? "white" : "",
-        },
-        onclick: () => router$.navigate("/trash"),
-        ondragenter: (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          self$.canDrop = true;
-        },
-        ondragover: (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        },
-        ondragleave: () => {
-          self$.canDrop = false;
-        },
-        ondrop: () => {
-          deleteAll();
-          self$.canDrop = false;
-        },
-      },
+      (style = {
+        background: self$.canDrop ? "var(--theme)" : "",
+        color: self$.canDrop ? "white" : "",
+      }),
+      { collapsed },
+      { activated },
+      { ...eventListeners },
+
       // prettier-ignore
       [
         MenuIcon((className = "fas fa-trash")), 
