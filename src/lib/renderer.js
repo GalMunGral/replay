@@ -143,7 +143,6 @@ function* mountComponent(element, parent) {
         instance.node = document.createElement(type);
         instance.node.append(new Text()); // Create a dummy node to make reordering easier
     }
-    instance.node.instance = instance;
 
     yield* renderComponent(instance, props);
     yield* insertAfter(previousSibling, instance);
