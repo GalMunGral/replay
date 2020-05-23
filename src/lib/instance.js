@@ -1,6 +1,6 @@
-function createFrame(type, parent, createContext) {
+function createFrame(type, parent) {
   const parentContext = parent ? parent.context : null;
-  const localContext = createContext ? createContext() : {};
+  const localContext = typeof type.context == "function" ? type.context() : {};
 
   return {
     type,

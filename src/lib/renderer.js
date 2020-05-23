@@ -128,11 +128,9 @@ function* mountComponent(element, parent) {
   const [type, props, children] = element;
   props.children = children;
 
-  let instance;
+  const instance = createFrame(type, parent);
 
   if (typeof type === "string") {
-    instance = createFrame(type, parent);
-
     switch (type) {
       case "text":
         instance.node = new Text();
@@ -144,11 +142,9 @@ function* mountComponent(element, parent) {
         instance.node = document.createElement(type);
         instance.node.append(new Text()); // Create a dummy node to make reordering easier
     }
-
     yield* renderComponent(instance, props);
     yield* insertAfter(previousSibling, instance);
   } else {
-    instance = createFrame(type, parent, type.context);
     yield* renderComponent(instance, props);
   }
 
