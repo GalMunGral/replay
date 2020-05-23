@@ -1,10 +1,10 @@
 import { Container, ToolbarContainer, Scrollable } from "../elements/Layout";
 
-const Layout = ({ children: [buttons, body] }) =>
+const Layout = ({ children: [toolbar, body] }) =>
   // use-transform
   // prettier-ignore
   Container([
-    ToolbarContainer([buttons]),
+    ToolbarContainer([toolbar]),
     Scrollable([body])
   ]);
 
