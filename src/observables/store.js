@@ -90,10 +90,7 @@ fetch("/data.json")
   .then((data) => {
     store$.dispatch({
       type: store$.T.LOAD,
-      payload: {
-        folder: "inbox",
-        data,
-      },
+      payload: { folder: "inbox", data },
     });
   });
 
