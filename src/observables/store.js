@@ -20,10 +20,11 @@ const reducer = (state, action) => {
     }
     case Type.DELETE: {
       const { id, folder } = action.payload;
+      const item = state[folder].find((item) => item.id === id);
       return {
         ...state,
         [folder]: state[folder].filter((item) => item.id !== id),
-        trash: [state[folder].find((item) => item.id === id), ...state.trash],
+        trash: [item, ...state.trash],
       };
     }
     case Type.SAVE_DRAFT: {
@@ -37,12 +38,11 @@ const reducer = (state, action) => {
     }
     case Type.DELETE_SELECTED: {
       const { folder, selected } = action.payload;
-      const selectedSet = new Set(selected);
       return {
         ...state,
-        [folder]: state[folder].filter((item) => !selectedSet.has(item.id)),
+        [folder]: state[folder].filter((item) => !selected.has(item.id)),
         trash: [
-          ...state[folder].filter((item) => selectedSet.has(item.id)),
+          ...state[folder].filter((item) => selected.has(item.id)),
           ...state.trash,
         ],
       };
