@@ -2,21 +2,21 @@ import { withContext, Observable } from "lib";
 import { InputBox } from "../elements/Editor";
 
 const context = () => ({
-  state$: Observable({
+  self$: Observable({
     focused: false,
   }),
 });
 
-const EditorInput = ({ label, value, setValue, placeholder }, { state$ }) =>
+const EditorInput = ({ label, value, setValue, placeholder }, { self$ }) =>
   // use-transform
   InputBox([
-    state$.focused || value ? label(label) : null,
+    self$.focused || value ? label(label) : null,
     input(
       (key = "input"),
       (value = value),
-      (placeholder = !state$.focused && !value ? placeholder : ""),
-      (onfocus = () => (state$.focused = true)),
-      (onblur = () => (state$.focused = false)),
+      (placeholder = !self$.focused && !value ? placeholder : ""),
+      (onfocus = () => (self$.focused = true)),
+      (onblur = () => (self$.focused = false)),
       (onchange = (e) => setValue(e.target.value))
     ),
   ]);
