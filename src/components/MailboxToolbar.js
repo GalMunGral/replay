@@ -1,4 +1,3 @@
-import selection$ from "../observables/selection";
 import Checkbox from "./Checkbox";
 import IconButton from "./IconButton";
 import Space from "./Space";
