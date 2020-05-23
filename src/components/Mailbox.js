@@ -43,15 +43,15 @@ const Mailbox = ({ folder }, { page$, mails$, route$, store$ }) => {
         folder === "inbox" &&
           TabBar(
             tabs.map((t) =>
-              Tab(
-                (key = t),
-                (name = t),
-                (active = t === tab),
-                (onclick = () => {
+              Tab({
+                key: t,
+                name: t,
+                active: t === tab,
+                onclick: () => {
                   page$.tab = t;
                   page$.index = 0;
-                })
-              )
+                },
+              })
             )
           ),
         MailList(),
