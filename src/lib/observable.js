@@ -1,5 +1,4 @@
 import { update } from "./renderer";
-import { equals } from "./util";
 
 var current;
 var dirty = false;
@@ -17,12 +16,14 @@ function flushUpdateQueue() {
   dirty = false;
 }
 
-const Observable = (obj) => {
+function Observable(obj) {
   if (!obj) return null;
-  const propertyDescriptors = Object.getOwnPropertyDescriptors(obj);
-  for (let name in propertyDescriptors) {
-    const descriptor = propertyDescriptors[name];
-    if (descriptor.get || descriptor.set) continue; // Not a simple property
+
+  const properties = Object.getOwnPropertyDescriptors(obj);
+
+  for (let name in properties) {
+    const descriptor = properties[name];
+    if (descriptor.get || descriptor.set) continue;
 
     let value = descriptor.value;
     const observers = new Set();
@@ -39,16 +40,9 @@ const Observable = (obj) => {
         return value;
       },
       set(newValue) {
-        // if (equals(value, newValue)) return;
         value = newValue;
         for (let observer of observers) {
           observer.dirty = true;
-          // console.log(
-          //   name,
-          //   "causes",
-          //   observer.type.name || observer.type,
-          //   "to update"
-          // );
           updateQueue.add(observer);
         }
         if (!dirty) {
@@ -59,6 +53,6 @@ const Observable = (obj) => {
     });
   }
   return obj;
-};
+}
 
 export { Observable, setCurrent };

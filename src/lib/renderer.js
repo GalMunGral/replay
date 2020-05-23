@@ -1,5 +1,5 @@
 import {
-  createInstance,
+  createFrame,
   insertAfter,
   getFirstNode,
   getLastNode,
@@ -13,9 +13,8 @@ var stack = [];
 
 function* renderComponent(instance, props) {
   if (!props) props = instance.props;
-  if (equals(props, instance.props) && !instance.dirty) {
-    return;
-  }
+  if (equals(props, instance.props) && !instance.dirty) return;
+
   if (typeof instance.type === "string") {
     yield* renderDOMComponent(instance, props);
   } else {
@@ -27,20 +26,23 @@ function* renderComponent(instance, props) {
 
 function* renderCompositeComponent(instance, props) {
   const { type, context } = instance;
-  setCurrent(instance);
   let elements;
+
+  setCurrent(instance);
   if (isGeneratorFunction(type)) {
     elements = yield* type(props, context);
   } else {
     elements = type(props, context);
   }
   setCurrent(null);
-  yield* reconcileChilren(instance, elements);
+
+  yield* reconcileChildren(instance, elements);
 }
 
 function* renderDOMComponent(instance, props) {
   const effects = [];
   const memoized = instance.props;
+
   for (let [name, value] of Object.entries(props)) {
     if (name === "children") continue;
     if (name === "style") {
@@ -60,69 +62,80 @@ function* renderDOMComponent(instance, props) {
       }
     }
   }
+
   yield effects;
+
   if (instance.type === "text" || instance.type === "comment") {
-    yield () => {
-      instance.node.textContent = props.children;
-    };
-  } else {
-    if (!Array.isArray(props.children)) {
-      props.children = [["text", {}, props.children]];
-    }
-    stack.push(previousSibling);
-    previousSibling = { type: "dummy", node: instance.node.firstChild };
-    yield* reconcileChilren(instance, props.children);
-    previousSibling = stack.pop();
+    yield () => (instance.node.textContent = props.children);
+    return;
   }
+
+  if (!Array.isArray(props.children)) {
+    props.children = [["text", {}, props.children]]; // p('hello') -> p([ text('hello') ])
+  }
+
+  stack.push(previousSibling);
+  previousSibling = {
+    type: "_",
+    node: instance.node.firstChild,
+  };
+  yield* reconcileChildren(instance, props.children);
+  previousSibling = stack.pop();
 }
 
-function* reconcileChilren(instance, elements) {
+function* reconcileChildren(parent, elements) {
   const newChildren = {};
-  const oldChildren = instance.children;
+  const oldChildren = parent.children;
+
   let firstChild, lastChild;
   let lastIndex = -1;
+
   for (let [index, element] of elements.entries()) {
-    element = element || ["comment", {}, "slot"];
+    if (!element) element = ["comment", {}, "(slot)"];
     const [type, props, children] = element;
     const key = props.key != null ? props.key : index;
-    let child;
+
+    let instance;
     if (oldChildren.hasOwnProperty(key) && oldChildren[key].type === type) {
-      child = oldChildren[key];
+      instance = oldChildren[key];
       delete oldChildren[key];
-      if (child.index < lastIndex) {
-        yield* insertAfter(previousSibling, child);
+      if (instance.index < lastIndex) {
+        yield* insertAfter(previousSibling, instance);
       } else {
-        lastIndex = child.index;
+        lastIndex = instance.index;
       }
       props.children = children;
-      yield* renderComponent(child, props);
+      yield* renderComponent(instance, props);
     } else {
-      child = yield* mountComponent(element, instance);
+      instance = yield* mountComponent(element, parent);
     }
-    child.index = index;
-    // console.log(element, key, child);
 
-    newChildren[key] = child;
-    if (!firstChild) firstChild = child;
-    lastChild = child;
-    previousSibling = child;
+    instance.index = index;
+    newChildren[key] = instance;
+
+    if (!firstChild) firstChild = instance;
+    lastChild = instance;
+
+    previousSibling = instance;
   }
-  for (let child of Object.values(oldChildren)) {
-    yield* unmountComponent(child);
+
+  for (let instance of Object.values(oldChildren)) {
+    yield* unmountComponent(instance);
   }
-  instance.children = newChildren;
-  instance.firstChild = firstChild;
-  instance.lastChild = lastChild;
+
+  parent.children = newChildren;
+  parent.firstChild = firstChild;
+  parent.lastChild = lastChild;
 }
 
 function* mountComponent(element, parent) {
   const [type, props, children] = element;
-
-  // console.log(element, props);
   props.children = children;
+
   let instance;
+
   if (typeof type === "string") {
-    instance = createInstance(type, parent);
+    instance = createFrame(type, parent);
 
     switch (type) {
       case "text":
@@ -133,16 +146,18 @@ function* mountComponent(element, parent) {
         break;
       default:
         instance.node = document.createElement(type);
-        instance.node.append(new Text());
+        instance.node.append(new Text()); // Create a dummy node to make reordering easier
     }
     instance.node.instance = instance;
+
     yield* renderComponent(instance, props);
     yield* insertAfter(previousSibling, instance);
   } else {
-    instance = createInstance(type, parent, type.context, type.deps);
+    instance = createFrame(type, parent, type.context);
     yield* renderComponent(instance, props);
   }
-  instance.props = props;
+
+  instance.props = props; // Save
   return instance;
 }
 
@@ -157,7 +172,9 @@ function* unmountComponent(instance) {
 }
 
 function cleanup(instance) {
-  Object.values(instance.children).forEach((child) => cleanup(child));
+  for (let child of Object.values(instance.children)) {
+    cleanup(child);
+  }
   if (typeof instance.type === "function") {
     instance.subscriptions.forEach((s) => s.cancel());
     instance.requests.forEach((r) => (r.canceled = true));
@@ -165,21 +182,26 @@ function cleanup(instance) {
 }
 
 function render(elements, container) {
-  const root = createInstance(container.tagName.toLowerCase());
+  const root = createFrame("_");
   root.node = container;
+  root.node.innerHTML = "";
+  root.node.prepend(new Text());
   request(
-    (function* () {
-      previousSibling = { type: "dummy", node: container.firstChild };
-      yield* reconcileChilren(root, elements);
+    (function* task() {
+      previousSibling = {
+        type: "_",
+        node: container.firstChild,
+      };
+      yield* reconcileChildren(root, elements);
     })()
   );
-  window.root = root;
+  window.__root__ = root;
 }
 
 function update(instance) {
-  const task = (function* () {
+  const task = (function* task() {
     previousSibling = {
-      type: "dummy",
+      type: "_",
       node: getFirstNode(instance).previousSibling,
     };
     yield* renderComponent(instance);

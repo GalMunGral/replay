@@ -1,21 +1,23 @@
-function createInstance(type, parent, createContext = () => ({}), deps = {}) {
-  const proto = (parent && parent.context) || null;
-  const properties = Object.getOwnPropertyDescriptors(createContext(proto));
-  const context = Object.create(proto, properties);
-  Object.freeze(context);
+function createFrame(type, parent, createContext) {
+  const parentContext = parent ? parent.context : null;
+  const localContext = createContext ? createContext() : {};
 
   return {
     type,
-    parent,
-    context,
+    context: Object.create(
+      parentContext,
+      Object.getOwnPropertyDescriptors(localContext)
+    ),
     props: {},
     children: {},
+    parent,
     index: -1,
     firstChild: null,
     lastChild: null,
     node: null,
     subscriptions: [],
     requests: [],
+    dirty: false,
     depth: parent ? parent.depth + 1 : 0,
   };
 }
@@ -55,10 +57,4 @@ function* insertAfter(previouSibling, instance) {
   };
 }
 
-export {
-  createInstance,
-  getFirstNode,
-  getLastNode,
-  getParentNode,
-  insertAfter,
-};
+export { createFrame, getFirstNode, getLastNode, getParentNode, insertAfter };

@@ -64,9 +64,9 @@ const decor = (component) => (...args) => {
     ];
   };
 
-  StyleWrapper.and = function attachRules(...args) {
+  StyleWrapper.and = (...args) => {
     rules.push(compileCSS(...args));
-    return this;
+    return StyleWrapper;
   };
 
   return StyleWrapper;

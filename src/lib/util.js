@@ -28,9 +28,8 @@ function isGeneratorFunction(obj) {
   return constructor && constructor.name === "GeneratorFunction";
 }
 
-const withContext = (context, deps) => (component) => {
-  component.context = context;
-  component.deps = deps;
+const withContext = (createContext) => (component) => {
+  component.context = createContext;
   return component;
 };
 
