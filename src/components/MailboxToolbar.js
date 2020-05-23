@@ -4,20 +4,38 @@ import IconButton from "./IconButton";
 import Space from "./Space";
 import { PageRange, PageRangeText } from "../elements/MailboxToolbar";
 
-const MailboxToolbar = ({
-  folder,
-  pagination: { pageStart, pageEnd, total, mails, nextPage, prevPage },
-}) => {
-  const { selected } = selection$;
+const MailboxToolbar = (
+  __,
+  {
+    page$,
+    page$: { index, pageStart, pageEnd, pageSize },
+    route$: { folder },
+    mails$: { total, currentPage },
+    selection$,
+    selection$: { selected },
+  }
+) => {
+  pageEnd = Math.min(pageEnd, total);
+
+  const nextPage = () => {
+    const pageCount = Math.ceil(total / pageSize);
+    page$.index = Math.min(index + 1, pageCount - 1);
+  };
+
+  const prevPage = () => {
+    page$.index = Math.max(index - 1, 0);
+  };
 
   const allSelected =
-    mails.length > 0 ? mails.every((item) => selected.has(item.id)) : false;
+    currentPage.length > 0
+      ? currentPage.every((item) => selected.has(item.id))
+      : false;
 
   const toggleAll = () => {
     if (allSelected) {
       selection$.selected = new Set();
     } else {
-      selection$.selected = new Set(mails.map((item) => item.id));
+      selection$.selected = new Set(currentPage.map((item) => item.id));
     }
   };
 

@@ -1,25 +1,12 @@
 import {
   createInstance,
   insertAfter,
-  appendChild,
-  insertBefore,
   getFirstNode,
   getLastNode,
 } from "./instance";
 import { setCurrent } from "./observable";
 import { request } from "./scheduler";
 import { equals, toKebabCase, isGeneratorFunction } from "./util";
-
-function getPath(instance) {
-  if (!instance) return "";
-  if (
-    typeof instance.type === "string" ||
-    instance.type.name === "StyleWrapper"
-  ) {
-    return getPath(instance.parent);
-  }
-  return getPath(instance.parent) + "->" + instance.type.name;
-}
 
 var previousSibling;
 var stack = [];
@@ -39,16 +26,13 @@ function* renderComponent(instance, props) {
 }
 
 function* renderCompositeComponent(instance, props) {
-  // console.log(getPath(instance), "RENDER", instance, props);
-  const { type, state, deps } = instance;
-  // console.log(deps);
-  // console.log(type);
+  const { type, context } = instance;
   setCurrent(instance);
   let elements;
   if (isGeneratorFunction(type)) {
-    elements = yield* type(props, state, ...deps);
+    elements = yield* type(props, context);
   } else {
-    elements = type(props, state, ...deps);
+    elements = type(props, context);
   }
   setCurrent(null);
   yield* reconcileChilren(instance, elements);
@@ -152,17 +136,10 @@ function* mountComponent(element, parent) {
         instance.node.append(new Text());
     }
     instance.node.instance = instance;
-
     yield* renderComponent(instance, props);
-
-    // if (previousSibling) {
     yield* insertAfter(previousSibling, instance);
-    // }
-    // else {
-    //   yield* appendChild(parent, instance);
-    // }
   } else {
-    instance = createInstance(type, parent, type.initialState, type.deps);
+    instance = createInstance(type, parent, type.context, type.deps);
     yield* renderComponent(instance, props);
   }
   instance.props = props;
@@ -200,8 +177,6 @@ function render(elements, container) {
 }
 
 function update(instance) {
-  // console.log(instance.type.name || instance.type, "update");
-  // const task = renderComponent(instance, instance.props);
   const task = (function* () {
     previousSibling = {
       type: "dummy",

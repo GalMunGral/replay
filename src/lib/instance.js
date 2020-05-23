@@ -1,20 +1,21 @@
-function createInstance(type, parent, initState = () => ({}), deps = []) {
+function createInstance(type, parent, createContext = () => ({}), deps = {}) {
+  const proto = (parent && parent.context) || null;
+  const properties = Object.getOwnPropertyDescriptors(createContext(proto));
+  const context = Object.create(proto, properties);
+  Object.freeze(context);
+
   return {
     type,
-    props: {},
-    state: Object.create(
-      (parent && parent.state) || null,
-      Object.getOwnPropertyDescriptors(initState())
-    ),
-    index: -1,
     parent,
+    context,
+    props: {},
     children: {},
+    index: -1,
     firstChild: null,
     lastChild: null,
     node: null,
     subscriptions: [],
     requests: [],
-    deps,
     depth: parent ? parent.depth + 1 : 0,
   };
 }
@@ -41,7 +42,6 @@ function getParentNode(instance) {
 }
 
 function* insertAfter(previouSibling, instance) {
-  // console.log(previouSibling, instance);
   const lastNode = getLastNode(instance);
   let curNode = getFirstNode(instance);
   let prevNode = getLastNode(previouSibling);
@@ -55,34 +55,10 @@ function* insertAfter(previouSibling, instance) {
   };
 }
 
-// function* insertBefore(nextSibling, instance) {
-//   const firstNode = getFirstNode(instance);
-//   let curNode = getLastNode(instance);
-//   let prevNode = getFirstNode(nextSibling);
-//   yield () => {
-//     while (curNode !== firstNode) {
-//       prevNode.before(curNode);
-//       prevNode = curNode;
-//       curNode = curNode.previouSibling;
-//     }
-//     prevNode.before(curNode);
-//   };
-// }
-
-function* appendChild(parent, instance) {
-  const parentNode = getParentNode(parent);
-  let curNode = getFirstNode(instance);
-  yield () => {
-    parentNode.append(curNode);
-  };
-}
-
 export {
   createInstance,
   getFirstNode,
   getLastNode,
   getParentNode,
   insertAfter,
-  // insertBefore,
-  appendChild,
 };

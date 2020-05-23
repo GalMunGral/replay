@@ -1,5 +1,8 @@
-import { withState, Observable } from "lib";
+import { withContext, Observable } from "lib";
 import router$ from "../observables/router";
+import selection$ from "../observables/selection";
+import store$ from "../observables/store";
+import editor$ from "../observables/editor";
 import AppBar from "./AppBar";
 import Mailbox from "./Mailbox";
 import Sidebar from "./Sidebar";
@@ -7,26 +10,31 @@ import Editor from "./Editor";
 import Detail from "./Detail";
 import { Container } from "../elements/App";
 
-const initialState = () => ({
+const context = () => ({
+  router$,
+  store$,
+  selection$,
+  editor$,
   editorPopup$: Observable({
     open: false,
+    minimized: false,
   }),
   sideBar$: Observable({
     collapsed: false,
   }),
 });
 
-const App = (__, { sideBar$, editorPopup$ }, router$) => {
+const App = (__, { router$ }) => {
   const { folder, id } = router$;
   return (
     // use-transform
     Container([
-      AppBar({ toggle: () => (sideBar$.collapsed = !sideBar$.collapsed) }),
+      AppBar(),
       Sidebar({ folder }),
       id ? Detail({ folder, id }) : Mailbox({ folder }),
-      editorPopup$.open && Editor(),
+      Editor(),
     ])
   );
 };
 
-export default withState(initialState, router$)(App);
+export default withContext(context)(App);

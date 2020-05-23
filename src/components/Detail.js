@@ -34,10 +34,27 @@ const Detail = ({ folder, id }) => {
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
 
+  const deleteMail = () => {
+    store$.dispatch((dispatch) => {
+      window.history.back();
+      setTimeout(
+        () =>
+          dispatch({
+            type: store$.T.DELETE,
+            payload: { id, folder },
+          }),
+        200
+      );
+    });
+  };
+
   return (
     // use-transform
     Layout([
-      DetailToolbar((folder = folder), (id = id)),
+      DetailToolbar(
+        (canDelete = folder !== "trash"),
+        (deleteMail = deleteMail)
+      ),
       Main([
         Header(subject),
         SenderInfo((innerHTML = senderInfo)),

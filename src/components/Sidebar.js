@@ -1,6 +1,5 @@
-import { withState, Observable } from "lib";
+import { withContext, Observable } from "lib";
 import router$ from "../observables/router";
-import store$ from "../observables/store";
 import selection$ from "../observables/selection";
 import editor$ from "../observables/editor";
 import {
@@ -19,14 +18,14 @@ const ICON_MAP = {
   drafts: "scroll",
 };
 
-const initialState = () => ({
+const context = () => ({
   state$: Observable({
     hovered: false,
     canDrop: false,
   }),
 });
 
-const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$ }) => {
+const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$, store$ }) => {
   const collapsed = sideBar$.collapsed && !state$.hovered;
 
   const deleteAll = () => {
@@ -76,7 +75,7 @@ const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$ }) => {
           )
         ),
         MenuItem(
-          (collapsed = collapsed),
+          { collapsed },
           (activated = folder === "trash"),
           (style = {
             background: state$.canDrop ? "var(--theme)" : "",
@@ -106,4 +105,4 @@ const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$ }) => {
   );
 };
 
-export default withState(initialState)(Sidebar);
+export default withContext(context)(Sidebar);

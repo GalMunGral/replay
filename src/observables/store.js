@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { Observable } from "lib";
 
 const Type = {
@@ -73,6 +74,11 @@ const store = Observable({
       this.state = reducer(this.state, action);
       // console.log(this.state);
     }
+  },
+  getMails(folder, tab) {
+    return folder === "inbox"
+      ? this.state[folder].filter((it) => it.category === tab)
+      : this.state[folder];
   },
 });
 

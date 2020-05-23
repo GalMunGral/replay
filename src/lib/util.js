@@ -28,10 +28,10 @@ function isGeneratorFunction(obj) {
   return constructor && constructor.name === "GeneratorFunction";
 }
 
-const withState = (initialState, ...deps) => (component) => {
-  component.initialState = initialState;
+const withContext = (context, deps) => (component) => {
+  component.context = context;
   component.deps = deps;
   return component;
 };
 
-export { equals, toKebabCase, isGeneratorFunction, withState };
+export { equals, toKebabCase, isGeneratorFunction, withContext };

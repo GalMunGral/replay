@@ -1,7 +1,7 @@
-import { withState, Observable } from "lib";
+import { withContext, Observable } from "lib";
 import { InputBox } from "../elements/Editor";
 
-const initialState = () => ({
+const context = () => ({
   state$: Observable({
     focused: false,
   }),
@@ -21,4 +21,4 @@ const EditorInput = ({ label, value, setValue, placeholder }, { state$ }) =>
     ),
   ]);
 
-export default withState(initialState)(EditorInput);
+export default withContext(context)(EditorInput);

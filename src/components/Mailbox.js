@@ -1,85 +1,63 @@
-import _ from "lodash";
-import { withState, Observable } from "lib";
-import store$ from "../observables/store";
+import { withContext, Observable } from "lib";
 import Tab from "./Tab";
 import MailList from "./MailList";
 import Layout from "./Layout";
 import MailboxToolbar from "./MailboxToolbar";
 import { TabBar } from "../elements/Mailbox";
 
-const PAGE_SIZE = 50;
-const TABS = ["primary", "social", "promotions"];
+const tabs = ["primary", "social", "promotions"];
 
-const initialState = () => ({
-  store$,
+const context = () => ({
   page$: Observable({
     tab: "primary",
     index: 0,
+    pageSize: 50,
     get pageStart() {
-      return this.index * PAGE_SIZE;
+      return this.index * this.pageSize;
     },
     get pageEnd() {
-      return (this.index + 1) * PAGE_SIZE;
+      return (this.index + 1) * this.pageSize;
     },
+  }),
+  route$: Observable({
+    folder: null,
+  }),
+  mails$: Observable({
+    currentPage: [],
+    total: 0,
   }),
 });
 
-const Mailbox = ({ folder }, { page$, store$ }) => {
-  const { state } = store$;
-  const { tab, index, pageStart, pageEnd } = page$;
-
-  const allMails = _.memoize(function (state, folder, tab) {
-    return folder === "inbox"
-      ? state[folder].filter((it) => it.category === tab)
-      : state[folder];
-  })(state, folder, tab);
-
-  const total = allMails.length;
-  const mails = allMails.slice(pageStart, pageEnd);
-
-  const nextPage = () => {
-    const pageCount = Math.ceil(total / PAGE_SIZE);
-    page$.index = Math.min(index + 1, pageCount - 1);
-  };
-
-  const prevPage = () => {
-    page$.index = Math.max(index - 1, 0);
-  };
+const Mailbox = ({ folder }, { page$, mails$, route$, store$ }) => {
+  const { tab, pageStart, pageEnd } = page$;
+  const allMails = store$.getMails(folder, tab);
+  mails$.total = allMails.length;
+  mails$.currentPage = allMails.slice(pageStart, pageEnd);
+  route$.folder = folder;
 
   return (
     // use-transform
     Layout([
-      MailboxToolbar(
-        (folder = folder),
-        (pagination = {
-          pageStart,
-          pageEnd: Math.min(pageEnd, total),
-          total,
-          nextPage,
-          prevPage,
-          mails,
-        })
-      ),
+      MailboxToolbar(),
       section([
-        folder === "inbox"
-          ? TabBar(
-              TABS.map((t) =>
-                Tab(
-                  (key = t),
-                  (name = t),
-                  (active = t === tab),
-                  (onclick = () => {
-                    page$.tab = t;
-                    page$.index = 0;
-                  })
-                )
+        folder === "inbox" &&
+          TabBar(
+            tabs.map((t) =>
+              Tab(
+                (key = t),
+                (name = t),
+                (active = t === tab),
+                (onclick = () => {
+                  page$.tab = t;
+                  page$.index = 0;
+                })
               )
             )
-          : null,
-        MailList((folder = folder), (mails = mails)),
+          ),
+        MailList(),
       ]),
     ])
   );
 };
 
-export default withState(initialState)(Mailbox);
+export default withContext(context)(Mailbox);

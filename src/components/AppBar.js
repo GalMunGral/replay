@@ -9,16 +9,18 @@ import {
   SearchInput,
 } from "../elements/AppBar";
 
-const AppBar = ({ toggle }) =>
+const AppBar = (__, { sideBar$ }) =>
   // use-transform
   Container([
     Group([
-      MenuButton({ onclick: toggle }, [MenuIcon({ className: "fas fa-bars" })]),
-      AppLogo({ src: "/assets/images/logo.png", alt: "logo" }),
+      MenuButton((onclick = () => (sideBar$.collapsed = !sideBar$.collapsed)), [
+        MenuIcon((className = "fas fa-bars")),
+      ]),
+      AppLogo((src = "/assets/images/logo.png"), (alt = "logo")),
     ]),
     SearchBar([
-      SearchIcon({ className: "fas fa-search" }),
-      SearchInput({ placeholder: "Search mail" }),
+      SearchIcon((className = "fas fa-search")),
+      SearchInput((placeholder = "Search mail")),
     ]),
     Group(),
   ]);

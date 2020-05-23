@@ -1,5 +1,3 @@
-import { withState, Observable } from "lib";
-import editor$ from "../observables/editor";
 import IconButton from "../components/IconButton";
 import Space from "../components/Space";
 import EditorInput from "../components/EditorInput";
@@ -13,19 +11,16 @@ import {
   SendButton,
 } from "../elements/Editor";
 
-const initialState = () => ({
-  state$: Observable({
-    minimized: false,
-  }),
-});
-
-const Editor = ({}, { state$, editorPopup$ }) => {
-  const { minimized } = state$;
+const Editor = (__, { editorPopup$, editor$ }) => {
+  const { minimized } = editorPopup$;
   const { recipientEmail, subject, content } = editor$;
+
+  if (!editorPopup$.open) return [null];
+
   return (
     // use-transform
     Window([
-      Header((onclick = () => (state$.minimized = !minimized)), [
+      Header((onclick = () => (editorPopup$.minimized = !minimized)), [
         span("New Message"),
         CloseButton(
           (onclick = () => {
@@ -35,7 +30,7 @@ const Editor = ({}, { state$, editorPopup$ }) => {
           [i((className = "fas fa-times"))]
         ),
       ]),
-      Body((minimized = minimized), [
+      Body({ minimized }, [
         EditorInput(
           (label = "To:"),
           (placeholder = "Recipient"),
@@ -60,8 +55,8 @@ const Editor = ({}, { state$, editorPopup$ }) => {
             }),
             "Send"
           ),
-          IconButton((onclick = () => editor$.undo()), (type = "undo")),
-          IconButton((onclick = () => editor$.redo()), (type = "redo")),
+          IconButton((type = "undo"), (onclick = () => editor$.undo())),
+          IconButton((type = "redo"), (onclick = () => editor$.redo())),
           Space(),
         ]),
       ]),
@@ -69,4 +64,4 @@ const Editor = ({}, { state$, editorPopup$ }) => {
   );
 };
 
-export default withState(initialState)(Editor);
+export default Editor;

@@ -43,7 +43,7 @@ module.exports = function (babel) {
     let children = t.ArrayExpression([]);
     node.arguments.forEach((arg) => {
       if (t.isObjectExpression(arg)) {
-        props = arg;
+        props.properties.push(...arg.properties);
       } else if (t.isAssignmentExpression(arg)) {
         const key = t.Identifier(arg.left.name);
         const value = arg.right;
