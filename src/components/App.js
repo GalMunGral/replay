@@ -16,7 +16,7 @@ const initialState = () => ({
   }),
 });
 
-const App = (__, { sideBar$, editorPopup$ }) => {
+const App = (__, { sideBar$, editorPopup$ }, router$) => {
   const { folder, id } = router$;
   return (
     // use-transform
@@ -24,9 +24,9 @@ const App = (__, { sideBar$, editorPopup$ }) => {
       AppBar({ toggle: () => (sideBar$.collapsed = !sideBar$.collapsed) }),
       Sidebar({ folder }),
       id ? Detail({ folder, id }) : Mailbox({ folder }),
-      editorPopup$.open ? Editor() : null,
+      editorPopup$.open && Editor(),
     ])
   );
 };
 
-export default withState(initialState)(App);
+export default withState(initialState, router$)(App);

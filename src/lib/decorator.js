@@ -27,7 +27,7 @@ const decor = (component) => (...args) => {
   const declarations = compileCSS(...args);
   const rules = [];
 
-  const StyleWrapper = function* (props, state, setState) {
+  const StyleWrapper = function* (props) {
     const computedDeclarations = declarations(props);
 
     let className;

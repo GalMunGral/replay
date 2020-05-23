@@ -28,8 +28,9 @@ function isGeneratorFunction(obj) {
   return constructor && constructor.name === "GeneratorFunction";
 }
 
-const withState = (initialState) => (component) => {
+const withState = (initialState, ...deps) => (component) => {
   component.initialState = initialState;
+  component.deps = deps;
   return component;
 };
 

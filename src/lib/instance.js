@@ -1,10 +1,10 @@
-function createInstance(type, parent, state) {
+function createInstance(type, parent, initState = () => ({}), deps = []) {
   return {
     type,
     props: {},
     state: Object.create(
       (parent && parent.state) || null,
-      state ? Object.getOwnPropertyDescriptors(state) : {}
+      Object.getOwnPropertyDescriptors(initState())
     ),
     index: -1,
     parent,
@@ -14,6 +14,7 @@ function createInstance(type, parent, state) {
     node: null,
     subscriptions: [],
     requests: [],
+    deps,
     depth: parent ? parent.depth + 1 : 0,
   };
 }

@@ -40,13 +40,15 @@ function* renderComponent(instance, props) {
 
 function* renderCompositeComponent(instance, props) {
   // console.log(getPath(instance), "RENDER", instance, props);
-  const { type, state } = instance;
+  const { type, state, deps } = instance;
+  // console.log(deps);
+  // console.log(type);
   setCurrent(instance);
   let elements;
   if (isGeneratorFunction(type)) {
-    elements = yield* type(props, state);
+    elements = yield* type(props, state, ...deps);
   } else {
-    elements = type(props, state);
+    elements = type(props, state, ...deps);
   }
   setCurrent(null);
   yield* reconcileChilren(instance, elements);
@@ -136,7 +138,7 @@ function* mountComponent(element, parent) {
   props.children = children;
   let instance;
   if (typeof type === "string") {
-    instance = createInstance(type, parent, null);
+    instance = createInstance(type, parent);
 
     switch (type) {
       case "text":
@@ -160,11 +162,7 @@ function* mountComponent(element, parent) {
     //   yield* appendChild(parent, instance);
     // }
   } else {
-    instance = createInstance(
-      type,
-      parent,
-      type.initialState ? type.initialState() : null
-    );
+    instance = createInstance(type, parent, type.initialState, type.deps);
     yield* renderComponent(instance, props);
   }
   instance.props = props;
