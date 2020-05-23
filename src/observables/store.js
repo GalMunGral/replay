@@ -4,8 +4,8 @@ import { Observable } from "lib";
 const Type = {
   LOAD: "LOAD",
   DELETE: "DELETE",
-  SAVE_DRAFT: "SAVE_DRAFT",
   SEND: "SEND",
+  SAVE_DRAFT: "SAVE_DRAFT",
   DELETE_SELECTED: "DELETE_SELECTED",
 };
 
