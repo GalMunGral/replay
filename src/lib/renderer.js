@@ -1,9 +1,4 @@
-import {
-  createFrame,
-  insertAfter,
-  getFirstNode,
-  getLastNode,
-} from "./instance";
+import { createFrame, insertAfter, getFirstNode, remove } from "./instance";
 import { setCurrent } from "./observable";
 import { request } from "./scheduler";
 import { equals, toKebabCase, isGeneratorFunction } from "./util";
@@ -163,12 +158,7 @@ function* mountComponent(element, parent) {
 
 function* unmountComponent(instance) {
   cleanup(instance);
-  yield () => {
-    const lastNode = getLastNode(instance);
-    const cur = getFirstNode(instance);
-    while (cur !== lastNode) cur.remove();
-    cur.remove();
-  };
+  yield* remove(instance);
 }
 
 function cleanup(instance) {

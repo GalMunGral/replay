@@ -57,4 +57,26 @@ function* insertAfter(previouSibling, instance) {
   };
 }
 
-export { createFrame, getFirstNode, getLastNode, getParentNode, insertAfter };
+function* remove(instance) {
+  const firstNode = getFirstNode(instance);
+  const lastNode = getLastNode(instance);
+  yield () => {
+    let cur = firstNode;
+    let next = cur.nextSibling;
+    while (cur !== lastNode) {
+      cur.remove();
+      cur = next;
+      next = next.nextSibling;
+    }
+    cur.remove();
+  };
+}
+
+export {
+  createFrame,
+  getFirstNode,
+  getLastNode,
+  getParentNode,
+  insertAfter,
+  remove,
+};
