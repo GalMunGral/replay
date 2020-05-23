@@ -7,7 +7,7 @@ const MailboxToolbar = (
   __,
   {
     page$,
-    page$: { index, pageStart, pageEnd, pageSize },
+    page$: { pageStart, pageEnd, pageSize },
     route$: { folder },
     mails$: { total, currentPage },
     selection$,
@@ -18,11 +18,11 @@ const MailboxToolbar = (
 
   const nextPage = () => {
     const pageCount = Math.ceil(total / pageSize);
-    page$.index = Math.min(index + 1, pageCount - 1);
+    page$.index = Math.min(page$.index + 1, pageCount - 1);
   };
 
   const prevPage = () => {
-    page$.index = Math.max(index - 1, 0);
+    page$.index = Math.max(page$.index - 1, 0);
   };
 
   const allSelected =
