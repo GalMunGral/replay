@@ -90,6 +90,7 @@ function* reconcileChildren(parent, elements) {
     if (!element) element = ["comment", {}, "[slot]"];
     const [type, props, children] = element;
     const key = props.key != null ? props.key : index;
+    props.children = children;
 
     let instance;
     if (oldChildren.hasOwnProperty(key) && oldChildren[key].type === type) {
@@ -100,7 +101,6 @@ function* reconcileChildren(parent, elements) {
       } else {
         lastIndex = instance.index;
       }
-      props.children = children;
       yield* renderComponent(instance, props);
     } else {
       instance = yield* mountComponent(element, parent);
