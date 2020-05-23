@@ -148,7 +148,6 @@ function* mountComponent(element, parent) {
     yield* renderComponent(instance, props);
   }
 
-  instance.props = props; // Save
   return instance;
 }
 
