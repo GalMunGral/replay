@@ -8,9 +8,9 @@ const Checkbox = ({ checked, onchange }) =>
     (onclick = onchange),
     [
       div([
-        Background((checked = checked)),
-        CheckMark((checked = checked), [i((className = "fas fa-check"))]),
-        input((type = "checkbox"), (checked = checked)),
+        Background({ checked }),
+        CheckMark({ checked }, [i((className = "fas fa-check"))]),
+        input((type = "checkbox"), { checked }),
       ]),
     ]
   );
