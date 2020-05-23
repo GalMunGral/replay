@@ -10,7 +10,7 @@ const context = () => ({
 const EditorInput = ({ label, value, setValue, placeholder }, { self$ }) =>
   // use-transform
   InputBox([
-    self$.focused || value ? label(label) : null,
+    (self$.focused || value) && label(label),
     input(
       (key = "input"),
       (value = value),
