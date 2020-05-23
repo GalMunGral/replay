@@ -8,8 +8,8 @@ import {
   MenuIcon,
 } from "../elements/Sidebar";
 
-const FOLDERS = ["inbox", "sent", "drafts"];
-const ICON_MAP = {
+const folders = ["inbox", "sent", "drafts"];
+const iconMap = {
   inbox: "inbox",
   sent: "paper-plane",
   drafts: "scroll",
@@ -71,13 +71,13 @@ const Sidebar = (
             !collapsed && EditorButtonText("Compose"),
           ]
         ),
-        ...FOLDERS.map((_folder) =>
+        ...folders.map((_folder) =>
           MenuItem(
             (collapsed = collapsed),
             (activated = folder === _folder),
             (onclick = () => router$.navigate("/" + _folder)),
             [
-              MenuIcon((className = `fas fa-${ICON_MAP[_folder]}`)),
+              MenuIcon((className = `fas fa-${iconMap[_folder]}`)),
               !collapsed && span(_folder),
             ]
           )
