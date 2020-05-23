@@ -27,8 +27,7 @@ const router = Observable({
 });
 
 window.onpopstate = () => {
-  const newPath = document.location.pathname;
-  router.updateStateWithPath(newPath);
+  router.updateStateWithPath(document.location.pathname);
 };
 
 const initialPath = document.location.pathname;
