@@ -72,9 +72,7 @@ const store$ = Observable({
     if (typeof action === "function") {
       action(this.dispatch.bind(this));
     } else {
-      // console.log(action);
       this.state = reducer(this.state, action);
-      // console.log(this.state);
     }
   },
   getMail(folder, id) {
