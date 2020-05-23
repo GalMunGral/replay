@@ -8,7 +8,7 @@ const router = Observable({
     this.folder = result.groups.folder;
     this.id = result.groups.id;
   },
-  updateHistorywithContext(replace = false) {
+  updateHistorywithState(replace = false) {
     const { folder, id } = this;
     const path = id ? `/${folder}/${id}` : `/${folder}`;
     document.title = `Mail - ${folder}`;
@@ -18,11 +18,11 @@ const router = Observable({
   },
   navigate(path) {
     this.updateStateWithPath(path);
-    this.updateHistorywithContext(false);
+    this.updateHistorywithState(false);
   },
   redirect(path) {
     this.updateStateWithPath(path);
-    this.updateHistorywithContext(true);
+    this.updateHistorywithState(true);
   },
 });
 
