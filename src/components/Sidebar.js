@@ -19,14 +19,17 @@ const ICON_MAP = {
 };
 
 const context = () => ({
-  state$: Observable({
+  self$: Observable({
     hovered: false,
     canDrop: false,
   }),
 });
 
-const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$, store$ }) => {
-  const collapsed = sideBar$.collapsed && !state$.hovered;
+const Sidebar = (
+  __,
+  { self$, editorPopup$, sideBar$, store$, router$: { folder } }
+) => {
+  const collapsed = sideBar$.collapsed && !self$.hovered;
 
   const deleteAll = () => {
     store$.dispatch((dispatch) => {
@@ -47,8 +50,8 @@ const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$, store$ }) => {
     // use-transform
     Menu(
       (collapsed = collapsed),
-      (onmouseenter = () => (state$.hovered = true)),
-      (onmouseleave = () => (state$.hovered = false)),
+      (onmouseenter = () => (self$.hovered = true)),
+      (onmouseleave = () => (self$.hovered = false)),
       [
         EditorButton(
           (collapsed = collapsed),
@@ -78,25 +81,25 @@ const Sidebar = ({ folder }, { state$, editorPopup$, sideBar$, store$ }) => {
           { collapsed },
           (activated = folder === "trash"),
           (style = {
-            background: state$.canDrop ? "var(--theme)" : "",
-            color: state$.canDrop ? "white" : "",
+            background: self$.canDrop ? "var(--theme)" : "",
+            color: self$.canDrop ? "white" : "",
           }),
           (onclick = () => router$.navigate("/trash")),
           (ondragenter = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            state$.canDrop = true;
+            self$.canDrop = true;
           }),
           (ondragover = (e) => {
             e.preventDefault();
             e.stopPropagation();
           }),
           (ondragleave = () => {
-            state$.canDrop = false;
+            self$.canDrop = false;
           }),
           (ondrop = () => {
             deleteAll();
-            state$.canDrop = false;
+            self$.canDrop = false;
           }),
           [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
         ),

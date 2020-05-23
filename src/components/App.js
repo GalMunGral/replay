@@ -30,7 +30,7 @@ const App = (__, { router$ }) => {
     // use-transform
     Container([
       AppBar(),
-      Sidebar({ folder }),
+      Sidebar(),
       id ? Detail({ folder, id }) : Mailbox({ folder }),
       Editor(),
     ])
