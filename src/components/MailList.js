@@ -10,10 +10,12 @@ const context = () => {
     isDragging: false,
     x: 0,
     y: 0,
+
     setCoordinates: _.throttle((x, y) => {
       dragState$.x = x;
       dragState$.y = y;
     }, 32),
+
     setIsDragging: (isDragging) => {
       dragState$.isDragging = isDragging;
     },
