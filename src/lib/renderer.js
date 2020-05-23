@@ -130,7 +130,7 @@ function* mountComponent(element, parent) {
 
   const instance = createFrame(type, parent);
 
-  if (typeof type === "string") {
+  if (typeof type == "string") {
     switch (type) {
       case "text":
         instance.node = new Text();
