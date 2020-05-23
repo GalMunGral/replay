@@ -11,7 +11,7 @@ const router = Observable({
   updateHistorywithState(replace = false) {
     const { folder, id } = this;
     const path = id ? `/${folder}/${id}` : `/${folder}`;
-    document.title = `Mail - ${folder}`;
+    document.title = `Mail - ${folder.toUpperCase()}`;
     replace
       ? window.history.replaceState(null, "test", path)
       : window.history.pushState(null, "test", path);
