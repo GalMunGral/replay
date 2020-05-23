@@ -83,30 +83,36 @@ const Sidebar = (
           )
         ),
         MenuItem(
-          { collapsed },
-          (activated = folder === "trash"),
-          (style = {
-            background: self$.canDrop ? "var(--theme)" : "",
-            color: self$.canDrop ? "white" : "",
-          }),
-          (onclick = () => router$.navigate("/trash")),
-          (ondragenter = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            self$.canDrop = true;
-          }),
-          (ondragover = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }),
-          (ondragleave = () => {
-            self$.canDrop = false;
-          }),
-          (ondrop = () => {
-            deleteAll();
-            self$.canDrop = false;
-          }),
-          [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
+          {
+            collapsed,
+            activated: folder === "trash",
+            style: {
+              background: self$.canDrop ? "var(--theme)" : "",
+              color: self$.canDrop ? "white" : "",
+            },
+            onclick: () => router$.navigate("/trash"),
+            ondragenter: (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              self$.canDrop = true;
+            },
+            ondragover: (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            },
+            ondragleave: () => {
+              self$.canDrop = false;
+            },
+            ondrop: () => {
+              deleteAll();
+              self$.canDrop = false;
+            },
+          },
+          // prettier-ignore
+          [
+            MenuIcon((className = "fas fa-trash")), 
+            !collapsed && span("trash")
+          ]
         ),
       ]
     )
