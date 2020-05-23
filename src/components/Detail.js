@@ -47,10 +47,7 @@ const Detail = ({ folder, id }, { store$, router$ }) => {
   return (
     // use-transform
     Layout([
-      DetailToolbar(
-        (canDelete = folder !== "trash"),
-        (deleteMail = deleteMail)
-      ),
+      DetailToolbar({ canDelete: folder !== "trash", deleteMail }),
       Main([
         Header(subject),
         SenderInfo((innerHTML = senderInfo)),
