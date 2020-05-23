@@ -1,4 +1,5 @@
 import { withContext, Observable } from "lib";
+import SidebarDropZone from "./SidebarDropZone";
 import {
   Menu,
   EditorButton,
@@ -18,39 +19,14 @@ const iconMap = {
 const context = () => ({
   self$: Observable({
     hovered: false,
-    canDrop: false,
   }),
 });
 
 const Sidebar = (
   __,
-  {
-    self$,
-    editorPopup$,
-    sidebar$,
-    store$,
-    editor$,
-    selection$,
-    router$,
-    router$: { folder },
-  }
+  { self$, editorPopup$, sidebar$, editor$, router$, router$: { folder } }
 ) => {
   const collapsed = sidebar$.collapsed && !self$.hovered;
-
-  const deleteAll = () => {
-    store$.dispatch((dispatch) => {
-      setTimeout(() => {
-        dispatch({
-          type: store$.T.DELETE_SELECTED,
-          payload: {
-            folder,
-            selected: selection$.selected,
-          },
-        });
-        selection$.selected = new Set();
-      }, 200);
-    });
-  };
 
   return (
     // use-transform
@@ -83,38 +59,7 @@ const Sidebar = (
             ]
           )
         ),
-        MenuItem(
-          {
-            collapsed,
-            activated: folder === "trash",
-            style: {
-              background: self$.canDrop ? "var(--theme)" : "",
-              color: self$.canDrop ? "white" : "",
-            },
-            onclick: () => router$.navigate("/trash"),
-            ondragenter: (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              self$.canDrop = true;
-            },
-            ondragover: (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            },
-            ondragleave: () => {
-              self$.canDrop = false;
-            },
-            ondrop: () => {
-              deleteAll();
-              self$.canDrop = false;
-            },
-          },
-          // prettier-ignore
-          [
-            MenuIcon((className = "fas fa-trash")), 
-            !collapsed && span("trash")
-          ]
-        ),
+        SidebarDropZone({ collapsed, activated: folder === "trash" }),
       ]
     )
   );
