@@ -30,6 +30,7 @@ const Sidebar = (
     sidebar$,
     store$,
     editor$,
+    selection$,
     router$,
     router$: { folder },
   }
