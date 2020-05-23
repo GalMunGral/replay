@@ -35,7 +35,7 @@ const reducer = (state, action) => {
         ],
       };
     }
-    case Type.DELETE_SELECTED:
+    case Type.DELETE_SELECTED: {
       const { folder, selected } = action.payload;
       const selectedSet = new Set(selected);
       return {
@@ -46,13 +46,15 @@ const reducer = (state, action) => {
           ...state.trash,
         ],
       };
-    case Type.SEND:
+    }
+    case Type.SEND: {
       const message = action.payload;
       return {
         ...state,
         drafts: state.drafts.filter((item) => item.id !== message.id),
         sent: [message, ...state.sent],
       };
+    }
     default:
       return state;
   }
