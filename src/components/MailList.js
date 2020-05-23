@@ -59,7 +59,7 @@ const MailList = (
           store$.dispatch((dispatch) => {
             setTimeout(() => {
               dispatch({
-                type: store.T.DELETE,
+                type: store$.T.DELETE,
                 payload: { folder, id: mail.id },
               });
             }, 200);
