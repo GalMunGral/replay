@@ -16,8 +16,8 @@ const context = () => {
       dragState$.y = y;
     }, 32),
 
-    setIsDragging: (isDragging) => {
-      dragState$.isDragging = isDragging;
+    setIsDragging: (bool) => {
+      dragState$.isDragging = bool;
     },
   });
 
