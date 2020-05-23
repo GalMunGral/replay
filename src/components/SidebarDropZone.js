@@ -27,7 +27,9 @@ const SidebarDropZone = (
   };
 
   const eventListeners = {
-    onclick: () => router$.navigate("/trash"),
+    onclick: () => {
+      router$.navigate("/trash");
+    },
     ondragenter: (e) => {
       e.preventDefault();
       e.stopPropagation();
