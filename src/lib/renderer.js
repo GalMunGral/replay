@@ -87,7 +87,7 @@ function* reconcileChildren(parent, elements) {
   let lastIndex = -1;
 
   for (let [index, element] of elements.entries()) {
-    if (!element) element = ["comment", {}, "(slot)"];
+    if (!element) element = ["comment", {}, "[slot]"];
     const [type, props, children] = element;
     const key = props.key != null ? props.key : index;
 
