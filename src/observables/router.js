@@ -31,6 +31,8 @@ window.onpopstate = () => {
 };
 
 const initialPath = document.location.pathname;
-router$.redirect(initialPath === "/" ? "/inbox" : initialPath);
+router$.redirect(
+  /^inbox|sent|drafts|trash$/.test(initialPath) ? initialPath : "/inbox"
+);
 
 export default router$;
