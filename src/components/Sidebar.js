@@ -32,7 +32,7 @@ const Sidebar = (
   return (
     // use-transform
     Menu(
-      (collapsed = collapsed),
+      { collapsed },
       (onmouseenter = () => (self$.hovered = true)),
       (onmouseleave = () => (self$.hovered = false)),
       [
