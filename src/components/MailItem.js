@@ -23,23 +23,28 @@ const MailItem = ({
   eventListeners,
 }) =>
   // use-transform
-  ListItem((draggable = folder !== "trash"), { selected, ...eventListeners }, [
-    folder !== "trash" &&
-      Checkbox((checked = selected), (onchange = toggleItem)),
-    SenderInfo(senderName || senderEmail || "(no name)"),
-    Summary([
-      Title("" + format(subject, 30)),
-      Preheader((innerHTML = `&nbsp;&mdash;&nbsp;${format(content, 50)}`)),
-    ]),
-    folder !== "trash" &&
-      Actions([
-        IconButton(
-          (type = "trash"),
-          (onclick = deleteItem),
-          (onmousedown = (e) => e.stopPropagation()),
-          (onmouseup = (e) => e.stopPropagation())
-        ),
+  ListItem(
+    (draggable = folder !== "trash"),
+    { selected },
+    { ...eventListeners },
+    [
+      folder !== "trash" &&
+        Checkbox((checked = selected), (onchange = toggleItem)),
+      SenderInfo(senderName || senderEmail || "(no name)"),
+      Summary([
+        Title("" + format(subject, 30)),
+        Preheader((innerHTML = `&nbsp;&mdash;&nbsp;${format(content, 50)}`)),
       ]),
-  ]);
+      folder !== "trash" &&
+        Actions([
+          IconButton(
+            (type = "trash"),
+            (onclick = deleteItem),
+            (onmousedown = (e) => e.stopPropagation()),
+            (onmouseup = (e) => e.stopPropagation())
+          ),
+        ]),
+    ]
+  );
 
 export default MailItem;
