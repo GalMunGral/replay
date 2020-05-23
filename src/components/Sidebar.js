@@ -59,7 +59,7 @@ const Sidebar = (
       (onmouseleave = () => (self$.hovered = false)),
       [
         EditorButton(
-          (collapsed = collapsed),
+          { collapsed },
           (onclick = () => {
             if (!editorPopup$.open) {
               editor$.createDraft();
@@ -73,7 +73,7 @@ const Sidebar = (
         ),
         ...folders.map((_folder) =>
           MenuItem(
-            (collapsed = collapsed),
+            { collapsed },
             (activated = folder === _folder),
             (onclick = () => router$.navigate("/" + _folder)),
             [
