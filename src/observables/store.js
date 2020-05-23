@@ -58,7 +58,7 @@ const reducer = (state, action) => {
   }
 };
 
-const store = Observable({
+const store$ = Observable({
   state: {
     inbox: [],
     sent: [],
@@ -75,6 +75,9 @@ const store = Observable({
       // console.log(this.state);
     }
   },
+  getMail(folder, id) {
+    return this.state[folder].find((item) => item.id === id);
+  },
   getMails(folder, tab) {
     return folder === "inbox"
       ? this.state[folder].filter((it) => it.category === tab)
@@ -85,8 +88,8 @@ const store = Observable({
 fetch("/data.json")
   .then((res) => res.json())
   .then((data) => {
-    store.dispatch({
-      type: store.T.LOAD,
+    store$.dispatch({
+      type: store$.T.LOAD,
       payload: {
         folder: "inbox",
         data,
@@ -94,4 +97,4 @@ fetch("/data.json")
     });
   });
 
-export default store;
+export default store$;

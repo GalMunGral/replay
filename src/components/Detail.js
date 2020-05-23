@@ -1,5 +1,3 @@
-import store$ from "../observables/store";
-import router$ from "../observables/router";
 import Layout from "./Layout";
 import DetailToolbar from "./DetailToolbar";
 import {
@@ -10,10 +8,8 @@ import {
   Body,
 } from "../elements/Detail";
 
-const Detail = ({ folder, id }) => {
-  const { state: allMails } = store$;
-  const mail = allMails[folder].find((item) => item.id === id);
-
+const Detail = ({ folder, id }, { store$, router$ }) => {
+  const mail = store$.getMail(folder, id);
   if (!mail) {
     router$.redirect("/" + folder);
     return (
