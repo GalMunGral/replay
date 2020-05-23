@@ -15,6 +15,7 @@ function* renderComponent(instance, props) {
   } else {
     yield* renderCompositeComponent(instance, props);
   }
+
   instance.props = props;
   instance.dirty = false;
 }
