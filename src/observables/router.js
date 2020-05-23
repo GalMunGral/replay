@@ -1,6 +1,6 @@
 import { Observable } from "lib";
 
-const router = Observable({
+const router$ = Observable({
   folder: "",
   id: null,
   updateStateWithPath(path) {
@@ -27,10 +27,10 @@ const router = Observable({
 });
 
 window.onpopstate = () => {
-  router.updateStateWithPath(document.location.pathname);
+  router$.updateStateWithPath(document.location.pathname);
 };
 
 const initialPath = document.location.pathname;
-router.redirect(initialPath === "/" ? "/inbox" : initialPath);
+router$.redirect(initialPath === "/" ? "/inbox" : initialPath);
 
-export default router;
+export default router$;
