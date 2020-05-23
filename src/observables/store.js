@@ -61,13 +61,13 @@ const reducer = (state, action) => {
 };
 
 const store$ = Observable({
+  T: Type,
   state: {
     inbox: [],
     sent: [],
     drafts: [],
     trash: [],
   },
-  T: Type,
   dispatch(action) {
     if (typeof action === "function") {
       action(this.dispatch.bind(this));
