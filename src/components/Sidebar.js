@@ -10,6 +10,7 @@ import {
 } from "../elements/Sidebar";
 
 const folders = ["inbox", "sent", "drafts"];
+
 const iconMap = {
   inbox: "inbox",
   sent: "paper-plane",
