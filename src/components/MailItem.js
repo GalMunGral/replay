@@ -9,6 +9,11 @@ import {
   Actions,
 } from "../elements/MailItem";
 
+function format(s, length) {
+  if (!s) return "(empty)";
+  return s.length <= length ? s : s.slice(0, length) + "...";
+}
+
 const MailItem = ({
   mail: { senderName, senderEmail, subject, content },
   folder,
@@ -36,10 +41,5 @@ const MailItem = ({
         ),
       ]),
   ]);
-
-function format(s, length) {
-  if (!s) return "(empty)";
-  return s.length <= length ? s : s.slice(0, length) + "...";
-}
 
 export default MailItem;
