@@ -3,7 +3,6 @@ import { Observable } from "lib";
 const router = Observable({
   folder: "",
   id: null,
-
   updateStateWithPath(path) {
     const result = path.match(/^\/(?<folder>[\w-]+)(\/(?<id>[\w-]+))?/);
     this.folder = result.groups.folder;
