@@ -14,10 +14,10 @@ const MailboxToolbar = (
     selection$: { selected },
   }
 ) => {
+  const pageCount = Math.ceil(total / pageSize);
   pageEnd = Math.min(pageEnd, total);
 
   const nextPage = () => {
-    const pageCount = Math.ceil(total / pageSize);
     page$.index = Math.min(page$.index + 1, pageCount - 1);
   };
 
