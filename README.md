@@ -14,7 +14,8 @@ I wrote this project to formalize my intuition about React
   
 (defmacro user-box [user]
   (let [name (str (get user :first) " " (get user :last))]
-    `(fancy-box ("Name: " (name-box ~name)))))
+    `(fancy-box 
+      ("Name: " (name-box ~name)))))
 
 (user-box {:first "Wenqi" :last "He"})
 ```
