@@ -5,13 +5,14 @@ I wrote this project to formalize my intuition about React
 ```clojure
 (defn render [comp]
   (if (seq? comp)
-    ; functional component
+    ;; functional component
     (render (eval comp))
     (if (map? comp) 
-      ; host component
+      ;; host component
       (let [
         children (get comp :children)
         children (if (seq? children) (map render children) (render children))]
+         ;; render children
         (assoc comp :children children))
       comp)))
 
@@ -38,4 +39,5 @@ I wrote this project to formalize my intuition about React
 ;;        :children "Wenqi He"
 ;;      }
 ;;    )
-;;  }```
+;;  }
+```
