@@ -3,19 +3,22 @@ I wrote this project to formalize my intuition about React
 
 
 ```clojure
-(defmacro div [attrs children]
-   `{:tag "div" :attrs ~attrs :children '~(map macroexpand children)})
+(defn eval-children [children]
+  (map (fn [c] (if (seq? c) (eval c) c)) children))
+ 
+(defn div [attrs children]
+   {:tag "div" :attrs attrs :children (eval-children children)})
    
-(defmacro name-box [name]
-  `(div {:font-weight "bold"} (~name)))
+(defn name-box [name]
+  (div {:font-weight "bold"} `(~name)))
   
-(defmacro fancy-box [children]
-  `(div {:border-style "1px solid blue"} ~children))
+(defn fancy-box [children]
+  (div {:border-style "1px solid blue"} children))
   
-(defmacro user-box [user]
+(defn user-box [user]
   (let [name (str (get user :first) " " (get user :last))]
-    `(fancy-box 
-      ("Name: " (name-box ~name)))))
-
-(user-box {:first "Wenqi" :last "He"})
+    (fancy-box `("Name: " (name-box ~name)))))
+    
+(let [me {:first "Wenqi" :last "He"}]
+  (user-box me))
 ```
