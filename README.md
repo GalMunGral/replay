@@ -3,6 +3,18 @@ I wrote this project to formalize my intuition about React
 
 
 ```clojure
+(defn render [comp]
+  (if (seq? comp)
+    ; functional component
+    (render (eval comp))
+    (if (map? comp) 
+      ; host component
+      (let [
+        children (get comp :children)
+        children (if (seq? children) (map render children) (render children))]
+        (assoc comp :children children))
+      comp)))
+
 (defn name-box [name]
   {:font-weight "bold" :children name})
   
@@ -13,18 +25,17 @@ I wrote this project to formalize my intuition about React
   (let [name (str (get user :first) " " (get user :last))]
     `(fancy-box `("Name: " (name-box ~~name)))))
 
-(defn render [comp]
-  (println "HE" comp)
-  (if (seq? comp)
-    (render (eval comp))
-    (if (map? comp)
-      (let [
-        children (get comp :children)
-        rendered (if (seq? children) (map render children) (render children))]
-        (assoc comp :children rendered))
-      comp)))
-
-
-(def user {:first "Wenqi" :last "He"})
-(render (user-box user))
+(let [user {:first "Wenqi" :last "He"}]
+  (render (user-box user)))
+;;Output:
+;;  {
+;;    :border-style "1px solid blue",
+;;    :children (
+;;      "Name: "
+;;      {
+;;        :font-weight "bold",
+;;        :children "Wenqi He"
+;;      }
+;;    )
+;;  }
 ```
