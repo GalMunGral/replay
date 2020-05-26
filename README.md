@@ -27,6 +27,7 @@ I wrote this project to formalize my intuition about React
 
 (let [user {:first "Wenqi" :last "He"}]
   (render (user-box user)))
+
 ;;Output:
 ;;  {
 ;;    :border-style "1px solid blue",
@@ -37,5 +38,4 @@ I wrote this project to formalize my intuition about React
 ;;        :children "Wenqi He"
 ;;      }
 ;;    )
-;;  }
-```
+;;  }```
