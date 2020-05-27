@@ -1,8 +1,29 @@
 # Actre
 
-I wrote this project to formalize my intuition about React
+I wrote this project to formalize my intuition about React. The basic idea is to construct UI as composition of _expressions_ derived from state (i.e. FP) as opposed to _entities_ that hold state (i.e. OOP).
+
+![equation](<https://latex.codecogs.com/svg.latex?View^n_i({\bf%20Args}^n_i,%20{\bf%20Free}^n_i)%20=%20\Big{%20View^{n+1}_j\big({\bf%20Args}^{n+1}_j,{\bf%20Free}^n_i%20%20\cup%20%20{\bf%20Free}^{n+1}_j%20\big)%20\Big}>)
+
+Another core idea is that each invocation of the same component function creates sdf
+if we view component instance identity and stack frames.
+React Fiber [this article](https://github.com/acdlite/react-fiber-architecture) on and [this article](https://github.com/reactjs/react-basic)).
+
+Here are some of the important fields that belong to a fiber. (This list is not exhaustive.)
+
+However to express the idea more clearly there are two missing ingredients that's missing in JavaScript: **normal-order evaluation** and **dynamic scope**.
 
 ```clojure
+(defn name-box [name]
+  {:font-weight "bold" :label-content name})
+
+(defn fancy-box [children]
+  {:border-style "1px solid blue" :children children})
+
+(defn user-box [user]
+  (let [name (str (get user :first-name) " " (get user :last-name))]
+    `(fancy-box ["Name: "
+                 `(name-box ~~name)])))
+
 (defn render [comp]
   (if (seq? comp)
     ; functional component
@@ -16,17 +37,6 @@ I wrote this project to formalize my intuition about React
           (assoc comp :children rendered))
         comp)
       comp)))
-
-(defn name-box [name]
-  {:font-weight "bold" :label-content name})
-
-(defn fancy-box [children]
-  {:border-style "1px solid blue" :children children})
-
-(defn user-box [user]
-  (let [name (str (get user :first-name) " " (get user :last-name))]
-    `(fancy-box ["Name: "
-                 `(name-box ~~name)])))
 
 (let [user {:first-name "Wenqi" :last-name "He"}]
   (render (user-box user)))
@@ -42,56 +52,4 @@ I wrote this project to formalize my intuition about React
 ;;      }
 ;;    )
 ;;  }
-```
-
-```js
-function render(comp) {
-  if (typeof comp == "function") {
-    return render(comp());
-  } else if (typeof comp == "object") {
-    if (comp.children) {
-      if (Array.isArray(comp.children)) {
-        comp.children = comp.children.map(render);
-      } else {
-        comp.children = render(comp.children);
-      }
-    }
-    return comp;
-  } else {
-    return comp;
-  }
-}
-
-function NameBox(name) {
-  return { fontWeight: "bold", labelContent: name };
-}
-
-function FancyBox(children) {
-  return {
-    borderStyle: "1px solid blue",
-    children: children,
-  };
-}
-
-function UserBox(user) {
-  return FancyBox.bind(null, [
-    "Name: ",
-    NameBox.bind(null, user.firstName + " " + user.lastName),
-  ]);
-}
-
-const user = { firstName: "Wenqi", lastName: "He" };
-render(UserBox(user));
-
-// Output:
-// {
-//   borderStyle: '1px solid blue',
-//   children: [
-//     'Name: ',
-//     {
-//       fontWeight: 'bold',
-//       labelContent: 'Wenqi He'
-//     }
-//   ]
-// }
 ```
