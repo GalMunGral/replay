@@ -8,6 +8,7 @@ My variation of this model can be summarized as follows: A component depends on 
 
 ### Sample Code
 ```js
+// src/components/Editorjs
 import IconButton from "../components/IconButton";
 import Space from "../components/Space";
 import EditorInput from "../components/EditorInput";
