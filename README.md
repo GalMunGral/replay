@@ -1,12 +1,13 @@
 # Actre
 
-This project is highly inspired by React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP).
-
-My main idea could be expressed formally (perhaps not very rigorously) as:
+This project is highly inspired by React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP). The model can be summarized as follows: Each component depends solely on its arguments and context, and evaluates to a sequence of child components. The arguments to each child component is derived from the arguments passed to the parent as well as the parent's context. The local variables taht the child component introduces, along with the parent's existing context, comprises the child's context. This could be expressed a bit more formally as:
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\}),
 
-that is, a component depends on two sources of information: arguments and context, the latter of which is a combination of the local variables it introduces and the parent context.
+
+There are two implications of this model.
+
+### Normal order evaluation
 
 Another core idea is that each invocation of the same component function creates 
 
