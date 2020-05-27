@@ -1,6 +1,6 @@
 # Actre
-I wrote this project to formalize my intuition about React
 
+I wrote this project to formalize my intuition about React
 
 ```clojure
 (defn render [comp]
@@ -9,14 +9,16 @@ I wrote this project to formalize my intuition about React
     (render (eval comp))
     (if (map? comp)
       ; host component
-      (let [children (get comp :children)
-            rendered (if (vector? children)
-                       (map render children) (render children))]
-        (assoc comp :children rendered))
+      (if (contains? comp :children)
+        (let [children (get comp :children)
+              rendered (if (vector? children)
+                         (map render children) (render children))]
+          (assoc comp :children rendered))
+        comp)
       comp)))
 
 (defn name-box [name]
-  {:font-weight "bold" :children name})
+  {:font-weight "bold" :label-content name})
 
 (defn fancy-box [children]
   {:border-style "1px solid blue" :children children})
@@ -29,7 +31,6 @@ I wrote this project to formalize my intuition about React
 (let [user {:first-name "Wenqi" :last-name "He"}]
   (render (user-box user)))
 
-
 ;;  Output:
 ;;  {
 ;;    :border-style "1px solid blue",
@@ -37,7 +38,7 @@ I wrote this project to formalize my intuition about React
 ;;      "Name: "
 ;;      {
 ;;        :font-weight "bold",
-;;        :children "Wenqi He"
+;;        :label-content "Wenqi He"
 ;;      }
 ;;    )
 ;;  }
@@ -81,4 +82,16 @@ function UserBox(user) {
 
 const user = { firstName: "Wenqi", lastName: "He" };
 render(UserBox(user));
+
+// Output:
+// {
+//   borderStyle: '1px solid blue',
+//   children: [
+//     'Name: ',
+//     {
+//       fontWeight: 'bold',
+//       labelContent: 'Wenqi He'
+//     }
+//   ]
+// }
 ```
