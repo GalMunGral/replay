@@ -10,10 +10,14 @@ My variation of this model can be summarized as follows: A component depends on 
 
 Translated to JavaScript:
 ```js
+const Component = ({ ...args}, { ...vars }) => [/* Child Components */];
+```
+Example:
+```js
 // Child.js
 const Child = ({ text, onclick }, { color }) =>
   // use-transform
-  p({ style: { color }, onclick }, text);
+  [p({ style: { color }, onclick }, text)];
 
 export default Child;
 ```
@@ -29,9 +33,12 @@ const context = () => ({
 
 const Parent = ({ onclick }, { className }) => 
   // use-transform
-  div({ className }, [
-    Child({ text: 'Hello', onclick });
-  ]);
+  [
+    h1('Exmaple'),
+    div({ className }, [
+      Child({ text: 'Hello', onclick });
+    ])
+  ]
 
 export default withContext(context)(Parent);
 ```
