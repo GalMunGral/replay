@@ -4,15 +4,15 @@ I wrote this project to formalize my intuition about React
 
 ```clojure
 (defn render [comp]
-  (println comp "\n")
   (if (seq? comp)
     ; functional component
     (render (eval comp))
     (if (map? comp)
       ; host component
       (let [children (get comp :children)
-            children (if (vector? children) (map render children) (render children))]
-        (assoc comp :children children))
+            rendered (if (vector? children)
+                       (map render children) (render children))]
+        (assoc comp :children rendered))
       comp)))
 
 (defn name-box [name]
@@ -28,6 +28,7 @@ I wrote this project to formalize my intuition about React
 
 (let [user {:first "Wenqi" :last "He"}]
   (render (user-box user)))
+
 
 ;;  Output:
 ;;  {
