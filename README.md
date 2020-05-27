@@ -2,7 +2,7 @@
 
 I wrote this project to formalize my intuition about React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP). 
 
-![equation](https://latex.codecogs.com/svg.latex?View^n_i({\bf%20Args}^n_i,%20{\bf%20Free}^n_i)%20=%20\Big\\{%20View^{n+1}_j\big({\bf%20Args}^{n+1}_j,{\bf%20Free}^n_i%20%20\cup%20%20{\bf%20Free}^{n+1}_j%20\big)%20\Big\\})
+![equation](https://latex.codecogs.com/svg.latex?View^n_i({\bf%20args}^n_i,%20{\bf%20free}^n_i)%20=%20\Big\\{%20View^{n+1}_j\big({\bf%20args}^{n+1}_j,{\bf%20free}^n_i%20%20\cup%20%20{\bf%20free}^{n+1}_j%20\big)%20\Big\\})
 
 
 Another core idea is that each invocation of the same component function creates sdf
