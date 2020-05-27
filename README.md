@@ -28,7 +28,7 @@ const context = () => ({
 
 const Parent = ({ onclick }, { className }) => 
   // use-transform
-  Container({ className }, [
+  div({ className }, [
     Child({ text: 'Hello', onclick });
   ]);
 
