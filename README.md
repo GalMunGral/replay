@@ -19,7 +19,7 @@ export default Child;
 ```
 ```js
 // Parent.js
-import withContext from 'lib';
+import { withContext } from 'lib';
 import Child from './Child';
 
 const context = () => ({
