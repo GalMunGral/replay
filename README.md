@@ -22,11 +22,11 @@ I wrote this project to formalize my intuition about React
   {:border-style "1px solid blue" :children children})
 
 (defn user-box [user]
-  (let [name (str (get user :first) " " (get user :last))]
+  (let [name (str (get user :first-name) " " (get user :last-name))]
     `(fancy-box ["Name: "
                  `(name-box ~~name)])))
 
-(let [user {:first "Wenqi" :last "He"}]
+(let [user {:first-name "Wenqi" :last-name "He"}]
   (render (user-box user)))
 
 
