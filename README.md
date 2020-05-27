@@ -2,7 +2,7 @@
 
 This project is highly inspired by React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP). Using this model, there is no explicit *construction* of component instances; Rather, an instance corresponds to an *invocation* of the component function, which is reified as a *stack frame*.
 
-My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to (the evaluation of) a sequence of child components. The arguments to each child component is derived solely from the parent's arguments and context. Each child extend its parent's context with its own local variables. This could be expressed a bit more formally as:
+My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to (the evaluation of) a sequence of child components. The arguments to each child component is derived solely from the parent's arguments and context. The context for each child is formed by extending its parent's context with its own local variables. This could be expressed a bit more formally as:
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\}),
 
