@@ -8,30 +8,28 @@ I wrote this project to formalize my intuition about React
   (if (seq? comp)
     ; functional component
     (render (eval comp))
-    (if (map? comp) 
+    (if (map? comp)
       ; host component
-      (let [
-        children (get comp :children)
-        children (if (vector? children) (map render children) (render children))]
+      (let [children (get comp :children)
+            children (if (vector? children) (map render children) (render children))]
         (assoc comp :children children))
       comp)))
 
 (defn name-box [name]
   {:font-weight "bold" :children name})
-  
+
 (defn fancy-box [children]
   {:border-style "1px solid blue" :children children})
-  
+
 (defn user-box [user]
   (let [name (str (get user :first) " " (get user :last))]
-    `(fancy-box [
-      "Name: "
-      `(name-box ~~name)])))
+    `(fancy-box ["Name: "
+                 `(name-box ~~name)])))
 
 (let [user {:first "Wenqi" :last "He"}]
   (render (user-box user)))
 
-;;Output:
+;;  Output:
 ;;  {
 ;;    :border-style "1px solid blue",
 ;;    :children (
