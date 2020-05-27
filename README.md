@@ -1,16 +1,17 @@
 # Actre
 
-I wrote this project to formalize my intuition about React. The basic idea is to construct UI as composition of _expressions_ derived from state (i.e. FP) as opposed to _entities_ that hold state (i.e. OOP).
+I wrote this project to formalize my intuition about React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP). 
 
-![equation](<https://latex.codecogs.com/svg.latex?View^n_i({\bf%20Args}^n_i,%20{\bf%20Free}^n_i)%20=%20\Big{%20View^{n+1}_j\big({\bf%20Args}^{n+1}_j,{\bf%20Free}^n_i%20%20\cup%20%20{\bf%20Free}^{n+1}_j%20\big)%20\Big}>)
-
+![equation](https://latex.codecogs.com/svg.latex?View^n_i({\bf%20Args}^n_i,%20{\bf%20Free}^n_i)%20=%20\Big\\{%20View^{n+1}_j\big({\bf%20Args}^{n+1}_j,{\bf%20Free}^n_i%20%20\cup%20%20{\bf%20Free}^{n+1}_j%20\big)%20\Big\\})
+s
 Another core idea is that each invocation of the same component function creates sdf
 if we view component instance identity and stack frames.
-React Fiber [this article](https://github.com/acdlite/react-fiber-architecture) on and [this article](https://github.com/reactjs/react-basic)).
+ React Fiber [this article](https://github.com/acdlite/react-fiber-architecture) on and [this article](https://github.com/reactjs/react-basic)).
+
 
 Here are some of the important fields that belong to a fiber. (This list is not exhaustive.)
 
-However to express the idea more clearly there are two missing ingredients that's missing in JavaScript: **normal-order evaluation** and **dynamic scope**.
+However to express the idea more clearly there are two missing ingredients that's missing in JavaScript:  **normal-order evaluation** and **dynamic scope**.
 
 ```clojure
 (defn name-box [name]
