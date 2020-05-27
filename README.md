@@ -26,7 +26,7 @@ export default Child;
 import { withContext } from 'lib';
 import Child from './Child';
 
-const context = () => ({
+const local = () => ({
   color: '#4285f4',
   className: 'fancy'
 });
@@ -40,7 +40,7 @@ const Parent = ({ onclick }, { className }) =>
     ])
   ]
 
-export default withContext(context)(Parent);
+export default withContext(local)(Parent);
 ```
 
 There are two implications of this model.
