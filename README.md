@@ -6,6 +6,77 @@ My variation of this model can be summarized as follows: A component depends on 
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\}),
 
+### Sample Code
+```js
+import IconButton from "../components/IconButton";
+import Space from "../components/Space";
+import EditorInput from "../components/EditorInput";
+import {
+  Window,
+  Header,
+  CloseButton,
+  Body,
+  TextArea,
+  ButtonGroup,
+  SendButton,
+} from "../elements/Editor";
+
+const Editor = (__, { editorPopup$, editor$ }) => {
+  const { minimized } = editorPopup$;
+  const { recipientEmail, subject, content } = editor$;
+
+  if (!editorPopup$.open) return [null];
+
+  return (
+    // use-transform
+    Window([
+      Header((onclick = () => (editorPopup$.minimized = !minimized)), [
+        span("New Message"),
+        CloseButton(
+          (onclick = () => {
+            editor$.saveDraft();
+            editorPopup$.open = false;
+          }),
+          [i((className = "fas fa-times"))]
+        ),
+      ]),
+      Body({ minimized }, [
+        EditorInput(
+          (label = "To:"),
+          (placeholder = "Recipient"),
+          (value = recipientEmail),
+          (setValue = (v) => (editor$.recipientEmail = v))
+        ),
+        EditorInput(
+          (label = "Subject:"),
+          (placeholder = "Subject"),
+          (value = subject),
+          (setValue = (v) => (editor$.subject = v))
+        ),
+        TextArea(
+          (value = content),
+          (oninput = (e) => editor$.updateHistory(e.target.value))
+        ),
+        ButtonGroup([
+          SendButton(
+            (onclick = () => {
+              editor$.send();
+              editorPopup$.open = false;
+            }),
+            "Send"
+          ),
+          IconButton((type = "undo"), (onclick = () => editor$.undo())),
+          IconButton((type = "redo"), (onclick = () => editor$.redo())),
+          Space(),
+        ]),
+      ]),
+    ])
+  );
+};
+
+export default Editor;
+
+```
 
 There are two implications of this model.
 
