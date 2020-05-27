@@ -31,6 +31,7 @@ const Parent = ({ onclick }, { className }) =>
   Container({ className }, [
     Child({ text: 'Hello', onclick });
   ]);
+
 export default withContext(context)(Parent);
 ```
 
