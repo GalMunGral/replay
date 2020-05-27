@@ -1,81 +1,37 @@
 # Actre
 
-This project is highly inspired by React. The basic idea is to construct UI as composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that hold state (i.e. OOP). Using this model, there is no explicit *construction* of component instances; Rather, an instance corresponds to an *invocation* of the component function, which is reified as a *stack frame*.
+This project is highly inspired by React.
 
-My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to (the evaluation of) a sequence of child components. The arguments to each child component is derived solely from the parent's arguments and context, and the context for each child is formed by extending its parent's context with its own local variables. This could be expressed a bit more formally as:
+The basic idea is to create UI as a composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames*.
+
+My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, and the context for each child is constructed by extending its parent's context with its own local variables. Expressed a bit more formally:
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\}),
 
-### Sample Code
+Translated to JavaScript:
 ```js
-// src/components/Editor.js
-import IconButton from "./IconButton";
-import Space from "./Space";
-import EditorInput from "./EditorInput";
-import {
-  Window,
-  Header,
-  CloseButton,
-  Body,
-  TextArea,
-  ButtonGroup,
-  SendButton,
-} from "../elements/Editor";
+// Child.js
+const Child = ({ text, onclick }, { color }) =>
+  // use-transform
+  p({ style: { color }, onclick }, text);
 
-const Editor = (__, { editorPopup$, editor$ }) => {
-  const { minimized } = editorPopup$;
-  const { recipientEmail, subject, content } = editor$;
+export default Child;
+```
+```js
+// Parent.js
+import Child from './Child';
 
-  if (!editorPopup$.open) return [null];
+const context = () => ({
+  color: '#4285f4',
+  className: 'fancy'
+});
 
-  return (
-    // use-transform
-    Window([
-      Header((onclick = () => (editorPopup$.minimized = !minimized)), [
-        span("New Message"),
-        CloseButton(
-          (onclick = () => {
-            editor$.saveDraft();
-            editorPopup$.open = false;
-          }),
-          [i((className = "fas fa-times"))]
-        ),
-      ]),
-      Body({ minimized }, [
-        EditorInput(
-          (label = "To:"),
-          (placeholder = "Recipient"),
-          (value = recipientEmail),
-          (setValue = (v) => (editor$.recipientEmail = v))
-        ),
-        EditorInput(
-          (label = "Subject:"),
-          (placeholder = "Subject"),
-          (value = subject),
-          (setValue = (v) => (editor$.subject = v))
-        ),
-        TextArea(
-          (value = content),
-          (oninput = (e) => editor$.updateHistory(e.target.value))
-        ),
-        ButtonGroup([
-          SendButton(
-            (onclick = () => {
-              editor$.send();
-              editorPopup$.open = false;
-            }),
-            "Send"
-          ),
-          IconButton((type = "undo"), (onclick = () => editor$.undo())),
-          IconButton((type = "redo"), (onclick = () => editor$.redo())),
-          Space(),
-        ]),
-      ]),
-    ])
-  );
-};
-
-export default Editor;
+const Parent = ({ onclick }, { className }) => 
+  // use-transform
+  Container({ className }, [
+    Child({ text: 'Hello', onclick });
+  ]);
+export default withContext(context)(Parent);
 ```
 
 There are two implications of this model.
