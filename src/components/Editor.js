@@ -1,6 +1,6 @@
-import IconButton from "../components/IconButton";
-import Space from "../components/Space";
-import EditorInput from "../components/EditorInput";
+import IconButton from "./IconButton";
+import Space from "./Space";
+import EditorInput from "./EditorInput";
 import {
   Window,
   Header,

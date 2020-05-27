@@ -9,9 +9,9 @@ My variation of this model can be summarized as follows: A component depends on 
 ### Sample Code
 ```js
 // src/components/Editor.js
-import IconButton from "../components/IconButton";
-import Space from "../components/Space";
-import EditorInput from "../components/EditorInput";
+import IconButton from "./IconButton";
+import Space from "./Space";
+import EditorInput from "./EditorInput";
 import {
   Window,
   Header,
@@ -76,7 +76,6 @@ const Editor = (__, { editorPopup$, editor$ }) => {
 };
 
 export default Editor;
-
 ```
 
 There are two implications of this model.
