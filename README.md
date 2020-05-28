@@ -77,7 +77,7 @@ Parent, div
 ```
 which is not what we want.
 ## Metaprogramming
-In a [homoiconic language](https://en.wikipedia.org/wiki/Homoiconicity) such as Lisp, we could easily simulate normal-order evaluation with [quoting](https://clojure.org/guides/learn/syntax#_delaying_evaluation_with_quoting). To illustrate what I mean, here is my adaptation of a snippet from [this article](https://github.com/reactjs/react-basic) in Clojure:
+In a [homoiconic language](https://en.wikipedia.org/wiki/Homoiconicity) such as Lisp, one could easily simulate normal-order evaluation with [quoting](https://clojure.org/guides/learn/syntax#_delaying_evaluation_with_quoting). To illustrate what I mean, here is my adaptation of a snippet from [this article](https://github.com/reactjs/react-basic) in Clojure:
 
 ```clojure
 (defn name-box [name]
