@@ -25,7 +25,7 @@ export default withContext(bindings)(Component);
 ```
 
 ## Lazy (Normal-Order) Evaluation of Functions
-The aforementioned equivalence of  the view tree and the tree of virtual stack frames relies on a subtle premise that functions calls are evaluated in [**normal order**](https://mitpress.mit.edu/sites/default/files/sicp/full-text/sicp/book/node85.html). In *normal-order evaluation*, expressions are reduced *from the outside in* &mdash; that is, operators/functions are evaluated before operands/arguments &mdash; whereas in *applicative-order* evaluation, it is the opposite. JavaScript, as the majority of programming languages, uses applicative order. Consider this example code:
+The aforementioned equivalence of  the view tree and the tree of virtual stack frames relies on a subtle premise that functions calls are evaluated in [**normal order**](https://mitpress.mit.edu/sites/default/files/sicp/full-text/sicp/book/node85.html). In *normal-order* evaluation, expressions are reduced *from the outside in* &mdash; that is, operators/functions are evaluated before operands/arguments &mdash; whereas in *applicative-order* evaluation, it is the opposite. JavaScript, as the majority of programming languages, uses applicative order. Consider this example code:
 ```js
 // Child.js
 const Child = ({ text, onclick }, { color }) =>
