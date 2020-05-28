@@ -183,12 +183,14 @@ const InvisibleRedButton = decor(RedButton)`
 This is inspired by styled-components. The name refers to the fact it "decorates" the component both in the sense that it creates a higher-order function that enhances the wrapped
 component function, and in the sense that it applies styles to the wrapped component.
 
-## Scheduling
+## Implementation Details: Scheduling
 Internally, there are three levels of scheduling:
 ### Batch Updates 
-The setters of `Observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed at end of current event loop tick (using `queueMicrotask`). The update queue is actually a `Set`, so each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
+The setters of `Observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed *at the end of current event loop tick/iteration (i.e. after current task/macrotask)*. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
 ### Priority Queue
-All render requests submitted are handled by the `scheduler` module, which queues pending tasks in a priority queue based on node depth &mdash; specifically, the ones closer to the root are always rendered first. This was designed to prevent the following bug: Imagine a component uses a dynamic variable `a` from its context, and also takes an argument `b`, which is derived from `a`, from its parent. Now if `a` is updated and the child is updated before it's ancestors, it will get the latest value of `a` and a now invalid value of `b` that's computed from the original value of `a`.
+All render requests submitted are handled by the `scheduler` module, which queues pending tasks in a *priority queue based on node depth* &mdash; specifically, the ones closer to the root are always rendered first. This was designed to prevent the following scenario: Imagine a component uses a dynamic variable `a` declared by an ancestor, and it also takes an argument `b`, which is derived from `a`, from its parent. Now if `a` is updated and the child is updated before its parent, it will use the latest value of `a` but a value of `b` that's computed from the original value of `a` &mdash; this would be an error.
+### Effect List
+All side effects
 
 ## Sample file from the demo project
 ```js
