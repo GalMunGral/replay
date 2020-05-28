@@ -24,7 +24,53 @@ const Component = ({ ...args}, { ...vars }) => [/* Child Components */];
 export default withContext(bindings)(Component);
 ```
 
-## Normal-Order Evaluation
+## Lazy (Normal-Order) Evaluation of Functions
+The aforementioned equivalence of  the view tree and the stack frame tree (of component functions) relies on a subtle premise that functions calls are evaluated in [**normal order**](https://mitpress.mit.edu/sites/default/files/sicp/full-text/sicp/book/node85.html). In normal-order evaluation, expressions are reduced from the outside in &mdash; that is, operators/functions are evaluated before operands/arguments &mdash; whereas in *applicative order* evaluation, it is the opposite. JavaScript, as the majority of programming languages, uses applicative order. Consider this example code:
+```js
+// Child.js
+const Child = ({ text, onclick }, { color }) =>
+  // use-transform
+  [p({ style: { color }, onclick }, text)];
+
+export default Child;
+```
+```js
+// Parent.js
+import { withContext } from 'lib';
+import Child from './Child';
+
+const local = () => ({
+  color: '#4285f4',
+  className: 'fancy'
+});
+
+const Parent = ({ onclick }, { className }) => 
+  // use-transform
+  [
+    h1('Exmaple'),
+    div({ className }, [
+      Child({ text: 'Hello', onclick });
+    ])
+  ]
+
+export default withContext(local)(Parent);
+```
+Using normal-order evaluation, the history of call stack would look like this (assuming that `div` calls `Child` internally):
+```js
+Parent
+Parent, h1
+Parent, div
+Parent, div, Child 
+Parent, div, Child p
+```
+Whereas in JavaScript, the actual order is:
+```js
+Parent
+Parent, h1
+Parent, Child
+Parent, Child, p
+Parent, div
+```
 
 Here is my rewrite in Clojure of a snippet from [this article](https://github.com/reactjs/react-basic) about the conceptual model of React
 
@@ -70,33 +116,4 @@ Here is my rewrite in Clojure of a snippet from [this article](https://github.co
 ;;  }
 ```
 ## Example
-```js
-// Child.js
-const Child = ({ text, onclick }, { color }) =>
-  // use-transform
-  [p({ style: { color }, onclick }, text)];
-
-export default Child;
-```
-```js
-// Parent.js
-import { withContext } from 'lib';
-import Child from './Child';
-
-const local = () => ({
-  color: '#4285f4',
-  className: 'fancy'
-});
-
-const Parent = ({ onclick }, { className }) => 
-  // use-transform
-  [
-    h1('Exmaple'),
-    div({ className }, [
-      Child({ text: 'Hello', onclick });
-    ])
-  ]
-
-export default withContext(local)(Parent);
-```
 
