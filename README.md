@@ -152,7 +152,40 @@ const Component = () =>
   ];
 ```
 
-Finally, some sample code from the demo project:
+## Auxiliary Modules
+### Observable: Reactivity
+```js
+const bindings = () =>  ({
+  Observable({
+    count: 10
+  })
+});
+
+const App = withContext(bindings)(
+  () => /* ... */
+);
+```
+The `Observable` function takes an object and converts each property into a getter/setter pair. The getter registers the *stack frames (instances)* of the calling component functions as dependents (observers), while the setter schedules re-renders starting from those observing frames.
+
+### Decorator: Styling
+```js
+import { decor } from "lib";
+
+const RedButton = decor.button`
+  background: red;
+`;
+
+const InvisibleRedButton = decor(RedButton)`
+  visibility: hidden;
+`;
+```
+This is inspired by styled-components. The name refers to the fact it "decorates" the component both in the sense that it creates a higher-order function that enhances the wrapped
+component function, and in the sense that it applies styles to the wrapped component.
+
+## Implementation Details
+
+
+## Sample file from the demo project
 ```js
 import IconButton from "./IconButton";
 import Space from "./Space";
