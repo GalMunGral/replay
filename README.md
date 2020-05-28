@@ -10,7 +10,7 @@ My formulation of this kind of model can be summarized as follows: A component d
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\})
 
-Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects. To introduce dynamically-scoped local varaibles, define a function that returns the initialized local bindings as an object, and when a component function is invoked, this binding object will be passed as the second argument.
+Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects. To introduce dynamically-scoped local varaibles, define a function that returns the initialized local bindings as an object, which will be passed as the second argument when the component function is invoked.
 
 ```js
 import { withContext } from 'lib';
