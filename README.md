@@ -2,7 +2,9 @@
 
 This project is highly inspired by React.
 
-The basic idea is to create UI as a composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames (i.e. activation records)*. Just like how a generator need its stack frames to be retained so that its execution could be paused and resumed,our component are "spcecial" functions whose stack frames also need to be retained so that they could be re-executed (i.e. re-rendering). Thus we need to manually manage a tree of *simulated stack frames* that also functions as the *view tree*. In React, these frame are called ["fibers"](https://github.com/acdlite/react-fiber-architecture).
+The basic idea is to create UI as a composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames (i.e. activation records)*.
+
+Just like how a generator need its stack frames to be retained so that its execution could be paused and resumed,our component are "spcecial" functions whose stack frames also need to be retained so that they could be re-executed (i.e. re-rendering). Thus we need to manually manage a tree of *simulated stack frames* that also functions as the *view tree*. In React, these frame are called ["fibers"](https://github.com/acdlite/react-fiber-architecture).
 
 My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, and the context for each child is constructed by extending its parent's context with its own local variables (i.e. *dynamic scoping*). Expressed a bit more formally:
 
