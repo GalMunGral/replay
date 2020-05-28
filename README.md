@@ -14,7 +14,7 @@ Translated to JavaScript:
 ```js
 const Component = ({ ...args}, { ...vars }) => [/* Child Components */];
 ```
-Here, `{ ... args }` are the passed arguments, while `{ ...vars }` are **dynamically-scoped** free variables read from the context. Since JavaScript only supports lexical scope, the dynamic scope chains are simulated using prototype chains built on top of the above-mentioned virtual stack frames. And then these simulated dynamic variables
+Here, `{ ... args }` are the passed arguments, while `{ ...vars }` are **dynamically-scoped** free variables read from the context. Since JavaScript only supports static/lexical scope, dynamic scope chains are simulated using prototype chains built on top of the above-mentioned virtual stack frames. Finally these variables needs to be passed in explicitly as well.
 
 ## Example
 ```js
