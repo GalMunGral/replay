@@ -13,7 +13,7 @@ My formulation of this kind of model can be summarized as follows: A component d
 
 Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
 
-To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument.
+To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
 
 ```js
 import { withContext } from 'lib';
@@ -23,8 +23,6 @@ const Component = ({ ...args}, { ...vars }) => [/* Child Components */];
 
 export default withContext(bindings)(Component);
 ```
-
-There are two implications of this model.
 
 ## Normal-Order Evaluation
 
