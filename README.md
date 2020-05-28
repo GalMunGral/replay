@@ -75,7 +75,7 @@ Parent, div
 ```
 which is not what we want.
 ## Metaprogramming
-Here is my rewrite in Clojure of a snippet from [this article](https://github.com/reactjs/react-basic) about the conceptual model of React
+In a [homoiconic language](https://en.wikipedia.org/wiki/Homoiconicity) such as Lisp, we could easily simulate normal-order evaluation with [quoting](https://clojure.org/guides/learn/syntax#_delaying_evaluation_with_quoting). To illustrate this, here is my adaptation of a snippet from [this article](https://github.com/reactjs/react-basic) in Clojure:
 
 ```clojure
 (defn name-box [name]
@@ -118,5 +118,106 @@ Here is my rewrite in Clojure of a snippet from [this article](https://github.co
 ;;    )
 ;;  }
 ```
-## Example
+Obviously JavaScript doesn't represent code as data within the language itself, but we could always create our own representations &mdash; this is how I see React elements. In my own implementation, I used arrays instead of objects with string keys so that it is possible to write readable code without resorting to a DSL that requires transpilation (read: JSX):
+```js
+[type, { ...props }, [...children]] // suspended evaluation
 
+// evaluates to
+type({ ...props, children: [...children] }); // immediate evaluation
+```
+## Syntactic Sugar
+To provide better readability, you can my `babel-plugin-transform-elements` which allows you to express the same idea more clearly:
+
+```js
+const Component = () =>
+  // use-transform
+  Container(
+    id="container"
+    className="fancy",
+    [
+      Box(id="box", "Hello World")
+    ]);
+
+// transpiles to
+const Component = () => 
+  [
+    [Container, {
+      id: "container",
+      className:"fancy",
+      children: [
+        [Box, { id: "box", children: "Hello World" }]
+      ]
+    }]
+  ];
+```
+
+Finally, some real sample code:
+```js
+import IconButton from "./IconButton";
+import Space from "./Space";
+import EditorInput from "./EditorInput";
+import {
+  Window,
+  Header,
+  CloseButton,
+  Body,
+  TextArea,
+  ButtonGroup,
+  SendButton,
+} from "../elements/Editor";
+
+const Editor = (__, { editorPopup$, editor$ }) => {
+  const { minimized } = editorPopup$;
+  const { recipientEmail, subject, content } = editor$;
+
+  if (!editorPopup$.open) return [null];
+
+  return (
+    // use-transform
+    Window([
+      Header((onclick = () => (editorPopup$.minimized = !minimized)), [
+        span("New Message"),
+        CloseButton(
+          (onclick = () => {
+            editor$.saveDraft();
+            editorPopup$.open = false;
+          }),
+          [i((className = "fas fa-times"))]
+        ),
+      ]),
+      Body({ minimized }, [
+        EditorInput(
+          (label = "To:"),
+          (placeholder = "Recipient"),
+          (value = recipientEmail),
+          (setValue = (v) => (editor$.recipientEmail = v))
+        ),
+        EditorInput(
+          (label = "Subject:"),
+          (placeholder = "Subject"),
+          (value = subject),
+          (setValue = (v) => (editor$.subject = v))
+        ),
+        TextArea(
+          (value = content),
+          (oninput = (e) => editor$.updateHistory(e.target.value))
+        ),
+        ButtonGroup([
+          SendButton(
+            (onclick = () => {
+              editor$.send();
+              editorPopup$.open = false;
+            }),
+            "Send"
+          ),
+          IconButton((type = "undo"), (onclick = () => editor$.undo())),
+          IconButton((type = "redo"), (onclick = () => editor$.redo())),
+          Space(),
+        ]),
+      ]),
+    ])
+  );
+};
+
+export default Editor;
+```
