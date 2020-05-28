@@ -1,5 +1,4 @@
 # Actre
-
 This project is highly inspired by React.
 
 The basic idea is to create UI as a composition of **expressions** derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames*.
@@ -150,7 +149,7 @@ const Component = () =>
   ];
 ```
 
-Finally, some real sample code:
+Finally, some sample code from the demo project:
 ```js
 import IconButton from "./IconButton";
 import Space from "./Space";
@@ -220,3 +219,5 @@ const Editor = (__, { editorPopup$, editor$ }) => {
 
 export default Editor;
 ```
+and screenshot:
+![demo](demo.png)
