@@ -139,6 +139,7 @@ const Component = () =>
     [
       Box(id="box", "Hello World")
     ]);
+    
 // transpiles to
 const Component = () => 
   [
