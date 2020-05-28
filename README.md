@@ -2,9 +2,9 @@
 
 This project is highly inspired by React.
 
-The basic idea is to create UI as a composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames*.
+The basic idea is to create UI as a composition of *expressions* derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames (i.e. activation records)*. Just like how a generator need its stack frames to be retained so that its execution could be paused and resumed,our component are "spcecial" functions whose stack frames also need to be retained so that they could be re-executed (i.e. re-rendering). Thus we need to manually manage a tree of *simulated stack frames* that also functions as the *view tree*. In React, these frame are called ["fibers"](https://github.com/acdlite/react-fiber-architecture).
 
-My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, and the context for each child is constructed by extending its parent's context with its own local variables. Expressed a bit more formally:
+My variation of this model can be summarized as follows: A component depends on its arguments and context, and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, and the context for each child is constructed by extending its parent's context with its own local variables (i.e. *dynamic scoping*). Expressed a bit more formally:
 
 ![equation](https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big\\{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big\\}),
 
@@ -12,7 +12,9 @@ Translated to JavaScript:
 ```js
 const Component = ({ ...args}, { ...vars }) => [/* Child Components */];
 ```
-Example:
+The `{ ...vars }` variables are dynamically scoped, and since JavaScript doesn't have s
+
+## Example
 ```js
 // Child.js
 const Child = ({ text, onclick }, { color }) =>
