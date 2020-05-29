@@ -1,7 +1,5 @@
 # Actre
 
-![screenshot](demo.png)
-
 This project is highly inspired by React.
 
 The basic idea is to create UI as a composition of **expressions** derived from state (i.e. FP) as opposed to *entities* that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to *invocations* of the component function, reified as *stack frames*.
@@ -238,8 +236,10 @@ function commit() {
 
 // ...
 ```
+## Demo Project
+![screenshot](demo.png)
 
-## Sample file from the demo project
+### Sample code
 ```js
 import IconButton from "./IconButton";
 import Space from "./Space";
@@ -309,3 +309,8 @@ const Editor = (__, { editorPopup$, editor$ }) => {
 
 export default Editor;
 ```
+### Performance
+#### Render phase (idle callbacks) and commit phase (animation frame)
+![perf-0](perf-0.png)
+#### Interleaving of long-running render tasks and hover events
+![perf-1](perf-1.png)
