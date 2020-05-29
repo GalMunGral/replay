@@ -203,7 +203,7 @@ const decor = (component) => (...args) => {
   // ...
 }
 ``` 
-The scheduler can decide what to do with those thunks. For example, it could either execute them synchronously, or add them to a *effect list* to be commited later in a single pass.
+The scheduler can decide what to do with those thunks. For example, it could execute them synchronously, or it could add them to a *effect list* to be commited later.
 ### Cooperative Scheduling
 Using generators also allows for asynchronous rendering &mdash; which means that long-running render tasks could be split into chunks and spread across multiple frames &mdash; using the [Cooperative Scheduling of Background Tasks API](https://www.w3.org/TR/requestidlecallback/) (i.e. [`window.requestIdleCallback`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)) and batching DOM updates using [`window.requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). My implementation is as follows:
 ```js
