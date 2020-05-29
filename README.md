@@ -237,7 +237,7 @@ function commit() {
 // ...
 ```
 ## Demo Project
-![screenshot](demo.png)
+![screenshot](screenshots/demo.png)
 
 ### Sample code
 ```js
@@ -311,6 +311,6 @@ export default Editor;
 ```
 ### Performance
 #### Render phase (idle callbacks) and commit phase (animation frame)
-![perf-0](perf-0.png)
+![perf-0](screenshots/perf-0.png)
 #### Interleaving of long-running render tasks and hover events
-![perf-1](perf-1.png)
+![perf-1](screenshots/perf-1.png)
