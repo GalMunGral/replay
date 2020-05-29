@@ -191,10 +191,14 @@ All render requests submitted are handled by the `scheduler` module, which queue
 ### Generators and Effects
 Another important design choice is that all functions involved in the rendering process, whether the library's internal functions, or user-defined component functions, should not perform side effects (e.g. DOM updates) themselves. Instead, all side effects need to be delegated to the scheduler. This is implemented by using *generators* in place of functions with side effects. The scheduler runs a loop that drives these generators, which `yield` their side effects as *thunks*. For example, inside the wrapper component created by `decor`:
 ```js
-const StyleWrapper = function* (props) {
-  if (!classCache.has(computedDeclarations)) {
+const decor = (component) => (...args) => {
+  // ...
+  const StyleWrapper = function* (props) {
+    if (!classCache.has(computedDeclarations)) {
+      // ...
+      yield () => addCSSRule(rule);
+    }
     // ...
-    yield () => addCSSRule(rule);
   }
   // ...
 }
