@@ -184,13 +184,56 @@ This is inspired by styled-components. The name refers to the fact it "decorates
 component function, and in the sense that it applies styles to the wrapped component.
 
 ## Implementation Details: Scheduling
-Internally, there are three levels of scheduling:
-### Batch Updates 
+### Batched Updates 
 The setters of `Observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed *at the end of current event loop tick/iteration (i.e. after current task/macrotask)*. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
 ### Priority Queue
 All render requests submitted are handled by the `scheduler` module, which queues pending tasks in a *priority queue based on node depth* &mdash; specifically, the ones closer to the root are always rendered first. This was designed to prevent the following scenario: Imagine a component uses a dynamic variable `a` declared by an ancestor, and it also takes an argument `b`, which is derived from `a`, from its parent. Now if `a` is updated and the child is updated before its parent, it will use the latest value of `a` but a value of `b` that's computed from the original value of `a` &mdash; this would be an error.
-### Effect List
-All side effects
+### Side Effects and Generators
+Another important design choice is that, all functions involved in the rendering process, whether the library's internal functions, or user-defined component functions, should not perform side effects themselves. Instead, all side effects need to be delegated to the scheduler. This is implemented by using *generators* for effectful functions. The scheduler runs a loop that drives these generators, which `yield` their side effects as *thunks*. For example, inside the wrapper component created by `decor`:
+```js
+const StyleWrapper = function* (props) {
+  if (!classCache.has(computedDeclarations)) {
+    // ...
+    yield () => addCSSRule(rule);
+  }
+  // ...
+}
+``` 
+The scheduler can decide what to do with those thunks. For example, it could either execute them synchronously, or add them to a *effect list* to be commited later in a single pass.
+### Cooperative Scheduling
+Using generators also allows for asynchronous rendering &mdash; which means that long-running render tasks could be split into chunks and spread across multiple frames &mdash; using the [Cooperative Scheduling of Background Tasks API](https://www.w3.org/TR/requestidlecallback/) (i.e. [`window.requestIdleCallback`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)) and batching DOM updates using [`window.requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). My implementation is as follows:
+```js
+// scheduler.js
+
+// ...
+function doWork(deadline) {
+  while (deadline.timeRemaining() > THRESHOLD) {
+    const { done, value } = currentTask.next();
+    if (done) {
+      return window.requestAnimationFrame(commit);
+    } else {
+      if (Array.isArray(value)) {
+        effects.push(...value);
+      } else {
+        effects.push(value);
+      }
+    }
+  }
+  return window.requestIdleCallback(doWork);
+}
+
+function commit() {
+  for (let effect of effects) {
+    effect();
+  }
+  effects = [];
+  currentTask = null;
+
+  // Poll next task
+}
+
+// ...
+```
 
 ## Sample file from the demo project
 ```js
