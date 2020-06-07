@@ -1,4 +1,4 @@
-# Actre
+# Koala
 
 This project is highly inspired by React.
 
