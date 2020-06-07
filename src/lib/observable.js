@@ -20,39 +20,42 @@ function Observable(obj) {
   if (!obj) return null;
 
   const properties = Object.getOwnPropertyDescriptors(obj);
+  const observerMap = new Map(
+    Object.keys(obj)
+      .filter((key) => properties[key].hasOwnProperty("value")) // not getter/setter
+      .map((key) => [key, new Set()])
+  );
 
-  for (let name in properties) {
-    const descriptor = properties[name];
-    if (descriptor.get || descriptor.set) continue;
-
-    let value = descriptor.value;
-    const observers = new Set();
-
-    Object.defineProperty(obj, name, {
-      get() {
-        if (current && !observers.has(current)) {
-          const instance = current;
-          observers.add(instance);
-          instance.subscriptions.push({
-            cancel: () => observers.delete(instance),
-          });
-        }
-        return value;
-      },
-      set(newValue) {
-        value = newValue;
-        for (let observer of observers) {
-          observer.dirty = true;
-          updateQueue.add(observer);
-        }
-        if (!dirty) {
-          dirty = true;
-          window.queueMicrotask(flushUpdateQueue);
-        }
-      },
-    });
-  }
-  return obj;
+  return new Proxy(obj, {
+    get(__, prop) {
+      if (!observerMap.has(prop)) {
+        return Reflect.get(...arguments);
+      }
+      const observers = observerMap.get(prop);
+      if (current && !observers.has(current)) {
+        const instance = current;
+        observers.add(instance);
+        instance.subscriptions.push({
+          cancel: () => observers.delete(instance),
+        });
+      }
+      return Reflect.get(...arguments);
+    },
+    set(__, prop) {
+      if (!observerMap.has(prop)) {
+        return Reflect.set(...arguments);
+      }
+      observerMap.get(prop).forEach((observer) => {
+        observer.dirty = true;
+        updateQueue.add(observer);
+      });
+      if (!dirty) {
+        dirty = true;
+        window.queueMicrotask(flushUpdateQueue);
+      }
+      return Reflect.set(...arguments);
+    },
+  });
 }
 
 export { Observable, setCurrent };
