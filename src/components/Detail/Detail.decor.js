@@ -14,6 +14,7 @@ export const SenderInfo = decor.div`
   font-weight: bold;
   font-size: 0.9rem;
 `;
+
 export const RecipientInfo = decor.div`
   margin: 0;
   color: gray;

@@ -66,6 +66,7 @@ module.exports = {
   devtool: "source-map",
   plugins: [
     new ProvidePlugin({
+      _: "lodash",
       observable: [
         path.resolve(__dirname, "lib/runtime/observable"),
         "observable",

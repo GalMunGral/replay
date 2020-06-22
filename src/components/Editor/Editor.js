@@ -1,5 +1,5 @@
-import IconButton from "@components/IconButton/IconButton";
-import Space from "@components/Layout/Space";
+import IconButton from "@components/Common/IconButton";
+import Space from "@components/Common/Space";
 import EditorInput from "@components/Editor/EditorInput";
 import {
   Window,
@@ -11,7 +11,8 @@ import {
   SendButton,
 } from "./Editor.decor";
 
-const Editor = (__, { $editorPopup, $editor }) => {
+const Editor = ({ $editorPopup }, context) => {
+  const { $editor } = context;
   const { minimized } = $editorPopup;
   const { recipientEmail, subject, content } = $editor;
 

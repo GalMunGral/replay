@@ -1,6 +1,6 @@
 import { InputBox } from "./Editor.decor";
 
-const context = () => {
+const init = () => {
   return {
     $self: observable({
       focused: false,
@@ -8,20 +8,25 @@ const context = () => {
   };
 };
 
-const EditorInput = ({ label, value, setValue, placeholder }, { $self }) =>
-  // use-transform
-  InputBox([
-    ($self.focused || value) && label(label),
-    input(
-      (key = "input"),
-      (value = value),
-      (placeholder = !$self.focused && !value ? placeholder : ""),
-      (onfocus = () => ($self.focused = true)),
-      (onblur = () => ($self.focused = false)),
-      (onchange = (e) => setValue(e.target.value))
-    ),
-  ]);
+const EditorInput = ({ value, setValue, label, placeholder }, context) => {
+  const { $self } = context;
+  const activated = $self.focused || value;
 
-EditorInput.context = context;
+  return (
+    // use-transform
+    InputBox([
+      activated && label(label),
+      input(
+        (value = value),
+        (placeholder = !activated ? placeholder : ""),
+        (onfocus = () => ($self.focused = true)),
+        (onblur = () => ($self.focused = false)),
+        (onchange = (e) => setValue(e.target.value))
+      ),
+    ])
+  );
+};
+
+EditorInput.init = init;
 
 export default EditorInput;

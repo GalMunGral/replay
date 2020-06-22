@@ -1,65 +1,65 @@
-import Tab from "@components/Tab/Tab";
 import MailList from "@components/MailList/MailList";
 import Layout from "@components/Layout/Layout";
 import MailboxToolbar from "@components/MailboxToolbar/MailboxToolbar";
+import Tabs from "./Tabs";
 
-import { TabBar } from "./Mailbox.decor";
-
-const context = () => {
+const init = () => {
   return {
-    $page: observable({
+    $mails: observable({
+      allMails: [],
       tab: "primary",
-      index: 0,
+      pageIndex: 0,
       pageSize: 50,
+      get total() {
+        return this.allMails.length;
+      },
+      get pageCount() {
+        return Math.ceil(this.total / this.pageSize);
+      },
       get pageStart() {
-        return this.index * this.pageSize;
+        return this.pageIndex * this.pageSize;
       },
       get pageEnd() {
-        return (this.index + 1) * this.pageSize;
+        return Math.min((this.pageIndex + 1) * this.pageSize, this.total);
+      },
+      get currentPage() {
+        return this.allMails.slice(this.pageStart, this.pageEnd);
+      },
+      nextPage() {
+        this.pageIndex = Math.min(this.pageIndex + 1, this.pageCount - 1);
+      },
+      prevPage() {
+        this.pageIndex = Math.max(this.pageIndex - 1, 0);
       },
     }),
     $route: observable({
       folder: null,
     }),
-    $mails: observable({
-      currentPage: [],
-      total: 0,
-    }),
   };
 };
 
-const Mailbox = ({ folder }, { $page, $mails, $route, $store }) => {
-  const { tab, pageStart, pageEnd } = $page;
-  const allMails = $store.getMails(folder, tab);
-  $mails.total = allMails.length;
-  $mails.currentPage = allMails.slice(pageStart, pageEnd);
+const Mailbox = ({ folder }, { $mails, $route, $store, $selection }) => {
+  const { tab } = $mails;
   $route.folder = folder;
+  $mails.allMails = $store.getMails(folder, tab);
+
+  const { currentPage } = $mails;
+  const allSelected = $selection.allSelected(currentPage);
+  const toggleAll = () => $selection.toggleAll(currentPage);
 
   return (
     // use-transform
     Layout([
-      MailboxToolbar(),
+      MailboxToolbar((allSelected = allSelected), (toggleAll = toggleAll)),
       section([
-        folder === "inbox" &&
-          TabBar(
-            ["primary", "social", "promotions"].map((t) =>
-              Tab({
-                key: t,
-                name: t,
-                active: t === tab,
-                onclick: () => {
-                  $page.tab = t;
-                  $page.index = 0;
-                },
-              })
-            )
-          ),
+        // prettier-ignore
+        Tabs((folder = folder), (activeTab = tab)),
         MailList(),
       ]),
     ])
   );
 };
 
-Mailbox.context = context;
+Mailbox.init = init;
 
 export default Mailbox;

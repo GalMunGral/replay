@@ -3,16 +3,13 @@ import $store from "@observables/store";
 import $history from "@observables/editorHistory";
 
 const $editor = observable({
-  id: null,
+  id: "",
   recipientEmail: "",
   subject: "",
 
-  $history,
-
   get content() {
-    return this.$history.state.current;
+    return $history.state.current;
   },
-
   get message() {
     return {
       id: this.id,
@@ -25,16 +22,16 @@ const $editor = observable({
   },
 
   undo() {
-    this.$history.dispatch({ type: "UNDO" });
+    $history.dispatch({ type: "UNDO" });
   },
   redo() {
-    this.$history.dispatch({ type: "REDO" });
+    $history.dispatch({ type: "REDO" });
   },
   updateHistory(content) {
-    this.$history.dispatch({ type: "UPDATE", payload: content });
+    $history.dispatch({ type: "UPDATE", payload: content });
   },
   resetHistory(content) {
-    this.$history.dispatch({ type: "RESET", payload: content });
+    $history.dispatch({ type: "RESET", payload: content });
   },
 
   createDraft() {
@@ -42,13 +39,6 @@ const $editor = observable({
     this.recipientEmail = "";
     this.subject = "";
     this.resetHistory("");
-  },
-  replaceDraft(draft) {
-    this.saveDraft();
-    this.id = draft.id;
-    this.recipientEmai = draft.recipientEmail;
-    this.subject = draft.subject;
-    this.resetHistory(draft.content);
   },
   saveDraft() {
     $store.dispatch((dispatch) => {
@@ -59,6 +49,13 @@ const $editor = observable({
         });
       }, 200);
     });
+  },
+  replaceDraft(draft) {
+    this.saveDraft();
+    this.id = draft.id;
+    this.recipientEmai = draft.recipientEmail;
+    this.subject = draft.subject;
+    this.resetHistory(draft.content);
   },
   sendMail() {
     $store.dispatch((dispatch) => {

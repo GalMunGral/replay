@@ -8,65 +8,46 @@ import {
   MenuIcon,
 } from "./Sidebar.decor";
 
-const folders = ["inbox", "sent", "drafts"];
-
 const iconMap = {
   inbox: "inbox",
   sent: "paper-plane",
   drafts: "scroll",
 };
 
-const context = () => {
-  return {
-    $self: observable({
-      hovered: false,
-    }),
-  };
-};
-
-const Sidebar = (
-  __,
-  { $self, $editorPopup, $sidebar, $editor, $router, $router: { folder } }
-) => {
-  const collapsed = $sidebar.collapsed && !$self.hovered;
+const Sidebar = ({ $sidebar, openEditor }, context) => {
+  const { $router } = context;
+  const { folder } = $router;
+  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
 
   return (
     // use-transform
     Menu(
-      { collapsed },
-      (onmouseenter = () => ($self.hovered = true)),
-      (onmouseleave = () => ($self.hovered = false)),
+      (collapsed = collapsed),
+      (onmouseenter = () => ($sidebar.hovered = true)),
+      (onmouseleave = () => ($sidebar.hovered = false)),
       [
-        EditorButton(
-          { collapsed },
-          (onclick = () => {
-            if (!$editorPopup.open) {
-              $editor.createDraft();
-              $editorPopup.open = true;
-            }
-          }),
-          [
-            EditorButtonIcon((src = "/assets/images/create.png")),
-            !collapsed && EditorButtonText("Compose"),
-          ]
-        ),
-        ...folders.map((fldr) =>
+        EditorButton((collapsed = collapsed), (onclick = openEditor), [
+          EditorButtonIcon((src = "/assets/images/create.png")),
+          !collapsed && EditorButtonText("Compose"),
+        ]),
+        ...["inbox", "sent", "drafts"].map((f) =>
           MenuItem(
-            { collapsed },
-            (activated = folder === fldr),
-            (onclick = () => $router.navigate("/" + fldr)),
+            (collapsed = collapsed),
+            (activated = folder === f),
+            (onclick = () => $router.navigate("/" + f)),
             [
-              MenuIcon((className = `fas fa-${iconMap[fldr]}`)),
-              !collapsed && span(fldr),
+              MenuIcon((className = `fas fa-${iconMap[f]}`)),
+              !collapsed && span(f),
             ]
           )
         ),
-        SidebarDropZone({ collapsed, activated: folder === "trash" }),
+        SidebarDropZone(
+          (collapsed = collapsed),
+          (activated = folder === "trash")
+        ),
       ]
     )
   );
 };
-
-Sidebar.context = context;
 
 export default Sidebar;
