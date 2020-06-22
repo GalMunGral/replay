@@ -152,10 +152,10 @@ const Component = () =>
 ```
 
 ## Auxiliary Modules
-### Observable: Reactivity
+### observable: Reactivity
 ```js
 const bindings = () =>  ({
-  Observable({
+  observable({
     count: 10
   })
 });
@@ -164,12 +164,10 @@ const App = withContext(bindings)(
   () => /* ... */
 );
 ```
-The `Observable` function takes an object and converts each property into a getter/setter pair. The getter registers the *stack frames (instances)* of the calling component functions as dependents (observers), while the setter schedules re-renders starting from those observing frames.
+The `observable` function takes an object and converts each property into a getter/setter pair. The getter registers the *stack frames (instances)* of the calling component functions as dependents (observers), while the setter schedules re-renders starting from those observing frames.
 
 ### Decorator: Styling
 ```js
-import { decor } from "lib";
-
 const RedButton = decor.button`
   background: red;
 `;
@@ -183,7 +181,7 @@ component function, and in the sense that it applies styles to the wrapped compo
 
 ## Implementation Details: Scheduling
 ### Batched Updates 
-The setters of `Observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed *at the end of current event loop tick/iteration (i.e. after current task/macrotask)*. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
+The setters of `observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed *at the end of current event loop tick/iteration (i.e. after current task/macrotask)*. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
 ### Priority Queue
 All render requests submitted are handled by the `scheduler` module, which queues pending tasks in a *priority queue based on node depth* &mdash; specifically, the ones closer to the root are always rendered first. This was designed to prevent the following scenario: Imagine a component uses a dynamic variable `a` declared by an ancestor, and it also takes an argument `b`, which is derived from `a`, from its parent. Now if `a` is updated and the child is updated before its parent, it will use the latest value of `a` but a value of `b` that's computed from the original value of `a` &mdash; this would be an error.
 ### Generators and Effects
@@ -254,21 +252,21 @@ import {
   SendButton,
 } from "../elements/Editor";
 
-const Editor = (__, { editorPopup$, editor$ }) => {
-  const { minimized } = editorPopup$;
-  const { recipientEmail, subject, content } = editor$;
+const Editor = (__, { $editorPopup, $editor }) => {
+  const { minimized } = $editorPopup;
+  const { recipientEmail, subject, content } = $editor;
 
-  if (!editorPopup$.open) return [null];
+  if (!$editorPopup.open) return [null];
 
   return (
     // use-transform
     Window([
-      Header((onclick = () => (editorPopup$.minimized = !minimized)), [
+      Header((onclick = () => ($editorPopup.minimized = !minimized)), [
         span("New Message"),
         CloseButton(
           (onclick = () => {
-            editor$.saveDraft();
-            editorPopup$.open = false;
+            $editor.saveDraft();
+            $editorPopup.open = false;
           }),
           [i((className = "fas fa-times"))]
         ),
@@ -278,28 +276,28 @@ const Editor = (__, { editorPopup$, editor$ }) => {
           (label = "To:"),
           (placeholder = "Recipient"),
           (value = recipientEmail),
-          (setValue = (v) => (editor$.recipientEmail = v))
+          (setValue = (v) => ($editor.recipientEmail = v))
         ),
         EditorInput(
           (label = "Subject:"),
           (placeholder = "Subject"),
           (value = subject),
-          (setValue = (v) => (editor$.subject = v))
+          (setValue = (v) => ($editor.subject = v))
         ),
         TextArea(
           (value = content),
-          (oninput = (e) => editor$.updateHistory(e.target.value))
+          (oninput = (e) => $editor.updateHistory(e.target.value))
         ),
         ButtonGroup([
           SendButton(
             (onclick = () => {
-              editor$.send();
-              editorPopup$.open = false;
+              $editor.sendMail();
+              $editorPopup.open = false;
             }),
             "Send"
           ),
-          IconButton((type = "undo"), (onclick = () => editor$.undo())),
-          IconButton((type = "redo"), (onclick = () => editor$.redo())),
+          IconButton((type = "undo"), (onclick = () => $editor.undo())),
+          IconButton((type = "redo"), (onclick = () => $editor.redo())),
           Space(),
         ]),
       ]),

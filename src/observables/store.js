@@ -1,6 +1,3 @@
-import _ from "lodash";
-import { Observable } from "lib";
-
 const Type = {
   LOAD: "LOAD",
   DELETE: "DELETE",
@@ -38,11 +35,12 @@ const reducer = (state, action) => {
     }
     case Type.DELETE_SELECTED: {
       const { folder, selected } = action.payload;
+      const selectedSet = new Set(selected);
       return {
         ...state,
-        [folder]: state[folder].filter((item) => !selected.has(item.id)),
+        [folder]: state[folder].filter((item) => !selectedSet.has(item.id)),
         trash: [
-          ...state[folder].filter((item) => selected.has(item.id)),
+          ...state[folder].filter((item) => selectedSet.has(item.id)),
           ...state.trash,
         ],
       };
@@ -60,7 +58,7 @@ const reducer = (state, action) => {
   }
 };
 
-const store$ = Observable({
+const $store = observable({
   T: Type,
   state: {
     inbox: [],
@@ -70,7 +68,8 @@ const store$ = Observable({
   },
   dispatch(action) {
     if (typeof action === "function") {
-      action(this.dispatch.bind(this));
+      const dispatch = this.dispatch.bind(this);
+      action(dispatch);
     } else {
       this.state = reducer(this.state, action);
     }
@@ -88,10 +87,10 @@ const store$ = Observable({
 fetch("/data.json")
   .then((res) => res.json())
   .then((data) => {
-    store$.dispatch({
-      type: store$.T.LOAD,
+    $store.dispatch({
+      type: $store.T.LOAD,
       payload: { folder: "inbox", data },
     });
   });
 
-export default store$;
+export default $store;

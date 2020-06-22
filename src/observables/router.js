@@ -1,38 +1,40 @@
-import { Observable } from "lib";
-
-const router$ = Observable({
+const $router = observable({
   folder: "",
-  id: null,
+  id: "",
+
   updateStateWithPath(path) {
     const result = path.match(/^\/(?<folder>[\w-]+)(\/(?<id>[\w-]+))?/);
     this.folder = result.groups.folder;
     this.id = result.groups.id;
   },
-  updateHistorywithState(replace = false) {
-    const { folder, id } = this;
-    const path = id ? `/${folder}/${id}` : `/${folder}`;
-    document.title = `Mail - ${folder.toUpperCase()}`;
+
+  updateHistoryWithState(replace = false) {
+    const path = this.id ? `/${this.folder}/${this.id}` : `/${this.folder}`;
+
     replace
       ? window.history.replaceState(null, "", path)
       : window.history.pushState(null, "", path);
+
+    document.title = `Mail - ${this.folder.toUpperCase()}`;
   },
+
   navigate(path) {
     this.updateStateWithPath(path);
-    this.updateHistorywithState(false);
+    this.updateHistoryWithState(false);
   },
+
   redirect(path) {
     this.updateStateWithPath(path);
-    this.updateHistorywithState(true);
+    this.updateHistoryWithState(true);
   },
 });
 
 window.onpopstate = () => {
-  router$.updateStateWithPath(document.location.pathname);
+  $router.updateStateWithPath(location.pathname);
 };
 
-const initialPath = document.location.pathname;
-router$.redirect(
-  /^inbox|sent|drafts|trash$/.test(initialPath) ? initialPath : "/inbox"
-);
+/^inbox|sent|drafts|trash$/.test(location.pathname)
+  ? $router.redirect(location.pathname)
+  : $router.redirect("/inbox");
 
-export default router$;
+export default $router;

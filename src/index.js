@@ -1,5 +1,5 @@
-import { render } from "lib";
-import App from "./components/App";
+import { render } from "@runtime";
+import App from "@components/App/App";
 
 const app = /* use-transform */ App();
 const container = document.querySelector("#app");
