@@ -1,57 +1,18 @@
 import { v4 as uuidv4 } from "uuid";
-import { Observable } from "lib";
-import store$ from "./store";
+import $store from "@observables/store";
+import $history from "@observables/editorHistory";
 
-const historyReducer = (state, action) => {
-  switch (action.type) {
-    case "UNDO":
-      if (state.past.length === 0) return state;
-      return {
-        past: state.past.slice(1),
-        current: state.past[0],
-        future: [state.current, ...state.future],
-      };
-    case "REDO":
-      if (state.future.length === 0) return state;
-      return {
-        past: [state.current, ...state.past],
-        current: state.future[0],
-        future: state.future.slice(1),
-      };
-    case "UPDATE":
-      return {
-        past: [state.current, ...state.past],
-        current: action.payload,
-        future: [],
-      };
-    case "RESET":
-      return {
-        past: [],
-        current: action.payload,
-        futrue: [],
-      };
-    default:
-      return state;
-  }
-};
-
-const editor$ = Observable({
+const $editor = observable({
   id: null,
   recipientEmail: "",
   subject: "",
-  history$: Observable({
-    state: {
-      past: [],
-      current: "",
-      future: [],
-    },
-    dispatch(action) {
-      this.state = historyReducer(this.state, action);
-    },
-  }),
+
+  $history,
+
   get content() {
-    return this.history$.state.current;
+    return this.$history.state.current;
   },
+
   get message() {
     return {
       id: this.id,
@@ -64,16 +25,16 @@ const editor$ = Observable({
   },
 
   undo() {
-    this.history$.dispatch({ type: "UNDO" });
+    this.$history.dispatch({ type: "UNDO" });
   },
   redo() {
-    this.history$.dispatch({ type: "REDO" });
+    this.$history.dispatch({ type: "REDO" });
   },
   updateHistory(content) {
-    this.history$.dispatch({ type: "UPDATE", payload: content });
+    this.$history.dispatch({ type: "UPDATE", payload: content });
   },
   resetHistory(content) {
-    this.history$.dispatch({ type: "RESET", payload: content });
+    this.$history.dispatch({ type: "RESET", payload: content });
   },
 
   createDraft() {
@@ -90,20 +51,20 @@ const editor$ = Observable({
     this.resetHistory(draft.content);
   },
   saveDraft() {
-    store$.dispatch((dispatch) => {
+    $store.dispatch((dispatch) => {
       setTimeout(() => {
         dispatch({
-          type: store$.T.SAVE_DRAFT,
+          type: $store.T.SAVE_DRAFT,
           payload: this.message,
         });
       }, 200);
     });
   },
-  send() {
-    store$.dispatch((dispatch) => {
+  sendMail() {
+    $store.dispatch((dispatch) => {
       setTimeout(() => {
         dispatch({
-          type: store$.T.SEND,
+          type: $store.T.SEND,
           payload: this.message,
         });
       }, 200);
@@ -111,4 +72,4 @@ const editor$ = Observable({
   },
 });
 
-export default editor$;
+export default $editor;

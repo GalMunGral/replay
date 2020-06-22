@@ -1,6 +1,4 @@
-import { Observable } from "lib";
-
-const selection$ = Observable({
+const $selection = observable({
   selected: new Set(),
   set(id, shouldSelect) {
     if (shouldSelect) {
@@ -17,4 +15,4 @@ const selection$ = Observable({
   },
 });
 
-export default selection$;
+export default $selection;
