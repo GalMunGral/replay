@@ -2,8 +2,8 @@ import MailItem from "@components/MailItem/MailItem";
 import DragImage from "@components/DragImage/DragImage";
 import createActions from "./MailList.actions";
 
-const OFFSET = 15;
-const DELAY = 32;
+const OFFSET = 30;
+const DELAY = 1000 / 60;
 
 const init = () => {
   const state = {

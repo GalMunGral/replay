@@ -7,6 +7,7 @@ import {
   MenuItem,
   MenuIcon,
 } from "./Sidebar.decor";
+import editorButtonIconImage from "@assets/images/create.png";
 
 const iconMap = {
   inbox: "inbox",
@@ -27,7 +28,7 @@ const Sidebar = ({ $sidebar, openEditor }, context) => {
       (onmouseleave = () => ($sidebar.hovered = false)),
       [
         EditorButton((collapsed = collapsed), (onclick = openEditor), [
-          EditorButtonIcon((src = "/assets/images/create.png")),
+          EditorButtonIcon((src = editorButtonIconImage)),
           !collapsed && EditorButtonText("Compose"),
         ]),
         ...["inbox", "sent", "drafts"].map((f) =>
