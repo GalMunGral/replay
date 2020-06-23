@@ -8,6 +8,7 @@ import {
   SearchIcon,
   SearchInput,
 } from "./AppBar.decor";
+import appLogoImage from "@assets/images/logo.png";
 
 const AppBar = ({ toggleSidebar }) =>
   // use-transform
@@ -16,7 +17,7 @@ const AppBar = ({ toggleSidebar }) =>
       MenuButton((onclick = toggleSidebar), [
         MenuIcon((className = "fas fa-bars")),
       ]),
-      AppLogo((src = "/assets/images/logo.png"), (alt = "logo")),
+      AppLogo((src = appLogoImage), (alt = "logo")),
     ]),
     SearchBar([
       SearchIcon((className = "fas fa-search")),

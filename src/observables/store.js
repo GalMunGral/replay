@@ -84,13 +84,13 @@ const $store = observable({
   },
 });
 
-fetch("/data.json")
-  .then((res) => res.json())
-  .then((data) => {
-    $store.dispatch({
+$store.dispatch((dispatch) => {
+  import(/* webpackChunkName: 'data' */ "@assets/data").then(({ data }) => {
+    dispatch({
       type: $store.T.LOAD,
       payload: { folder: "inbox", data },
     });
   });
+});
 
 export default $store;
