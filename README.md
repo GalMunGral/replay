@@ -11,8 +11,8 @@ Just like how the generators need their stack frames kept alive so that executio
 My formulation of this kind of model can be summarized as follows: A component depends on its _arguments_ and _context_ and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, the context for each child constructed by extending the parent's context with the child's own local variables. Expressed more formally:
 ```
 view := (args, c) => compose(
-  root(args, c),
-  subviews.map((view, i) => view(f(args, context, i), merge(c, locals[i])))
+  root(args, ctx),
+  subviews.map((view, i) => view(f(args, ctx, i), merge(ctx, locals[i])))
 )
 ```
 Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
