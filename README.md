@@ -12,7 +12,7 @@ My formulation of this kind of model can be summarized as follows: A component d
 ```
 view := (args, c) => compose(
   root(args, c),
-  subviews.map((view, i) => view(f(args, c, i), merge(c, locals[i])))
+  subviews.map((view, i) => view(f(args, c, i), merge(c, bindings[i])))
 )
 ```
 Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
