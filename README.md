@@ -9,9 +9,12 @@ Just like how the generators need their stack frames kept alive so that executio
 ## Dynamic Scope
 
 My formulation of this kind of model can be summarized as follows: A component depends on its _arguments_ and _context_ and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, the context for each child constructed by extending the parent's context with the child's own local variables. Expressed more formally:
-
-![equation](<https://latex.codecogs.com/svg.latex?view^n_i({\bf%20Args},%20{\bf%20C})%20\rightarrow%20\Big{%20view^{n+1}_j\big(f({\bf%20Args},%20{\bf%20C}),{\bf%20C}%20%20\cup%20%20{\bf%20L}^{n+1}_j%20\big)%20\Big}>)
-
+```
+view := (args, c) => compose(
+  root(args, c),
+  subviews.map((view, i) => view(f(args, context, i), merge(c, locals[i])))
+)
+```
 Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
 
 To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
