@@ -2,9 +2,6 @@ import Layout from "@components/Layout/Layout";
 import DetailToolbar from "./DetailToolbar";
 import { Main, Header, SenderInfo, RecipientInfo, Body } from "./Detail.decor";
 
-import { printMessage } from "../shared";
-printMessage();
-
 const Detail = ({ folder, id }, context) => {
   const { $store, $router } = context;
   const { T } = $store;

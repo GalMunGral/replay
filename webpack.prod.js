@@ -1,9 +1,9 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const commonConfig = require("./webpack.common");
 const merge = require("webpack-merge");
+const commonConfig = require("./webpack.common");
 
-module.exports = merge(commonConfig, {
+module.exports = (env) => merge(commonConfig(env), {
   mode: "production",
   module: {
     rules: [

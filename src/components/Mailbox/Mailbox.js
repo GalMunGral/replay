@@ -3,9 +3,6 @@ import Layout from "@components/Layout/Layout";
 import MailboxToolbar from "@components/MailboxToolbar/MailboxToolbar";
 import Tabs from "./Tabs";
 
-import { printMessage } from "../shared";
-printMessage();
-
 const init = () => {
   return {
     $mails: observable({

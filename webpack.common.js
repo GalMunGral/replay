@@ -1,9 +1,9 @@
 const path = require("path");
-const { ProvidePlugin } = require("webpack");
+const { DefinePlugin, ProvidePlugin } = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = {
+module.exports = (env) => ({
   entry: "./src/index.js",
   output: {
     path: path.resolve(__dirname, "public"),
@@ -19,6 +19,11 @@ module.exports = {
       "@observables": path.resolve(__dirname, "src/observables"),
     },
   },
+  resolveLoader: {
+    alias: {
+      'replay-loader': path.resolve(__dirname, 'lib/replay-loader.js') 
+    }
+  },
   module: {
     noParse: /lodash/,
     rules: [
@@ -29,9 +34,10 @@ module.exports = {
           {
             loader: "babel-loader",
             options: {
-              cacheDirectory: true,
+              // cacheDirectory: true,
             },
           },
+          'replay-loader'
         ]
       },
       {
@@ -47,6 +53,9 @@ module.exports = {
     ],
   },
   plugins: [
+    new DefinePlugin({
+      __DEBUG__: Boolean(env?.debug)
+    }),
     new ProvidePlugin({
       _: "lodash",
       lazy: [path.resolve(__dirname, "lib/runtime/renderer"), "lazy"],
@@ -59,4 +68,4 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
   ]
-};
+});
