@@ -183,7 +183,7 @@ const init = () =>  ({
 });
 ```
 
-The `observable` function takes an object and returns a `Proxy` object, with a `get` trap that registers the _stack frames (instances)_ of the calling component functions as dependents (observers), and a `set` trap that schedules re-render (re-evaluation) starting from that stack frame.
+The `observable` function takes an object and returns a proxy with a `get` trap that registers the stack frame of the component functions that's currently running as a dependent (observer) of the property being accessed, and a `set` trap that schedules a re-render (re-evaluation) starting from that stack frame when the property value changes.
 
 ### Decorator: Styling
 
