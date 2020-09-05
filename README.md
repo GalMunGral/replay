@@ -1,4 +1,4 @@
-# Koala
+# Replay
 
 This project is highly inspired by React.
 
