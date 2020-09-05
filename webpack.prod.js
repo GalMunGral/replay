@@ -1,6 +1,5 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const ParallelUglifyPlugin = require("webpack-parallel-uglify-plugin");
 const commonConfig = require("./webpack.common");
 const merge = require("webpack-merge");
 
@@ -30,7 +29,6 @@ module.exports = merge(commonConfig, {
       filename: "[name].[contenthash].css",
     }),
     new OptimizeCssAssetsPlugin(),
-    new ParallelUglifyPlugin({}),
   ],
   devtool: "source-map",
 });

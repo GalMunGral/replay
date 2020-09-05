@@ -1,8 +1,7 @@
 const path = require("path");
-const { ProvidePlugin, IgnorePlugin } = require("webpack");
+const { ProvidePlugin } = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const HappyPack = require("happypack");
 
 module.exports = {
   entry: "./src/index.js",
@@ -26,11 +25,17 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: "happypack/loader?id=babel",
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              cacheDirectory: true,
+            },
+          },
+        ]
       },
       {
         test: /\.(ttf|woff(2)?|eot)$/,
-        // use: "happypack/loader?id=fonts",
         use: {
           loader: "file-loader",
           options: {
@@ -46,56 +51,12 @@ module.exports = {
       _: "lodash",
       lazy: [path.resolve(__dirname, "lib/runtime/renderer"), "lazy"],
       decor: [path.resolve(__dirname, "lib/runtime/decorator"), "decor"],
-      observable: [
-        path.resolve(__dirname, "lib/runtime/observable"),
-        "observable",
-      ],
+      observable: [path.resolve(__dirname, "lib/runtime/observable"), "observable"],
     }),
-    new HappyPack({
-      id: "babel",
-      loaders: [
-        {
-          loader: "babel-loader",
-          options: {
-            cacheDirectory: true,
-          },
-        },
-      ],
-    }),
-    // new HappyPack({
-    //   id: "fonts",
-    //   loaders: [
-    //     {
-    //       loader: "file-loader",
-    //       options: {
-    //         outputPath: "fonts",
-    //         name: "[name].[contenthash].[ext]",
-    //       },
-    //     },
-    //   ],
-    // }),
     new HtmlWebpackPlugin({
-      title: "Fmail",
+      title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
     new CleanWebpackPlugin(),
-  ],
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-      cacheGroups: {
-        vendor: {
-          name: "vendor",
-          test: /node_modules/,
-          priority: 2,
-        },
-        common: {
-          name: "common",
-          minSize: 0,
-          minChunks: 2,
-          priority: 1,
-        },
-      },
-    },
-  },
+  ]
 };
