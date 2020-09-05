@@ -20,16 +20,15 @@ Here the free variables are **dynamically-scoped**. Since JavaScript only suppor
 To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
 
 ```js
-import { withContext } from "lib";
-
-const bindings = () => ({
+const init = () => ({
   /* Declare dynamic variables here */
 });
+
 const Component = ({ ...args }, { ...vars }) => [
   /* Child Components */
 ];
 
-export default withContext(bindings)(Component);
+Component.init = init;
 ```
 
 ## Lazy (Normal-Order) Evaluation of Functions
@@ -147,8 +146,7 @@ type({ ...props, children: [...children] }); // immediate evaluation
 ```
 
 ## Syntactic Sugar
-
-To provide better readability, you can my `babel-plugin-transform-elements` which allows you to express the same idea more clearly:
+The [webpack loader](https://github.com/GalMunGral/replay/blob/master/lib/replay-loader.js) enables a more readable syntax:
 
 ```js
 const Component = () =>
@@ -178,18 +176,14 @@ const Component = () =>
 ### observable: Reactivity
 
 ```js
-const bindings = () =>  ({
-  observable({
+const init = () =>  ({
+  state: observable({
     count: 10
   })
 });
-
-const App = withContext(bindings)(
-  () => /* ... */
-);
 ```
 
-The `observable` function takes an object and converts each property into a getter/setter pair. The getter registers the _stack frames (instances)_ of the calling component functions as dependents (observers), while the setter schedules re-renders starting from those observing frames.
+The `observable` function takes an object and returns a `Proxy` object, with a `get` trap that registers the _stack frames (instances)_ of the calling component functions as dependents (observers), and a `set` trap that schedules re-render (re-evaluation) starting from that stack frame.
 
 ### Decorator: Styling
 
