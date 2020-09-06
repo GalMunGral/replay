@@ -27,8 +27,9 @@ const init = () => {
 };
 
 const MailList = (__, context) => {
-  const { $dragState, $mails, $route, $selection } = context;
+  const { $dragState, $mails, $router, $selection } = context;
   const { setCoordinates, setIsDragging } = $dragState;
+  const { folder } = $router;
 
   const actions = createActions(context);
 
@@ -54,7 +55,7 @@ const MailList = (__, context) => {
         MailItem(
           (key = mail.id),
           (mail = mail),
-          (folder = $route.folder),
+          (folder = folder),
           (selected = $selection.selected.includes(mail.id)),
           (toggleItem = () => actions.toggleItem(mail.id)),
           (deleteItem = () => actions.deleteItem(mail.id)),

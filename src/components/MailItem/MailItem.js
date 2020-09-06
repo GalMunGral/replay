@@ -10,17 +10,20 @@ import {
 } from "./MailItem.decor";
 import { format } from "./MailItem.util";
 
-const MailItem = ({
-  mail,
-  folder,
-  selected,
-  toggleItem,
-  deleteItem,
-  selectItem,
-  viewItem,
-  dragHandlers,
-}) => {
+const MailItem = (
+  {
+    mail,
+    selected,
+    toggleItem,
+    deleteItem,
+    selectItem,
+    viewItem,
+    dragHandlers,
+  },
+  { $router }
+) => {
   const { senderName, senderEmail, subject, content } = mail;
+  const { folder } = $router;
   const isInTrash = folder === "trash";
 
   return (

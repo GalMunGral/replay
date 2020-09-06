@@ -74,22 +74,14 @@ const $store = observable({
       this.state = reducer(this.state, action);
     }
   },
-  getMail(folder, id) {
-    return this.state[folder].find((item) => item.id === id);
-  },
-  getMails(folder, tab) {
-    return folder === "inbox"
-      ? this.state[folder].filter((it) => it.category === tab)
-      : this.state[folder];
-  },
 });
 
-$store.dispatch((dispatch) => {
-  import(/* webpackChunkName: 'data' */ "@assets/data").then(({ data }) => {
-    dispatch({
-      type: $store.T.LOAD,
-      payload: { folder: "inbox", data },
-    });
+$store.dispatch(async (dispatch) => {
+  const res = await fetch("/data.json");
+  const data = await res.json();
+  dispatch({
+    type: $store.T.LOAD,
+    payload: { folder: "inbox", data },
   });
 });
 

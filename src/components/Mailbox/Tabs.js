@@ -13,11 +13,10 @@ const Tab = ({ name, key, active, onclick }) =>
     p(name),
   ]);
 
-const Tabs = ({ folder, activeTab }, context) => {
-  const { $mails } = context;
-
+const Tabs = (__, { $mails, $router }) => {
+  const { folder, tab: activeTab } = $router;
   const resetPage = (tab) => {
-    $mails.tab = tab;
+    $router.tab = tab;
     $mails.pageIndex = 0;
   };
 

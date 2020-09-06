@@ -1,12 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import $store from "@observables/store";
-import $history from "@observables/editorHistory";
+import $history from "@observables/history";
 
 const $editor = observable({
   id: "",
   recipientEmail: "",
   subject: "",
-
   get content() {
     return $history.state.current;
   },
@@ -20,7 +19,6 @@ const $editor = observable({
       content: this.content,
     };
   },
-
   undo() {
     $history.dispatch({ type: "UNDO" });
   },
@@ -33,7 +31,6 @@ const $editor = observable({
   resetHistory(content) {
     $history.dispatch({ type: "RESET", payload: content });
   },
-
   createDraft() {
     this.id = uuidv4();
     this.recipientEmail = "";

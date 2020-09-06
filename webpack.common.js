@@ -21,8 +21,8 @@ module.exports = (env) => ({
   },
   resolveLoader: {
     alias: {
-      'replay-loader': path.resolve(__dirname, 'lib/replay-loader.js') 
-    }
+      "replay-loader": path.resolve(__dirname, "lib/replay-loader.js"),
+    },
   },
   module: {
     noParse: /lodash/,
@@ -37,8 +37,8 @@ module.exports = (env) => ({
               // cacheDirectory: true,
             },
           },
-          'replay-loader'
-        ]
+          "replay-loader",
+        ],
       },
       {
         test: /\.(ttf|woff(2)?|eot)$/,
@@ -54,18 +54,21 @@ module.exports = (env) => ({
   },
   plugins: [
     new DefinePlugin({
-      __DEBUG__: Boolean(env?.debug)
+      __DEBUG__: Boolean(env?.debug),
     }),
     new ProvidePlugin({
       _: "lodash",
       lazy: [path.resolve(__dirname, "lib/runtime/renderer"), "lazy"],
       decor: [path.resolve(__dirname, "lib/runtime/decorator"), "decor"],
-      observable: [path.resolve(__dirname, "lib/runtime/observable"), "observable"],
+      observable: [
+        path.resolve(__dirname, "lib/runtime/observable"),
+        "observable",
+      ],
     }),
     new HtmlWebpackPlugin({
       title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
-    new CleanWebpackPlugin(),
-  ]
+    // new CleanWebpackPlugin(),
+  ],
 });

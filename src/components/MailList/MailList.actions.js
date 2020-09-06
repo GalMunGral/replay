@@ -4,12 +4,11 @@ const createActions = (context) => {
     $editorPopup,
     $store,
     $editor,
-    $route,
     $router,
     $selection,
   } = context;
 
-  const { folder } = $route;
+  const { folder } = $router;
   const { selected } = $selection;
 
   const toggleItem = (id) => {

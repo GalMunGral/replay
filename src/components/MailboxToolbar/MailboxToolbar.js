@@ -4,9 +4,10 @@ import Space from "@components/Common/Space";
 import { PageRange, PageRangeText } from "./MailboxToolbar.decor";
 
 const MailboxToolbar = ({ allSelected, toggleAll }, context) => {
-  const { $route, $mails } = context;
+  const { $router, $mails } = context;
   const { pageStart, pageEnd, total } = $mails;
-  const canSelect = $route.folder !== "trash";
+  const { folder } = $router;
+  const canSelect = folder !== "trash";
 
   return (
     // use-transform
