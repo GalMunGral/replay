@@ -2,15 +2,18 @@ import Layout from "@components/Layout/Layout";
 import DetailToolbar from "./DetailToolbar";
 import { Main, Header, SenderInfo, RecipientInfo, Body } from "./Detail.decor";
 
-const Detail = ({ folder, id }, context) => {
+const Detail = function*({ folder, id }, context) {
   const { $store, $router } = context;
   const { T } = $store;
 
   const mail = $store.getMail(folder, id);
 
   if (!mail) {
-    $router.redirect("/" + folder);
-    return /* use-transform */ h1("Redirecting");
+    yield () => $router.redirect("/" + folder);
+    return /* use-transform */ h1(
+      (style = { margin: '50px auto' }),
+      "Redirecting"
+    );
   }
 
   const {
