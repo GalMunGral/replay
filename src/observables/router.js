@@ -12,7 +12,7 @@ const $router = observable({
     replace
       ? window.history.replaceState(null, "", path)
       : window.history.pushState(null, "", path);
-    // document.title = `Mail - ${this.folder.toUpperCase()}`;
+    document.title = `Mail - ${this.folder.toUpperCase()}`;
   },
   navigate(path) {
     this.updateStateWithPath(path);

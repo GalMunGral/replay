@@ -1,7 +1,7 @@
 import $store from "./store";
 import $router from "./router";
 
-export class DefaultMap extends Map {
+class DefaultMap extends Map {
   constructor(factory) {
     super();
     this.factory = factory;
@@ -26,25 +26,25 @@ const $mails = observable({
   get mail() {
     const state = $store.state;
     const { folder, id } = $router;
-    const _cache = cache.get(state).get(folder);
-    if (!_cache.has(id)) {
+    const folderCache = cache.get(state).get(folder);
+    if (!folderCache.has(id)) {
       const mail = state[folder].find((it) => it.id === id);
-      _cache.set(id, mail);
+      folderCache.set(id, mail);
     }
-    return _cache.get(id);
+    return folderCache.get(id);
   },
   get mails() {
     const state = $store.state;
     const { folder, tab } = $router;
-    const _cache = cache.get(state).get(folder);
-    if (!_cache.get(tab)) {
+    const folderCache = cache.get(state).get(folder);
+    if (!folderCache.get(tab)) {
       const mails =
         folder === "inbox"
           ? state[folder].filter((it) => it.category === tab)
           : state[folder];
-      _cache.set(tab, mails);
+      folderCache.set(tab, mails);
     }
-    return _cache.get(tab);
+    return folderCache.get(tab);
   },
   get total() {
     return this.mails.length;
@@ -66,6 +66,18 @@ const $mails = observable({
   },
   prevPage() {
     this.pageIndex = Math.max(this.pageIndex - 1, 0);
+  },
+  deleteMail() {
+    $store.dispatch((dispatch) => {
+      const { folder, id } = $router;
+      window.history.back();
+      setTimeout(() => {
+        dispatch({
+          type: $store.T.DELETE,
+          payload: { folder, id },
+        });
+      }, 200);
+    });
   },
 });
 

@@ -8,24 +8,24 @@ import {
   Preheader,
   Actions,
 } from "./MailItem.decor";
-import { format } from "./MailItem.util";
 
-const MailItem = (
-  {
-    mail,
-    selected,
-    toggleItem,
-    deleteItem,
-    selectItem,
-    viewItem,
-    dragHandlers,
-  },
-  { $router }
-) => {
+const format = (s, length) =>
+  s ? (s.length <= length ? s : s.slice(0, length) + "...") : "(empty)";
+
+const MailItem = ({
+  mail,
+  folder,
+  selected,
+  toggleItem,
+  deleteItem,
+  selectItem,
+  viewItem,
+  ondrag,
+  ondragstart,
+  ondragend,
+}) => {
   const { senderName, senderEmail, subject, content } = mail;
-  const { folder } = $router;
   const isInTrash = folder === "trash";
-
   return (
     // use-transform
     ListItem(
@@ -33,9 +33,9 @@ const MailItem = (
       (draggable = !isInTrash),
       (onmousedown = selectItem),
       (onmouseup = viewItem),
-      (ondrag = dragHandlers.ondrag),
-      (ondragstart = dragHandlers.ondragstart),
-      (ondragend = dragHandlers.ondragend),
+      (ondrag = ondrag),
+      (ondragstart = ondragstart),
+      (ondragend = ondragend),
       [
         !isInTrash && Checkbox((checked = selected), (onchange = toggleItem)),
         SenderInfo(senderName || senderEmail || "(no name)"),

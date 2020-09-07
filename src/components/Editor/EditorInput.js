@@ -1,17 +1,13 @@
 import { InputBox } from "./Editor.decor";
 
-const init = () => {
-  return {
-    $self: observable({
-      focused: false,
-    }),
-  };
-};
+const init = () => ({
+  $self: observable({
+    focused: false,
+  }),
+});
 
-const EditorInput = ({ value, setValue, label, placeholder }, context) => {
-  const { $self } = context;
+const EditorInput = ({ value, setValue, label, placeholder }, { $self }) => {
   const activated = $self.focused || value;
-
   return (
     // use-transform
     InputBox([

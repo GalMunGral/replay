@@ -1,3 +1,4 @@
+import $editor from "@observables/editor";
 import IconButton from "@components/Common/IconButton";
 import Space from "@components/Common/Space";
 import EditorInput from "@components/Editor/EditorInput";
@@ -11,22 +12,21 @@ import {
   SendButton,
 } from "./Editor.decor";
 
-const Editor = ({ $editorPopup }, context) => {
-  const { $editor } = context;
-  const { minimized } = $editorPopup;
+const Editor = () => {
+  const { minimized } = $editor;
   const { recipientEmail, subject, content } = $editor;
 
-  if (!$editorPopup.open) return [null];
+  if (!$editor.open) return [null];
 
   return (
     // use-transform
     Window([
-      Header((onclick = () => ($editorPopup.minimized = !minimized)), [
+      Header((onclick = () => ($editor.minimized = !minimized)), [
         span("New Message"),
         CloseButton(
           (onclick = () => {
             $editor.saveDraft();
-            $editorPopup.open = false;
+            $editor.open = false;
           }),
           [i((className = "fas fa-times"))]
         ),
@@ -52,7 +52,7 @@ const Editor = ({ $editorPopup }, context) => {
           SendButton(
             (onclick = () => {
               $editor.sendMail();
-              $editorPopup.open = false;
+              $editor.open = false;
             }),
             "Send"
           ),

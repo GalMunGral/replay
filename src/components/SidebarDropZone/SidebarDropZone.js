@@ -1,70 +1,75 @@
+import $store from "@observables/store";
+import $router from "@observables/router";
+import $selection from "@observables/selection";
 import { MenuItem, MenuIcon } from "../Sidebar/Sidebar.decor";
 
-const init = () => {
-  return {
-    $self: observable({
-      canDrop: false,
-    }),
-  };
-};
-
-const SidebarDropZone = ({ collapsed, activated }, context) => {
-  const { $self, $store, $selection, $router } = context;
-  const { folder } = $router;
-  const { T } = $store;
-
-  const eventListeners = {
-    onclick: () => {
+const init = () => ({
+  $self: observable({
+    canDrop: false,
+    onclick() {
+      if (__DEBUG__) {
+        console.log("onclick");
+      }
       $router.navigate("/trash");
     },
-    ondragenter: (e) => {
+    ondragenter(e) {
+      if (__DEBUG__) {
+        console.log("ondragenter");
+      }
       e.preventDefault();
       e.stopPropagation();
-      $self.canDrop = true;
+      this.canDrop = true;
     },
-    ondragleave: () => {
-      $self.canDrop = false;
+    ondragleave() {
+      if (__DEBUG__) {
+        console.log("ondragleave");
+      }
+      this.canDrop = false;
     },
-    ondragover: (e) => {
+    ondragover(e) {
+      if (__DEBUG__) {
+        console.log("ondragover");
+      }
       e.preventDefault();
       e.stopPropagation();
     },
-    ondrop: () => {
+    ondrop() {
+      if (__DEBUG__) {
+        console.log("ondrop");
+      }
       $store.dispatch((dispatch) => {
         setTimeout(() => {
           dispatch({
-            type: T.DELETE_SELECTED,
+            type: $store.T.DELETE_SELECTED,
             payload: {
-              folder,
+              folder: $router.folder,
               selected: $selection.selected,
             },
           });
           $selection.reset();
         }, 200);
       });
-      $self.canDrop = false;
+      this.canDrop = false;
     },
-  };
+  }),
+});
 
-  const style = {
-    background: $self.canDrop ? "var(--theme)" : "",
-    color: $self.canDrop ? "white" : "",
-  };
-
-  return (
-    // use-transform
-    MenuItem(
-      (collapsed = collapsed),
-      (activated = activated),
-      { style, ...eventListeners },
-      // prettier-ignore
-      [
-        MenuIcon((className = "fas fa-trash")), 
-        !collapsed && span("trash")
-      ]
-    )
+const SidebarDropZone = ({ collapsed }, { $self }) =>
+  // use-transform
+  MenuItem(
+    (collapsed = collapsed),
+    (activated = $router.folder === "trash"),
+    (style = {
+      background: $self.canDrop ? "var(--theme)" : "",
+      color: $self.canDrop ? "white" : "",
+    }),
+    (onclick = $self.onclick.bind($self)),
+    (ondragenter = $self.ondragenter.bind($self)),
+    (ondragleave = $self.ondragleave.bind($self)),
+    (ondragover = $self.ondragover.bind($self)),
+    (ondrop = $self.ondrop.bind($self)),
+    [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
   );
-};
 
 SidebarDropZone.init = init;
 

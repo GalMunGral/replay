@@ -1,5 +1,5 @@
 const $selection = observable({
-  selected: [],
+  selected: [], // Immutable
   set(id, shouldSelect) {
     if (shouldSelect) {
       if (!this.selected.includes(id)) {

@@ -1,14 +1,21 @@
+import $mails from "@observables/mails";
+import $router from "@observables/router";
 import Layout from "@components/Layout/Layout";
-import DetailToolbar from "./DetailToolbar";
+import IconButton from "@components/Common/IconButton";
 import { Main, Header, SenderInfo, RecipientInfo, Body } from "./Detail.decor";
 
-const Detail = function* (__, { $store, $mails, $router }) {
-  const { T } = $store;
-  const { mail } = $mails;
-  const { folder, id } = $router;
+const DetailToolbar = ({ canDelete, deleteMail }) => {
+  return (
+    // use-transform
+    [
+      IconButton((type = "arrow-left"), (onclick = () => history.back())),
+      canDelete ? IconButton((type = "trash"), (onclick = deleteMail)) : null,
+    ]
+  );
+};
 
-  if (!mail) {
-    yield () => $router.redirect("/" + folder);
+const Detail = () => {
+  if (!$mails.mail) {
     return /* use-transform */ h1(
       (style = { margin: "50px auto" }),
       "Redirecting"
@@ -22,28 +29,17 @@ const Detail = function* (__, { $store, $mails, $router }) {
     recipientName = "(no name)",
     recipientEmail = "(no email)",
     content,
-  } = mail;
-
+  } = $mails.mail;
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
-  const canDelete = folder !== "trash";
-
-  const deleteMail = () => {
-    $store.dispatch((dispatch) => {
-      window.history.back();
-      setTimeout(() => {
-        dispatch({
-          type: T.DELETE,
-          payload: { folder, id },
-        });
-      }, 200);
-    });
-  };
 
   return (
     // use-transform
     Layout([
-      DetailToolbar((canDelete = canDelete), (deleteMail = deleteMail)),
+      DetailToolbar(
+        (canDelete = $router.folder !== "trash"),
+        (deleteMail = () => $mails.deleteMail())
+      ),
       Main([
         Header(subject),
         SenderInfo((innerHTML = senderInfo)),

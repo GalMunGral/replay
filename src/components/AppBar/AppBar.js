@@ -10,13 +10,11 @@ import {
 } from "./AppBar.decor";
 import appLogoImage from "@assets/images/logo.png";
 
-const AppBar = ({ toggleSidebar }) =>
+const AppBar = ({ toggle }) =>
   // use-transform
   Container([
     Group([
-      MenuButton((onclick = toggleSidebar), [
-        MenuIcon((className = "fas fa-bars")),
-      ]),
+      MenuButton((onclick = toggle), [MenuIcon((className = "fas fa-bars"))]),
       AppLogo((src = appLogoImage), (alt = "logo")),
     ]),
     SearchBar([

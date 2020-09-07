@@ -3,9 +3,11 @@ import $store from "@observables/store";
 import $history from "@observables/history";
 
 const $editor = observable({
-  id: "",
-  recipientEmail: "",
-  subject: "",
+  id: null,
+  recipientEmail: null,
+  subject: null,
+  open: false,
+  minimized: false,
   get content() {
     return $history.state.current;
   },
@@ -13,8 +15,8 @@ const $editor = observable({
     return {
       id: this.id,
       recipientEmail: this.recipientEmail,
-      senderEmail: "test@example.com",
-      senderName: "Me",
+      senderEmail: "hewenqi@gatech.edu",
+      senderName: "Wenqi He",
       subject: this.subject,
       content: this.content,
     };
@@ -63,6 +65,13 @@ const $editor = observable({
         });
       }, 200);
     });
+  },
+  openEditor() {
+    if (!this.open) {
+      this.createDraft();
+      this.open = true;
+      this.minimized = false;
+    }
   },
 });
 
