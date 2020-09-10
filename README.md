@@ -9,12 +9,14 @@ Just like how the generators need their stack frames kept alive so that executio
 ## Dynamic Scope
 
 My formulation of this kind of model can be summarized as follows: A component depends on its _arguments_ and _context_ and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, the context for each child constructed by extending the parent's context with the child's own local variables. Expressed more formally:
+
 ```
 view := (args, c) => compose(
   root(args, c),
   subviews.map((view, i) => view(f(args, c, i), merge(c, bindings[i])))
 )
 ```
+
 Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
 
 To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
@@ -244,7 +246,7 @@ Using generators also allows for asynchronous rendering &mdash; which means that
 // scheduler.js
 
 // ...
-function doWork(deadline) {
+function resume(deadline) {
   while (deadline.timeRemaining() > THRESHOLD) {
     const { done, value } = currentTask.next();
     if (done) {
@@ -257,7 +259,7 @@ function doWork(deadline) {
       }
     }
   }
-  return window.requestIdleCallback(doWork);
+  return window.requestIdleCallback(resume);
 }
 
 function commit() {
@@ -293,21 +295,21 @@ import {
   SendButton,
 } from "../elements/Editor";
 
-const Editor = (__, { $editorPopup, $editor }) => {
-  const { minimized } = $editorPopup;
+const Editor = (__, { $editor }) => {
+  const { minimized } = $editor;
   const { recipientEmail, subject, content } = $editor;
 
-  if (!$editorPopup.open) return [null];
+  if (!$editor.open) return [null];
 
   return (
     // use-transform
     Window([
-      Header((onclick = () => ($editorPopup.minimized = !minimized)), [
+      Header((onclick = () => ($editor.minimized = !minimized)), [
         span("New Message"),
         CloseButton(
           (onclick = () => {
             $editor.saveDraft();
-            $editorPopup.open = false;
+            $editor.open = false;
           }),
           [i((className = "fas fa-times"))]
         ),
@@ -333,7 +335,7 @@ const Editor = (__, { $editorPopup, $editor }) => {
           SendButton(
             (onclick = () => {
               $editor.sendMail();
-              $editorPopup.open = false;
+              $editor.open = false;
             }),
             "Send"
           ),

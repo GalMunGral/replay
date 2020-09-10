@@ -23,37 +23,34 @@ const compileCSS = (segments, ...fns) => (props) => {
   return result.join("");
 };
 
-const decor = (component) => (...args) => {
-  const declarations = compileCSS(...args);
+const decor = (component) => (segments, ...fns) => {
+  const declarations = compileCSS(segments, ...fns);
   const rules = [];
-
-  const StyleWrapper = function* (props) {
+  const StyleWrapper = (props, __, context) => {
     const computedDeclarations = declarations(props);
-    const effects = [];
     let className;
     if (!classCache.has(computedDeclarations)) {
       className = "s-" + uid();
       const rule = "." + className + " { " + computedDeclarations + " } ";
-      effects.push(() => addCSSRule(rule));
-      classCache.set(computedDeclarations, className);
+      context.emit(() => {
+        addCSSRule(rule);
+        classCache.set(computedDeclarations, className);
+      });
     } else {
       className = classCache.get(computedDeclarations);
     }
-
     for (let rule of rules) {
       const computedRule = "." + className + rule(props);
       if (!ruleCache.has(computedRule)) {
-        effects.push(() => addCSSRule(computedRule));
-        ruleCache.add(computedRule);
+        context.emit(() => {
+          addCSSRule(computedRule);
+          ruleCache.add(computedRule);
+        });
       }
     }
-
-    yield effects;
-    
     const mergedClassName = props.className
       ? className + " " + props.className
       : className;
-      
     return [
       [
         component,
@@ -65,12 +62,10 @@ const decor = (component) => (...args) => {
       ],
     ];
   };
-
-  StyleWrapper.and = (...args) => {
-    rules.push(compileCSS(...args));
+  StyleWrapper.and = (segments, ...fns) => {
+    rules.push(compileCSS(segments, ...fns));
     return StyleWrapper;
   };
-
   return StyleWrapper;
 };
 

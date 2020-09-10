@@ -12,8 +12,9 @@ module.exports = (env) => ({
     chunkFilename: "[name].[contenthash].js",
   },
   resolve: {
+    extensions: [".ts", ".js"],
     alias: {
-      "@runtime": path.resolve(__dirname, "lib/runtime"),
+      "@runtime": path.resolve(__dirname, "lib/src"),
       "@assets": path.resolve(__dirname, "src/assets"),
       "@components": path.resolve(__dirname, "src/components"),
       "@observables": path.resolve(__dirname, "src/observables"),
@@ -28,17 +29,14 @@ module.exports = (env) => ({
     noParse: /lodash/,
     rules: [
       {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: ["babel-loader", "replay-loader", "ts-loader"],
+      },
+      {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: [
-          {
-            loader: "babel-loader",
-            options: {
-              // cacheDirectory: true,
-            },
-          },
-          "replay-loader",
-        ],
+        use: ["babel-loader", "replay-loader"],
       },
       {
         test: /\.(ttf|woff(2)?|eot)$/,
@@ -58,12 +56,9 @@ module.exports = (env) => ({
     }),
     new ProvidePlugin({
       _: "lodash",
-      lazy: [path.resolve(__dirname, "lib/runtime/renderer"), "lazy"],
-      decor: [path.resolve(__dirname, "lib/runtime/decorator"), "decor"],
-      observable: [
-        path.resolve(__dirname, "lib/runtime/observable"),
-        "observable",
-      ],
+      lazy: [path.resolve(__dirname, "lib/src/renderer"), "lazy"],
+      decor: [path.resolve(__dirname, "lib/src/decorator"), "decor"],
+      observable: [path.resolve(__dirname, "lib/src/observable"), "observable"],
     }),
     new HtmlWebpackPlugin({
       title: "Cmail",

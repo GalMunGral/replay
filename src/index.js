@@ -9,4 +9,6 @@ if (process.env.NODE_ENV === "production") {
   import("@fortawesome/fontawesome-free/css/all.css");
 }
 
-render(/* use-transform */ App(), document.body);
+window.addEventListener("load", () => {
+  render(/* use-transform */ App(), document.body);
+});
