@@ -1,5 +1,11 @@
 import { Context, RenderTask, Scheduler } from "./scheduler";
 
+export type Quasiquote = [
+  string | RenderFunction | AsyncRenderFunction, // type
+  Object, // props
+  Quasiquote[] // children
+];
+
 interface RenderFunction extends Function {
   (props: Object, scope: Object, context: Context): Quasiquote[];
   init?: () => Object;
@@ -17,12 +23,6 @@ export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
 }
 
 export type ActivationRecordType = string | RenderFunction;
-
-export type Quasiquote = [
-  string | RenderFunction | AsyncRenderFunction, // type
-  Object, // props
-  Quasiquote[] // children
-];
 
 export class ActivationRecord {
   private static nextId = 0;
