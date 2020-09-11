@@ -4,8 +4,8 @@ import { Arguments, RenderFunction } from "../core/component";
 
 type StringRenderer = (props: Arguments) => string;
 
-interface StyledWrapper extends RenderFunction {
-  and: (segments: string[], ...fns: StringRenderer[]) => StyledWrapper;
+interface StyleWrapper extends RenderFunction {
+  and: (segments: string[], ...fns: StringRenderer[]) => StyleWrapper;
 }
 
 const usedDeclarations = new Map<string, string>();
@@ -29,12 +29,12 @@ function parseTemplateCSS(
 
 const decorator: (
   type: string | RenderFunction
-) => (segments: string[], ...fns: StringRenderer[]) => StyledWrapper = (
+) => (segments: string[], ...fns: StringRenderer[]) => StyleWrapper = (
   type
 ) => (segments, ...fns) => {
   const renderCSS = parseTemplateCSS(segments, ...fns);
   const subruleRenderers: StringRenderer[] = [];
-  const Styled: StyledWrapper = (props, _scope, context) => {
+  const Styled: StyleWrapper = (props, _scope, context) => {
     const declaration = renderCSS(props);
     let className: string;
     if (!usedDeclarations.has(declaration)) {
@@ -66,10 +66,7 @@ const decorator: (
     return [[type, props, props.children]];
   };
 
-  Styled.and = (
-    segments: string[],
-    ...fns: StringRenderer[]
-  ): StyledWrapper => {
+  Styled.and = (segments: string[], ...fns: StringRenderer[]): StyleWrapper => {
     subruleRenderers.push(parseTemplateCSS(segments, ...fns));
     return Styled;
   };
