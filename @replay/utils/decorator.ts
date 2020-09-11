@@ -46,22 +46,24 @@ const decorator: (
     } else {
       className = usedDeclarations.get(declaration);
     }
-    for (let rule of subruleRenderers) {
-      const computedRule = "." + className + rule(props);
-      if (!usedRules.has(computedRule)) {
+    for (let renderRule of subruleRenderers) {
+      const rule = `.${className} ${renderRule(props)}`;
+      if (!usedRules.has(rule)) {
         context.emit(() => {
-          styleEl.sheet.insertRule(computedRule);
-          usedRules.add(computedRule);
+          styleEl.sheet.insertRule(rule);
+          usedRules.add(rule);
         });
       }
     }
     const mergedClassName = props.className
       ? className + " " + props.className
       : className;
+
     props = {
       ...props,
       className: mergedClassName,
     };
+
     return [[type, props, props.children]];
   };
 
