@@ -68,7 +68,8 @@ const decorator: (
   };
 
   Styled.and = (segments: string[], ...fns: StringRenderer[]): StyleWrapper => {
-    subruleRenderers.push(parseTemplateCSS(segments, ...fns));
+    const renderer = parseTemplateCSS(segments, ...fns);
+    subruleRenderers.push(renderer);
     return Styled;
   };
 
