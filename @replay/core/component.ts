@@ -17,12 +17,12 @@ export interface RenderFunction extends Function {
   init?: () => Object;
 }
 
-export type ResolverFunction = () => Promise<{ default: RenderFunction }>;
-
 export interface AsyncRenderFunction {
   isAsync: true;
   resolver: ResolverFunction;
 }
+
+export type ResolverFunction = () => Promise<{ default: RenderFunction }>;
 
 export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
   return { isAsync: true, resolver };
