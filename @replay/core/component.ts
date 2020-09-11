@@ -56,6 +56,26 @@ export class ActivationRecord {
     }
   }
 
+  subscribe(observers: Set<ActivationRecord>): void {
+    observers.add(this);
+    this.subscriptions.push(observers);
+  }
+
+  private cancelSubscriptions(): void {
+    this.subscriptions.forEach((observers) => {
+      observers.delete(this);
+    });
+    this.subscriptions = [];
+  }
+
+  private transferSubscriptions(record: ActivationRecord): void {
+    this.subscriptions.forEach((observers) => {
+      observers.delete(this);
+      record.subscribe(observers);
+    });
+    this.subscriptions = [];
+  }
+
   public clone(parent: ActivationRecord, context: Context): ActivationRecord {
     if (__DEBUG__) {
       LOG("[[Render]] clone record");
@@ -153,25 +173,5 @@ export class ActivationRecord {
       }
       cur.remove();
     });
-  }
-
-  subscribe(observers: Set<ActivationRecord>): void {
-    observers.add(this);
-    this.subscriptions.push(observers);
-  }
-
-  private cancelSubscriptions(): void {
-    this.subscriptions.forEach((observers) => {
-      observers.delete(this);
-    });
-    this.subscriptions = [];
-  }
-
-  private transferSubscriptions(record: ActivationRecord): void {
-    this.subscriptions.forEach((observers) => {
-      observers.delete(this);
-      record.subscribe(observers);
-    });
-    this.subscriptions = [];
   }
 }
