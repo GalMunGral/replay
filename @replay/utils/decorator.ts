@@ -35,12 +35,12 @@ const decorator: (
   const renderCSS = parseTemplateCSS(segments, ...fns);
   const subruleRenderers: StringRenderer[] = [];
   const Styled: StyledWrapper = (props, _scope, context) => {
-    const declaration: string = renderCSS(props);
+    const declaration = renderCSS(props);
     let className: string;
     if (!usedDeclarations.has(declaration)) {
       className = `s-${uid()}`;
       context.emit(() => {
-        styleEl.sheet.insertRule(`.${className} { ${declaration} }`);
+        styleEl.sheet.insertRule(`.${className}{${declaration}}`);
         usedDeclarations.set(declaration, className);
       });
     } else {
@@ -55,13 +55,12 @@ const decorator: (
         });
       }
     }
-    const mergedClassName = props.className
-      ? className + " " + props.className
-      : className;
 
     props = {
       ...props,
-      className: mergedClassName,
+      className: props.className
+        ? [className, props.className].join(" ")
+        : className,
     };
 
     return [[type, props, props.children]];
