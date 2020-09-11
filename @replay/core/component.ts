@@ -7,14 +7,15 @@ export type Quasiquote = [
 ];
 
 export interface Arguments {
-  [prop: string]: any;
   key?: string;
   children?: string | Quasiquote[];
+  [prop: string]: any;
 }
 
 export interface RenderFunction extends Function {
   (props: Arguments, scope: Object, context: RenderTask): Quasiquote[];
   init?: () => Object;
+  [key: string]: any;
 }
 
 export interface AsyncRenderFunction {

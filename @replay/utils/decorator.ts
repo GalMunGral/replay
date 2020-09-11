@@ -1,21 +1,23 @@
 import uid from "uid";
 import htmlTags from "html-tags";
+import { Arguments, RenderFunction } from "../core/component";
 
-var styleSheet: CSSStyleSheet;
-const declarationToClassName = new Map<string, string>();
-const addedRules = new Set<string>();
+type StringRenderer = (props: Arguments) => string;
 
-function insertRule(rule: string): void {
-  if (!styleSheet) {
-    const styleEl = document.createElement("style");
-    document.head.append(styleEl);
-    styleSheet = styleEl.sheet;
-  }
-  styleSheet.insertRule(rule);
+interface StyledWrapper extends RenderFunction {
+  and: (segments: string[], ...fns: StringRenderer[]) => StyledWrapper;
 }
 
-function compileCSS(segments, ...fns) {
-  return (props) => {
+const usedDeclarations = new Map<string, string>();
+const usedRules = new Set<string>();
+const styleEl = document.createElement("style");
+document.head.append(styleEl);
+
+function parseTemplate(
+  segments: string[],
+  ...fns: StringRenderer[]
+): StringRenderer {
+  return (props: Arguments) => {
     const result = [segments[0]];
     for (let i = 0; i < fns.length; i++) {
       result.push(fns[i](props));
@@ -25,52 +27,60 @@ function compileCSS(segments, ...fns) {
   };
 }
 
-const decorator = (component) => (segments, ...fns) => {
-  const declarations = compileCSS(segments, ...fns);
-  const rules = [];
-  const StyleWrapper = (props, __, context) => {
-    const computedDeclarations = declarations(props);
-    let className;
-    if (!declarationToClassName.has(computedDeclarations)) {
-      className = "s-" + uid();
-      const rule = "." + className + " { " + computedDeclarations + " } ";
+const decorator: (
+  type: string | RenderFunction
+) => (segments: string[], ...fns: StringRenderer[]) => StyledWrapper = (
+  type
+) => (segments, ...fns) => {
+  const renderCSS = parseTemplate(segments, ...fns);
+  const subruleRenderers: StringRenderer[] = [];
+  const Styled: StyledWrapper = (props, _scope, context) => {
+    const declaration: string = renderCSS(props);
+    let className: string;
+    if (!usedDeclarations.has(declaration)) {
+      className = `s-${uid()}`;
+      const rule = `.${className} { ${declaration} }`;
       context.emit(() => {
-        insertRule(rule);
-        declarationToClassName.set(computedDeclarations, className);
+        styleEl.sheet.insertRule(rule);
+        usedDeclarations.set(declaration, className);
       });
     } else {
-      className = declarationToClassName.get(computedDeclarations);
+      className = usedDeclarations.get(declaration);
     }
-    for (let rule of rules) {
+    for (let rule of subruleRenderers) {
       const computedRule = "." + className + rule(props);
-      if (!addedRules.has(computedRule)) {
+      if (!usedRules.has(computedRule)) {
         context.emit(() => {
-          insertRule(computedRule);
-          addedRules.add(computedRule);
+          styleEl.sheet.insertRule(computedRule);
+          usedRules.add(computedRule);
         });
       }
     }
     const mergedClassName = props.className
       ? className + " " + props.className
       : className;
-    return [
-      [
-        component,
-        {
-          ...props,
-          className: mergedClassName,
-        },
-        props.children,
-      ],
-    ];
+    props = {
+      ...props,
+      className: mergedClassName,
+    };
+    return [[type, props, props.children]];
   };
-  StyleWrapper.and = (segments, ...fns) => {
-    rules.push(compileCSS(segments, ...fns));
-    return StyleWrapper;
+
+  Styled.and = (
+    segments: string[],
+    ...fns: StringRenderer[]
+  ): StyledWrapper => {
+    subruleRenderers.push(parseTemplate(segments, ...fns));
+    return Styled;
   };
-  return StyleWrapper;
+
+  return Styled;
 };
 
-htmlTags.forEach((tag) => (decorator[tag] = decorator(tag)));
+htmlTags.forEach((tag) => {
+  // Create shorthands for DOM components, e.g. `decorator('div')`
+  // can be written as `decorator['div']` or simply `decorator.div`
+  decorator[tag] = decorator(tag);
+});
 
 export { decorator };
