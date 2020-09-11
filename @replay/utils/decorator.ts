@@ -39,9 +39,8 @@ const decorator: (
     let className: string;
     if (!usedDeclarations.has(declaration)) {
       className = `s-${uid()}`;
-      const rule = `.${className} { ${declaration} }`;
       context.emit(() => {
-        styleEl.sheet.insertRule(rule);
+        styleEl.sheet.insertRule(`.${className} { ${declaration} }`);
         usedDeclarations.set(declaration, className);
       });
     } else {
