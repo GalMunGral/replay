@@ -15,7 +15,7 @@ const $router = new Observable({
       ? window.history.replaceState(null, "", path)
       : window.history.pushState(null, "", path);
     document.title = `CMail - ${
-      this.folder[0] + this.folder.slice(1).toUpperCase()
+      this.folder[0].toUpperCase() + this.folder.slice(1)
     }`;
   },
   navigate(path) {
