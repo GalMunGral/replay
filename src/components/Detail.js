@@ -1,8 +1,36 @@
+import { decorator as $$ } from "@replay/utils";
 import $mails from "@observables/mails";
 import $router from "@observables/router";
-import Layout from "@components/Layout/Layout";
-import IconButton from "@components/Common/IconButton";
-import { Main, Header, SenderInfo, RecipientInfo, Body } from "./Detail.decor";
+import Layout from "@components/Layout";
+import IconButton from "@components/IconButton";
+
+const Main = $$.main`
+  margin: 0 50px;
+`;
+
+const Header = $$.section`
+  font-weight: 600;
+  font-size: 1.8rem;
+  margin: 20px 0;
+  text-transform: capitalize;
+`;
+
+const SenderInfo = $$.div`
+  margin: 0;
+  font-weight: bold;
+  font-size: 0.9rem;
+`;
+
+const RecipientInfo = $$.div`
+  margin: 0;
+  color: gray;
+  font-size: 0.8rem;
+`;
+
+const Body = $$.section`
+  margin: 20px 0;
+  text-align: justify;
+`;
 
 const DetailToolbar = ({ canDelete, deleteMail }) => {
   return (

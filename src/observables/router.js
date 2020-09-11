@@ -1,4 +1,6 @@
-const $router = observable({
+import { Observable } from "@replay/core";
+
+const $router = new Observable({
   folder: null,
   tab: "primary",
   id: null,

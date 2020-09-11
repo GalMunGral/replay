@@ -1,3 +1,4 @@
+import { Observable } from "@replay/core";
 import $store from "./store";
 import $router from "./router";
 
@@ -20,7 +21,7 @@ const cache = new DefaultMap(() => {
   });
 });
 
-const $mails = observable({
+const $mails = new Observable({
   pageSize: 50,
   pageIndex: 0,
   get mail() {

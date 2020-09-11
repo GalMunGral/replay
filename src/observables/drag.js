@@ -1,13 +1,16 @@
-const DELAY = 1000 / 60;
+import { Observable } from "@replay/core";
+import { throttle } from "lodash";
 
-const $dragState = observable({
+const DELAY = 33.33;
+
+const $dragState = new Observable({
   isDragging: false,
   x: 0,
   y: 0,
   setIsDragging(isDragging) {
     this.isDragging = isDragging;
   },
-  setCoordinates: _.throttle(function (x, y) {
+  setCoordinates: throttle(function (x, y) {
     this.x = x;
     this.y = y;
   }, DELAY),

@@ -1,4 +1,6 @@
-export const Button = decor.button`
+import { decorator as $$ } from "@replay/utils";
+
+const Button = $$.button`
   --size: 40px;
   border: none;
   outline: none;
@@ -23,6 +25,20 @@ export const Button = decor.button`
   }
 `;
 
-export const Icon = decor.i`
+const Icon = $$.i`
   color: gray;
 `;
+
+const IconButton = ({ type, onclick }) =>
+  // use-transform
+  Button(
+    (onclick = onclick),
+    (onmousedown = (e) => e.stopPropagation()),
+    (onmouseup = (e) => e.stopPropagation()),
+    [
+      // prettier-ignore
+      Icon((className = `fas fa-${type}`)),
+    ]
+  );
+
+export default IconButton;

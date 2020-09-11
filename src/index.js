@@ -1,5 +1,5 @@
-import { render } from "@runtime";
-import App from "@components/App/App";
+import { render } from "@replay/core";
+import App from "@components/App";
 import "@assets/style.css";
 import "@assets/favicon.ico";
 

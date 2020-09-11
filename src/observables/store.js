@@ -1,3 +1,5 @@
+import { Observable } from "@replay/core";
+
 const Type = {
   LOAD: "LOAD",
   DELETE: "DELETE",
@@ -58,7 +60,7 @@ const reducer = (state, action) => {
   }
 };
 
-const $store = observable({
+const $store = new Observable({
   T: Type,
   state: {
     inbox: [],

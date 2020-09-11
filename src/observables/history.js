@@ -1,3 +1,5 @@
+import { Observable } from "@replay/core";
+
 const historyReducer = (state, action) => {
   switch (action.type) {
     case "UNDO":
@@ -31,7 +33,7 @@ const historyReducer = (state, action) => {
   }
 };
 
-const $history = observable({
+const $history = new Observable({
   state: {
     past: [],
     current: "",

@@ -1,4 +1,7 @@
-export const Container = decor.div`
+import { decorator as $$ } from "@replay/utils";
+import appLogoImage from "@assets/images/logo.png";
+
+const Container = $$.div`
   grid-area: a;
   padding: 2px 10px;
   width: 100%;
@@ -9,7 +12,7 @@ export const Container = decor.div`
   border-bottom: 1px solid var(--light-gray);
 `;
 
-export const Group = decor.div`
+const Group = $$.div`
   flex: 0 0 auto;
   min-width: 200px;
   height: 100%;
@@ -17,7 +20,7 @@ export const Group = decor.div`
   align-items: center;
 `;
 
-export const MenuButton = decor.button`
+const MenuButton = $$.button`
   --size: 48px;
   border: none;
   width: var(--size);
@@ -33,16 +36,16 @@ export const MenuButton = decor.button`
   }
 `;
 
-export const AppLogo = decor.img`
+const AppLogo = $$.img`
   height: 40px;
 `;
 
-export const MenuIcon = decor.i`
+const MenuIcon = $$.i`
   font-size: 1rem;
   color: var(--dark-gray);
 `;
 
-export const SearchInput = decor.input`
+const SearchInput = $$.input`
   height: 100%;
   width: 100%;
   border: none;
@@ -52,7 +55,7 @@ export const SearchInput = decor.input`
   font-size: 1rem;
 `;
 
-export const SearchBar = decor.div`
+const SearchBar = $$.div`
   width: 50vw;
   height: calc(100% - 20px);
   padding: 5px;
@@ -68,8 +71,24 @@ export const SearchBar = decor.div`
   }
 `;
 
-export const SearchIcon = decor.i`
+const SearchIcon = $$.i`
   font-size: 1rem;
   color: var(--dark-gray);
   margin: 20px;
 `;
+
+const AppBar = ({ toggle }) =>
+  // use-transform
+  Container([
+    Group([
+      MenuButton((onclick = toggle), [MenuIcon((className = "fas fa-bars"))]),
+      AppLogo((src = appLogoImage), (alt = "logo")),
+    ]),
+    SearchBar([
+      SearchIcon((className = "fas fa-search")),
+      SearchInput((placeholder = "Search mail")),
+    ]),
+    Group(),
+  ]);
+
+export default AppBar;

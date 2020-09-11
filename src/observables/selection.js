@@ -1,4 +1,6 @@
-const $selection = observable({
+import { Observable } from "@replay/core";
+
+const $selection = new Observable({
   selected: [], // Immutable
   set(id, shouldSelect) {
     if (shouldSelect) {

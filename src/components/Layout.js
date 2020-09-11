@@ -1,11 +1,13 @@
-export const Container = decor.div`
+import { decorator as $$ } from "@replay/utils";
+
+const Container = $$.div`
   grid-area: c;
   height: 100%;
   display: flex;
   flex-direction: column;
 `;
 
-export const ToolbarContainer = decor.div`
+const ToolbarContainer = $$.div`
   flex: 0 0 50px;
   border-bottom: 1px solid var(--light-gray);
   display: flex;
@@ -15,7 +17,7 @@ export const ToolbarContainer = decor.div`
   padding-right: 30px;
 `;
 
-export const Scrollable = decor.div`
+const Scrollable = $$.div`
   flex: 1 1 auto;
   overflow-y: auto;
   padding-bottom: 80px;
@@ -27,3 +29,13 @@ export const Scrollable = decor.div`
     width: 10px;
   }
 `;
+
+const Layout = ({ children: [toolbar, body] }) =>
+  // use-transform
+  Container([
+    // prettier-ignore
+    ToolbarContainer([toolbar]),
+    Scrollable([body]),
+  ]);
+
+export default Layout;

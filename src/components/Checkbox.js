@@ -1,4 +1,6 @@
-export const Background = decor.div`
+import { decorator as $$ } from "@replay/utils";
+
+const Background = $$.div`
   --border-size: 2px;
   margin: 0;
   position: absolute;
@@ -16,7 +18,7 @@ export const Background = decor.div`
   transition: all ${({ checked }) => (checked ? "0.2s" : 0)};
 `;
 
-export const CheckMark = decor.div`
+const CheckMark = $$.div`
   --border-size: 2px;
   margin: 0;
   position: absolute;
@@ -38,7 +40,7 @@ export const CheckMark = decor.div`
   transition: transform 0.2s;
 `;
 
-export const Clickable = decor.div`
+const Clickable = $$.div`
   --size: 40px;
   display: flex;
   justify-content: center;
@@ -68,3 +70,23 @@ export const Clickable = decor.div`
     cursor: pointer;
   }
 `;
+
+const Checkbox = ({ checked, onchange }) =>
+  // use-transform
+  Clickable(
+    (onclick = onchange),
+    (onmousedown = (e) => e.stopPropagation()),
+    (onmouseup = (e) => e.stopPropagation()),
+    [
+      div([
+        Background((checked = checked)),
+        CheckMark((checked = checked), [
+          // prettier-ignore
+          i((className = "fas fa-check")),
+        ]),
+        input((type = "checkbox"), (checked = checked)),
+      ]),
+    ]
+  );
+
+export default Checkbox;

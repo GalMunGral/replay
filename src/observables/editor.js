@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
+import { Observable } from "@replay/core";
 import $store from "@observables/store";
 import $history from "@observables/history";
 
-const $editor = observable({
+const $editor = new Observable({
   id: null,
   recipientEmail: null,
   subject: null,

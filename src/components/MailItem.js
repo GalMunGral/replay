@@ -1,16 +1,64 @@
-import Checkbox from "@components/Checkbox/Checkbox";
-import IconButton from "@components/Common/IconButton";
-import {
-  ListItem,
-  SenderInfo,
-  Summary,
-  Title,
-  Preheader,
-  Actions,
-} from "./MailItem.decor";
+import { decorator as $$ } from "@replay/utils";
+import Checkbox from "@components/Checkbox";
+import IconButton from "@components/IconButton";
 
 const format = (s, length) =>
   s ? (s.length <= length ? s : s.slice(0, length) + "...") : "(empty)";
+
+const ListItem = $$.div`
+  --height: 40px;
+  position: relative;
+  height: var(--height);
+  line-height: var(--height);
+  padding: 0 10px;
+  display: flex;
+  border-bottom: 1px solid var(--light-gray);
+  background-color: ${({ selected }) =>
+    selected ? "var(--highlight)" : "white"};
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+
+`.and`:active {
+    cursor: grabbing;
+  }
+`.and`:hover {
+    background: ${({ selected }) => (selected ? "var(--highlight)" : "white")};
+    filter: brightness(0.95);
+  }
+`.and`:hover * {
+    visibility: visible;
+  }
+`;
+
+const SenderInfo = $$.div`
+  flex: 0 0 200px;
+  font-weight: 600;
+`;
+
+const Summary = $$.div`
+  flex: 1 1 auto;
+  line-height: 1rem;
+`;
+
+const Title = $$.span`
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: capitalize;
+`;
+
+const Preheader = $$.span`
+  font-weight: 300;
+  font-size: 1rem;
+  color: gray;
+`;
+
+const Actions = $$.div`
+  margin-right: 30px;
+  flex: 0 0 auto;
+  visibility: hidden;
+  color: var(--gray);
+`;
 
 const MailItem = ({
   mail,
