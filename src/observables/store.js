@@ -1,3 +1,5 @@
+import { Observable } from "@replay/utils";
+
 const Type = {
   LOAD: "LOAD",
   DELETE: "DELETE",
@@ -12,7 +14,7 @@ const reducer = (state, action) => {
       const { folder, data } = action.payload;
       return {
         ...state,
-        [folder]: [...state[folder], ...data],
+        [folder]: data,
       };
     }
     case Type.DELETE: {
@@ -50,7 +52,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         drafts: state.drafts.filter((item) => item.id !== message.id),
-        sent: [message, ...state.sent],
+        sent: [...state.sent, message],
       };
     }
     default:
@@ -58,7 +60,7 @@ const reducer = (state, action) => {
   }
 };
 
-const $store = observable({
+const $store = new Observable({
   T: Type,
   state: {
     inbox: [],
@@ -68,28 +70,19 @@ const $store = observable({
   },
   dispatch(action) {
     if (typeof action === "function") {
-      const dispatch = this.dispatch.bind(this);
-      action(dispatch);
+      action(this.dispatch.bind(this));
     } else {
       this.state = reducer(this.state, action);
     }
   },
-  getMail(folder, id) {
-    return this.state[folder].find((item) => item.id === id);
-  },
-  getMails(folder, tab) {
-    return folder === "inbox"
-      ? this.state[folder].filter((it) => it.category === tab)
-      : this.state[folder];
-  },
 });
 
-$store.dispatch((dispatch) => {
-  import(/* webpackChunkName: 'data' */ "@assets/data").then(({ data }) => {
-    dispatch({
-      type: $store.T.LOAD,
-      payload: { folder: "inbox", data },
-    });
+$store.dispatch(async (dispatch) => {
+  const res = await fetch("/data.json");
+  const data = await res.json();
+  dispatch({
+    type: $store.T.LOAD,
+    payload: { folder: "inbox", data },
   });
 });
 

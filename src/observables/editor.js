@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
+import { Observable } from "@replay/utils";
 import $store from "@observables/store";
-import $history from "@observables/editorHistory";
+import $history from "@observables/history";
 
-const $editor = observable({
-  id: "",
-  recipientEmail: "",
-  subject: "",
-
+const $editor = new Observable({
+  id: null,
+  recipientEmail: null,
+  subject: null,
+  open: false,
+  minimized: false,
   get content() {
     return $history.state.current;
   },
@@ -14,13 +16,12 @@ const $editor = observable({
     return {
       id: this.id,
       recipientEmail: this.recipientEmail,
-      senderEmail: "test@example.com",
-      senderName: "Me",
+      senderEmail: "hewenqi@gatech.edu",
+      senderName: "Wenqi He",
       subject: this.subject,
       content: this.content,
     };
   },
-
   undo() {
     $history.dispatch({ type: "UNDO" });
   },
@@ -33,7 +34,6 @@ const $editor = observable({
   resetHistory(content) {
     $history.dispatch({ type: "RESET", payload: content });
   },
-
   createDraft() {
     this.id = uuidv4();
     this.recipientEmail = "";
@@ -66,6 +66,13 @@ const $editor = observable({
         });
       }, 200);
     });
+  },
+  openEditor() {
+    if (!this.open) {
+      this.createDraft();
+      this.open = true;
+      this.minimized = false;
+    }
   },
 });
 

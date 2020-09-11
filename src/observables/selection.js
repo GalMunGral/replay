@@ -1,5 +1,7 @@
-const $selection = observable({
-  selected: [],
+import { Observable } from "@replay/utils";
+
+const $selection = new Observable({
+  selected: [], // Immutable
   set(id, shouldSelect) {
     if (shouldSelect) {
       if (!this.selected.includes(id)) {

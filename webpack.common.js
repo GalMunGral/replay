@@ -12,8 +12,9 @@ module.exports = (env) => ({
     chunkFilename: "[name].[contenthash].js",
   },
   resolve: {
+    extensions: [".ts", ".js"],
     alias: {
-      "@runtime": path.resolve(__dirname, "lib/runtime"),
+      "@replay": path.resolve(__dirname, "@replay"),
       "@assets": path.resolve(__dirname, "src/assets"),
       "@components": path.resolve(__dirname, "src/components"),
       "@observables": path.resolve(__dirname, "src/observables"),
@@ -21,24 +22,20 @@ module.exports = (env) => ({
   },
   resolveLoader: {
     alias: {
-      'replay-loader': path.resolve(__dirname, 'lib/replay-loader.js') 
-    }
+      "@replay": path.resolve(__dirname, "@replay"),
+    },
   },
   module: {
     noParse: /lodash/,
     rules: [
       {
+        test: /\.ts$/,
+        use: ["babel-loader", "ts-loader"],
+      },
+      {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: [
-          {
-            loader: "babel-loader",
-            options: {
-              // cacheDirectory: true,
-            },
-          },
-          'replay-loader'
-        ]
+        use: ["babel-loader", "@replay/loader"],
       },
       {
         test: /\.(ttf|woff(2)?|eot)$/,
@@ -54,18 +51,13 @@ module.exports = (env) => ({
   },
   plugins: [
     new DefinePlugin({
-      __DEBUG__: Boolean(env?.debug)
-    }),
-    new ProvidePlugin({
-      _: "lodash",
-      lazy: [path.resolve(__dirname, "lib/runtime/renderer"), "lazy"],
-      decor: [path.resolve(__dirname, "lib/runtime/decorator"), "decor"],
-      observable: [path.resolve(__dirname, "lib/runtime/observable"), "observable"],
+      __DEBUG__: Boolean(env?.debug),
+      LOG: "console.debug",
     }),
     new HtmlWebpackPlugin({
       title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
-    new CleanWebpackPlugin(),
-  ]
+    // new CleanWebpackPlugin(),
+  ],
 });
