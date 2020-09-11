@@ -32,8 +32,9 @@ const decorator: (
 ) => (segments: string[], ...fns: StringRenderer[]) => StyleWrapper = (
   type
 ) => (segments, ...fns) => {
-  const renderCSS = parseTemplateCSS(segments, ...fns);
   const subruleRenderers: StringRenderer[] = [];
+
+  const renderCSS = parseTemplateCSS(segments, ...fns);
   const Styled: StyleWrapper = (props, _scope, context) => {
     const declaration = renderCSS(props);
     let className: string;
