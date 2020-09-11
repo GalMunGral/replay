@@ -13,7 +13,7 @@ const usedRules = new Set<string>();
 const styleEl = document.createElement("style");
 document.head.append(styleEl);
 
-function parseTemplate(
+function parseTemplateCSS(
   segments: string[],
   ...fns: StringRenderer[]
 ): StringRenderer {
@@ -32,7 +32,7 @@ const decorator: (
 ) => (segments: string[], ...fns: StringRenderer[]) => StyledWrapper = (
   type
 ) => (segments, ...fns) => {
-  const renderCSS = parseTemplate(segments, ...fns);
+  const renderCSS = parseTemplateCSS(segments, ...fns);
   const subruleRenderers: StringRenderer[] = [];
   const Styled: StyledWrapper = (props, _scope, context) => {
     const declaration: string = renderCSS(props);
@@ -70,7 +70,7 @@ const decorator: (
     segments: string[],
     ...fns: StringRenderer[]
   ): StyledWrapper => {
-    subruleRenderers.push(parseTemplate(segments, ...fns));
+    subruleRenderers.push(parseTemplateCSS(segments, ...fns));
     return Styled;
   };
 
