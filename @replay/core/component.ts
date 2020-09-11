@@ -130,7 +130,10 @@ export class ActivationRecord {
     return typeof this.type === "string" ? this.node : this.lastChild?.lastNode;
   }
 
-  public insertAfter(previouSibling: ActivationRecord, context: RenderTask) {
+  public insertAfter(
+    previouSibling: ActivationRecord,
+    context: RenderTask
+  ): void {
     const lastNode = this.lastNode;
     let curNode = this.firstNode;
     context.emit(() => {
@@ -154,7 +157,7 @@ export class ActivationRecord {
     });
   }
 
-  public remove(context: RenderTask) {
+  public remove(context: RenderTask): void {
     const firstNode = this.firstNode;
     const lastNode = this.lastNode;
     context.emit(() => {
