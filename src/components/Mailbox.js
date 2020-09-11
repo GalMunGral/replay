@@ -1,4 +1,4 @@
-import { decorator as $$ } from "@replay/utils";
+import { Observer, decorator as $$ } from "@replay/utils";
 import $mails from "@observables/mails";
 import $router from "@observables/router";
 import $selection from "@observables/selection";
@@ -91,18 +91,22 @@ const Tabs = () => {
     : [null];
 };
 
-const Mailbox = () =>
-  // use-transform
-  Layout([
-    MailboxToolbar(
-      (allSelected = $selection.allSelected($mails.currentPage)),
-      (toggleAll = () => $selection.toggleAll($mails.currentPage))
-    ),
-    section([
-      // prettier-ignore
-      Tabs(),
-      MailList(),
-    ]),
-  ]);
+const Mailbox = Observer(() => {
+  const page = $mails.currentPage;
+  return (
+    // use-transform
+    Layout([
+      MailboxToolbar(
+        (allSelected = $selection.allSelected(page)),
+        (toggleAll = () => $selection.toggleAll(page))
+      ),
+      section([
+        // prettier-ignore
+        Tabs(),
+        MailList(),
+      ]),
+    ])
+  );
+});
 
 export default Mailbox;

@@ -2,14 +2,18 @@ import { Context, RenderTask, Scheduler } from "./scheduler";
 
 export type Quasiquote = [
   string | RenderFunction | AsyncRenderFunction, // type
-  Object, // props
-  Quasiquote[] // children
+  Arguments, // props
+  string | Quasiquote[] // children
 ];
 
-export type ActivationRecordType = string | RenderFunction;
+export interface Arguments {
+  [prop: string]: any;
+  key?: string;
+  children?: string | Quasiquote[];
+}
 
 export interface RenderFunction extends Function {
-  (props: Object, scope: Object, context: Context): Quasiquote[];
+  (props: Arguments, scope: Object, context: RenderTask): Quasiquote[];
   init?: () => Object;
 }
 
@@ -29,6 +33,7 @@ export class ActivationRecord {
   public id: number;
   public readonly name: string;
   public readonly scope: Object = {};
+  public props: Arguments = {};
   public children: Map<string, ActivationRecord> = new Map();
   public depth: number;
   public index = -1;
@@ -40,9 +45,8 @@ export class ActivationRecord {
   public subscriptions: Set<ActivationRecord>[] = [];
 
   constructor(
-    public readonly type: ActivationRecordType,
-    public parent: ActivationRecord = null,
-    public props: Object = {}
+    public readonly type: string | RenderFunction,
+    public parent: ActivationRecord = null
   ) {
     this.id = ActivationRecord.nextId++;
     this.children = new Map();
@@ -140,7 +144,7 @@ export class ActivationRecord {
 
   public clone(parent: ActivationRecord, context: Context): ActivationRecord {
     if (__DEBUG__) {
-      LOG("[[Render]] clone record");
+      // LOG("[[Render]] clone record");
     }
     const clone: ActivationRecord = Object.create(ActivationRecord.prototype);
     Object.assign(clone, this);
@@ -158,7 +162,7 @@ export class ActivationRecord {
 
   public destruct(context: Context): void {
     if (__DEBUG__) {
-      LOG(this.id, "DESTRUCT");
+      // LOG(this.id, "DESTRUCT");
     }
     if (typeof this.type == "function") {
       context.emit(() => {
@@ -168,10 +172,12 @@ export class ActivationRecord {
     }
     this.children.forEach((c) => {
       if (c.parent !== this) {
-        console.warn("NOT MY CHILD");
-      } else {
-        c.destruct(context);
+        if (__DEBUG__) {
+          LOG("[[DESTRUCT]] STOP: NOT MY CHILD");
+        }
+        return;
       }
+      c.destruct(context);
     });
   }
 }

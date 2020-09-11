@@ -1,4 +1,4 @@
-import { Observable } from "@replay/core";
+import { Observable } from "@replay/utils";
 
 const $router = new Observable({
   folder: null,
@@ -14,7 +14,9 @@ const $router = new Observable({
     replace
       ? window.history.replaceState(null, "", path)
       : window.history.pushState(null, "", path);
-    document.title = `Mail - ${this.folder.toUpperCase()}`;
+    document.title = `CMail - ${
+      this.folder[0] + this.folder.slice(1).toUpperCase()
+    }`;
   },
   navigate(path) {
     this.updateStateWithPath(path);

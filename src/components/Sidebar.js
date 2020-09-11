@@ -1,5 +1,4 @@
-import { Observable } from "@replay/core";
-import { decorator as $$ } from "@replay/utils";
+import { Observer, Observable, decorator as $$ } from "@replay/utils";
 import $store from "@observables/store";
 import $editor from "@observables/editor";
 import $selection from "@observables/selection";
@@ -114,25 +113,55 @@ const MenuItem = $$.div`
   }
 `;
 
-const SidebarDropZone = ({ collapsed }, { $self }) =>
-  // use-transform
-  MenuItem(
-    (collapsed = collapsed),
-    (activated = $router.folder === "trash"),
-    (style = {
-      background: $self.canDrop ? "var(--theme)" : "",
-      color: $self.canDrop ? "white" : "",
-    }),
-    (onclick = $self.onclick.bind($self)),
-    (ondragenter = $self.ondragenter.bind($self)),
-    (ondragleave = $self.ondragleave.bind($self)),
-    (ondragover = $self.ondragover.bind($self)),
-    (ondrop = $self.ondrop.bind($self)),
-    [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
+const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
+  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
+  return (
+    // use-transform
+    Menu(
+      (collapsed = collapsed),
+      (onmouseenter = () => ($sidebar.hovered = true)),
+      (onmouseleave = () => ($sidebar.hovered = false)),
+      [
+        EditorButton(
+          (collapsed = collapsed),
+          (onclick = () => $editor.openEditor()),
+          [
+            EditorButtonIcon((src = editorButtonIconImage)),
+            !collapsed && EditorButtonText("Compose"),
+          ]
+        ),
+        ...["inbox", "sent", "drafts"].map((f) =>
+          MenuItem(
+            (collapsed = collapsed),
+            (activated = $router.folder === f),
+            (onclick = () => $router.navigate("/" + f)),
+            [
+              MenuIcon((className = `fas fa-${iconMap[f]}`)),
+              !collapsed && span(f),
+            ]
+          )
+        ),
+        MenuItem(
+          (collapsed = collapsed),
+          (activated = $router.folder === "trash"),
+          (style = {
+            background: $dropzone.canDrop ? "var(--theme)" : "",
+            color: $dropzone.canDrop ? "white" : "",
+          }),
+          (onclick = $dropzone.onclick.bind($dropzone)),
+          (ondragenter = $dropzone.ondragenter.bind($dropzone)),
+          (ondragleave = $dropzone.ondragleave.bind($dropzone)),
+          (ondragover = $dropzone.ondragover.bind($dropzone)),
+          (ondrop = $dropzone.ondrop.bind($dropzone)),
+          [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
+        ),
+      ]
+    )
   );
+});
 
-SidebarDropZone.init = () => ({
-  $self: new Observable({
+Sidebar.init = () => ({
+  $dropzone: new Observable({
     canDrop: false,
     onclick() {
       $router.navigate("/trash");
@@ -166,39 +195,5 @@ SidebarDropZone.init = () => ({
     },
   }),
 });
-
-const Sidebar = ({ $sidebar }) => {
-  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
-  return (
-    // use-transform
-    Menu(
-      (collapsed = collapsed),
-      (onmouseenter = () => ($sidebar.hovered = true)),
-      (onmouseleave = () => ($sidebar.hovered = false)),
-      [
-        EditorButton(
-          (collapsed = collapsed),
-          (onclick = () => $editor.openEditor()),
-          [
-            EditorButtonIcon((src = editorButtonIconImage)),
-            !collapsed && EditorButtonText("Compose"),
-          ]
-        ),
-        ...["inbox", "sent", "drafts"].map((f) =>
-          MenuItem(
-            (collapsed = collapsed),
-            (activated = $router.folder === f),
-            (onclick = () => $router.navigate("/" + f)),
-            [
-              MenuIcon((className = `fas fa-${iconMap[f]}`)),
-              !collapsed && span(f),
-            ]
-          )
-        ),
-        SidebarDropZone((collapsed = collapsed)),
-      ]
-    )
-  );
-};
 
 export default Sidebar;

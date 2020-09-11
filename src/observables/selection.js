@@ -1,4 +1,4 @@
-import { Observable } from "@replay/core";
+import { Observable } from "@replay/utils";
 
 const $selection = new Observable({
   selected: [], // Immutable

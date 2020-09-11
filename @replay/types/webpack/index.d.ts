@@ -3,8 +3,15 @@ declare const LOG: Function;
 
 declare module "window" {
   global {
+    interface IdleDeadline {
+      didTimeout: boolean;
+      timeRemaining(): DOMHighResTimeStamp;
+    }
+
+    type IdleCallback = (deadline: IdleDeadline) => any;
+
     interface Window {
-      requestIdleCallback(callback: Function, options?: Object): number;
+      requestIdleCallback(callback: IdleCallback, options?: Object): number;
       cancelIdleCallback(handle: number): void;
     }
   }

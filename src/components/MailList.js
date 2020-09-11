@@ -1,3 +1,4 @@
+import { Observer } from "@replay/utils";
 import $mails from "@observables/mails";
 import $router from "@observables/router";
 import $selection from "@observables/selection";

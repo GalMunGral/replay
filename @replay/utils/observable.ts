@@ -1,5 +1,5 @@
-import { ActivationRecord } from "./component";
-import { RenderTask, Scheduler } from "./scheduler";
+import { ActivationRecord, RenderFunction } from "../core/component";
+import { RenderTask, Scheduler } from "../core/scheduler";
 
 if (__DEBUG__) {
   globalThis.__obs__ = [];
@@ -18,6 +18,15 @@ class DefaultMap<K, V> extends Map<K, V> {
     }
     return super.get(key);
   }
+}
+
+export function Observer(render: RenderFunction): RenderFunction {
+  return function (props, scope, context) {
+    Observable.setCurrent(this, context);
+    const result = render(props, scope, context);
+    Observable.setCurrent(null, null);
+    return result;
+  };
 }
 
 export class Observable {

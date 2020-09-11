@@ -1,5 +1,5 @@
-import { Observable, lazy } from "@replay/core";
-import { decorator as $$ } from "@replay/utils";
+import { lazy } from "@replay/core";
+import { Observer, Observable, decorator as $$ } from "@replay/utils";
 import $router from "@observables/router";
 import AppBar from "@components/AppBar";
 import Sidebar from "@components/Sidebar";
@@ -21,7 +21,7 @@ const Container = $$.div`
     "b c" calc(100vh - 60px) / auto 1fr;
 `;
 
-const App = (__, { $sidebar }) =>
+const App = Observer((__, { $sidebar }) =>
   // use-transform
   Container([
     AppBar((toggle = () => ($sidebar.collapsed = !$sidebar.collapsed))),
@@ -29,7 +29,8 @@ const App = (__, { $sidebar }) =>
     $router.id ? Detail() : Mailbox(),
     Editor(),
     DragImage((key = "drag-image")),
-  ]);
+  ])
+);
 
 App.init = () => ({
   $sidebar: new Observable({

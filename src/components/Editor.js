@@ -1,6 +1,5 @@
-import { decorator as $$ } from "@replay/utils";
+import { Observer, Observable, decorator as $$ } from "@replay/utils";
 import $editor from "@observables/editor";
-import { Observable } from "@replay/core";
 import IconButton from "@components/IconButton";
 import Space from "@components/Space";
 
@@ -121,22 +120,24 @@ const SendButton = $$.button`
   }
 `;
 
-const EditorInput = ({ value, setValue, label, placeholder }, { $self }) => {
-  const activated = $self.focused || value;
-  return (
-    // use-transform
-    InputBox([
-      activated && label(label),
-      input(
-        (value = value),
-        (placeholder = !activated ? placeholder : ""),
-        (onfocus = () => ($self.focused = true)),
-        (onblur = () => ($self.focused = false)),
-        (onchange = (e) => setValue(e.target.value))
-      ),
-    ])
-  );
-};
+const EditorInput = Observer(
+  ({ value, setValue, label, placeholder }, { $self }) => {
+    const activated = $self.focused || value;
+    return (
+      // use-transform
+      InputBox([
+        activated && label(label),
+        input(
+          (value = value),
+          (placeholder = !activated ? placeholder : ""),
+          (onfocus = () => ($self.focused = true)),
+          (onblur = () => ($self.focused = false)),
+          (onchange = (e) => setValue(e.target.value))
+        ),
+      ])
+    );
+  }
+);
 
 EditorInput.init = () => ({
   $self: new Observable({
@@ -144,7 +145,7 @@ EditorInput.init = () => ({
   }),
 });
 
-const Editor = () => {
+const Editor = Observer(() => {
   const { minimized } = $editor;
   const { recipientEmail, subject, content } = $editor;
 
@@ -195,6 +196,6 @@ const Editor = () => {
       ]),
     ])
   );
-};
+});
 
 export default Editor;

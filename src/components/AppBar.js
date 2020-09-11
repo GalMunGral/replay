@@ -1,4 +1,4 @@
-import { decorator as $$ } from "@replay/utils";
+import { Observer, decorator as $$ } from "@replay/utils";
 import appLogoImage from "@assets/images/logo.png";
 
 const Container = $$.div`

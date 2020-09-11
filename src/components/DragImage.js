@@ -1,4 +1,4 @@
-import { decorator as $$ } from "@replay/utils";
+import { Observer, decorator as $$ } from "@replay/utils";
 import $selection from "@observables/selection";
 import $dragState from "@observables/drag";
 
@@ -23,7 +23,7 @@ const Icon = $$.i`
   margin-right: 15px;
 `;
 
-const DragImage = () => {
+const DragImage = Observer(() => {
   const { selected } = $selection;
   const { isDragging, x, y } = $dragState;
   return (
@@ -41,6 +41,6 @@ const DragImage = () => {
       ]
     )
   );
-};
+});
 
 export default DragImage;
