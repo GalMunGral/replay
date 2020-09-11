@@ -128,6 +128,15 @@ export class Scheduler {
   private continuation: Cancelable = null;
   private pendingUpdates = new Set<ActivationRecord>();
 
+  private nextUpdate(): ActivationRecord {
+    const sorted = [...this.pendingUpdates.values()].sort(
+      (a, b) => a.depth - b.depth
+    );
+    const entry = sorted.shift();
+    this.pendingUpdates.delete(entry);
+    return entry;
+  }
+
   private run(deadline: IdleDeadline, input?: RenderFunction) {
     if (__DEBUG__) {
       const entry = this.currentTask.entry;
@@ -186,15 +195,6 @@ export class Scheduler {
     });
   }
 
-  private nextUpdate(): ActivationRecord {
-    const sorted = [...this.pendingUpdates.values()].sort(
-      (a, b) => a.depth - b.depth
-    );
-    const entry = sorted.shift();
-    this.pendingUpdates.delete(entry);
-    return entry;
-  }
-
   public requestUpdate(notified: Set<ActivationRecord>): void {
     if (this.currentTask) {
       const entry = this.currentTask.entry;
@@ -233,6 +233,7 @@ export class Scheduler {
       });
     }
   }
+
   public cancelUpdate(entry: ActivationRecord): void {
     this.pendingUpdates.delete(entry);
   }
