@@ -47,7 +47,7 @@ const decorator: (
       className = usedDeclarations.get(declaration);
     }
     for (let renderRule of subruleRenderers) {
-      const rule = `.${className} ${renderRule(props)}`;
+      const rule = `.${className}${renderRule(props)}`;
       if (!usedRules.has(rule)) {
         context.emit(() => {
           styleEl.sheet.insertRule(rule);
