@@ -6,12 +6,14 @@ export type Quasiquote = [
   Quasiquote[] // children
 ];
 
-interface RenderFunction extends Function {
+export type ActivationRecordType = string | RenderFunction;
+
+export interface RenderFunction extends Function {
   (props: Object, scope: Object, context: Context): Quasiquote[];
   init?: () => Object;
 }
 
-type ResolverFunction = () => Promise<{ default: RenderFunction }>;
+export type ResolverFunction = () => Promise<{ default: RenderFunction }>;
 
 export interface AsyncRenderFunction {
   isAsync: true;
@@ -21,8 +23,6 @@ export interface AsyncRenderFunction {
 export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
   return { isAsync: true, resolver };
 }
-
-export type ActivationRecordType = string | RenderFunction;
 
 export class ActivationRecord {
   private static nextId = 0;
@@ -104,6 +104,7 @@ export class ActivationRecord {
     });
     this.subscriptions = [];
   }
+
   private transferSubscriptions(record: ActivationRecord): void {
     this.subscriptions.forEach((observers) => {
       observers.delete(this);
