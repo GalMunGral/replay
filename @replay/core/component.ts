@@ -76,43 +76,6 @@ export class ActivationRecord {
     this.subscriptions = [];
   }
 
-  public clone(parent: ActivationRecord, context: Context): ActivationRecord {
-    if (__DEBUG__) {
-      LOG("[[Render]] clone record");
-    }
-    const clone: ActivationRecord = Object.create(ActivationRecord.prototype);
-    Object.assign(clone, this);
-    clone.id = ActivationRecord.nextId++;
-    clone.children = new Map(this.children);
-    clone.parent = parent ?? this.parent;
-    clone.depth = parent ? parent.depth + 1 : 0;
-    clone.subscriptions = [];
-    context.emit(() => {
-      this.transferSubscriptions(clone);
-      Scheduler.instance.cancelUpdate(this);
-    });
-    return clone;
-  }
-
-  public destruct(context: Context): void {
-    if (__DEBUG__) {
-      LOG(this.id, "DESTRUCT");
-    }
-    if (typeof this.type == "function") {
-      context.emit(() => {
-        this.cancelSubscriptions();
-        Scheduler.instance.cancelUpdate(this);
-      });
-    }
-    this.children.forEach((c) => {
-      if (c.parent !== this) {
-        console.warn("NOT MY CHILD");
-      } else {
-        c.destruct(context);
-      }
-    });
-  }
-
   public get parentNode(): ChildNode {
     if (typeof this.type === "string") {
       return this.node;
@@ -172,6 +135,43 @@ export class ActivationRecord {
         next = next.nextSibling;
       }
       cur.remove();
+    });
+  }
+
+  public clone(parent: ActivationRecord, context: Context): ActivationRecord {
+    if (__DEBUG__) {
+      LOG("[[Render]] clone record");
+    }
+    const clone: ActivationRecord = Object.create(ActivationRecord.prototype);
+    Object.assign(clone, this);
+    clone.id = ActivationRecord.nextId++;
+    clone.children = new Map(this.children);
+    clone.parent = parent ?? this.parent;
+    clone.depth = parent ? parent.depth + 1 : 0;
+    clone.subscriptions = [];
+    context.emit(() => {
+      this.transferSubscriptions(clone);
+      Scheduler.instance.cancelUpdate(this);
+    });
+    return clone;
+  }
+
+  public destruct(context: Context): void {
+    if (__DEBUG__) {
+      LOG(this.id, "DESTRUCT");
+    }
+    if (typeof this.type == "function") {
+      context.emit(() => {
+        this.cancelSubscriptions();
+        Scheduler.instance.cancelUpdate(this);
+      });
+    }
+    this.children.forEach((c) => {
+      if (c.parent !== this) {
+        console.warn("NOT MY CHILD");
+      } else {
+        c.destruct(context);
+      }
     });
   }
 }
