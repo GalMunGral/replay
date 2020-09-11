@@ -5,6 +5,6 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "typeRoots": ["../@types", "./node_modules/@types"]
+    "typeRoots": ["./replay/types", "./node_modules/@types"]
   }
 }

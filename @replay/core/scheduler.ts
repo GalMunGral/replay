@@ -1,20 +1,59 @@
 import {
   ActivationRecord,
-  FunctionalComponent,
-  renderComponent,
-  AsyncComponent,
-} from "./renderer";
+  ActivationRecordType,
+  AsyncRenderFunction,
+} from "./component";
+import { renderComponent } from "./renderer";
 
-import {
-  Cancelable,
-  CancelableEffect,
-  CancelablePromise,
-  CancelableExecution,
-} from "./util";
+type Executor = Generator<AsyncRenderFunction, void, ActivationRecordType>;
 
-type Executor = Generator<AsyncComponent, void, FunctionalComponent>;
+export interface Cancelable {
+  cancel(): void;
+}
 
-interface Context {
+export class CancelableExecution implements Cancelable {
+  private handle: number;
+  constructor(fn: Function) {
+    this.handle = window.requestIdleCallback(fn);
+  }
+  public cancel() {
+    window.cancelIdleCallback(this.handle);
+  }
+}
+
+export class CancelableEffect implements Cancelable {
+  private handle: number;
+  constructor(fn: FrameRequestCallback) {
+    this.handle = window.requestAnimationFrame(fn);
+  }
+  public cancel() {
+    window.cancelAnimationFrame(this.handle);
+  }
+}
+
+export class CancelablePromise implements Cancelable {
+  private reject: Function;
+  private promise: Promise<any>;
+  constructor(promise: Promise<any>) {
+    this.promise = Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        this.reject = reject;
+      }),
+    ]);
+  }
+  public then(
+    onFulfilled: (value: any) => any,
+    onRejected: (value: any) => any
+  ) {
+    return this.promise.then(onFulfilled, onRejected);
+  }
+  public cancel() {
+    this.reject("CANCELED");
+  }
+}
+
+export interface Context {
   emit(effect: Function): void;
 }
 
@@ -92,7 +131,7 @@ export class Scheduler {
   private continuation: Cancelable;
   private pendingUpdates = new Set<ActivationRecord>();
 
-  private run(deadline: any, input: FunctionalComponent = null) {
+  private run(deadline: any, input: ActivationRecordType = null) {
     if (__DEBUG__) {
       const entry = this.currentTask.entry;
       console.debug(
@@ -134,7 +173,7 @@ export class Scheduler {
             `[[Schedule]] ${entry.name} (${entry.id}) LOADING ASYNC`
           );
         }
-        (this.continuation = new CancelablePromise(value.resolve())).then(
+        (this.continuation = new CancelablePromise(value.resolver())).then(
           ({ default: component }) => {
             if (__DEBUG__) {
               const entry = this.currentTask.entry;

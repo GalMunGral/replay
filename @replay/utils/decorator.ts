@@ -1,50 +1,52 @@
 import uid from "uid";
 import htmlTags from "html-tags";
 
-var styleSheet;
-const classCache = new Map();
-const ruleCache = new Set();
+var styleSheet: CSSStyleSheet;
+const declarationToClassName = new Map<string, string>();
+const addedRules = new Set<string>();
 
-const addCSSRule = (rule) => {
+function insertRule(rule: string): void {
   if (!styleSheet) {
     const styleEl = document.createElement("style");
     document.head.append(styleEl);
     styleSheet = styleEl.sheet;
   }
   styleSheet.insertRule(rule);
-};
+}
 
-const compileCSS = (segments, ...fns) => (props) => {
-  const result = [segments[0]];
-  for (let i = 0; i < fns.length; i++) {
-    result.push(fns[i](props));
-    result.push(segments[i + 1]);
-  }
-  return result.join("");
-};
+function compileCSS(segments, ...fns) {
+  return (props) => {
+    const result = [segments[0]];
+    for (let i = 0; i < fns.length; i++) {
+      result.push(fns[i](props));
+      result.push(segments[i + 1]);
+    }
+    return result.join("");
+  };
+}
 
-const decor = (component) => (segments, ...fns) => {
+const decorator = (component) => (segments, ...fns) => {
   const declarations = compileCSS(segments, ...fns);
   const rules = [];
   const StyleWrapper = (props, __, context) => {
     const computedDeclarations = declarations(props);
     let className;
-    if (!classCache.has(computedDeclarations)) {
+    if (!declarationToClassName.has(computedDeclarations)) {
       className = "s-" + uid();
       const rule = "." + className + " { " + computedDeclarations + " } ";
       context.emit(() => {
-        addCSSRule(rule);
-        classCache.set(computedDeclarations, className);
+        insertRule(rule);
+        declarationToClassName.set(computedDeclarations, className);
       });
     } else {
-      className = classCache.get(computedDeclarations);
+      className = declarationToClassName.get(computedDeclarations);
     }
     for (let rule of rules) {
       const computedRule = "." + className + rule(props);
-      if (!ruleCache.has(computedRule)) {
+      if (!addedRules.has(computedRule)) {
         context.emit(() => {
-          addCSSRule(computedRule);
-          ruleCache.add(computedRule);
+          insertRule(computedRule);
+          addedRules.add(computedRule);
         });
       }
     }
@@ -69,6 +71,6 @@ const decor = (component) => (segments, ...fns) => {
   return StyleWrapper;
 };
 
-htmlTags.forEach((tag) => (decor[tag] = decor(tag)));
+htmlTags.forEach((tag) => (decorator[tag] = decorator(tag)));
 
-export { decor };
+export { decorator };

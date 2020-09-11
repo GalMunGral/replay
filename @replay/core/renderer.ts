@@ -1,184 +1,23 @@
-import { Scheduler } from "./scheduler";
+import { ActivationRecord } from "./component";
 import { Observable } from "./observable";
-import { shallowEquals, toKebabCase, isGeneratorFunction } from "./util";
 
-interface AsyncModule {
-  default: FunctionalComponent;
+function shallowEquals(a: any, b: any): boolean {
+  if (typeof a != typeof b) return false;
+  if (typeof a != "object" || a == null) return a == b;
+  if (Object.keys(a).length != Object.keys(b).length) return false;
+  for (let key of Object.keys(a)) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
 }
 
-type Resolver = () => Promise<AsyncModule>;
-
-export interface AsyncComponent {
-  isAsync: boolean;
-  resolve: Resolver;
+function toKebabCase(s: string): string {
+  return s.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
 }
 
-export const lazy = (resolve: Resolver): AsyncComponent => ({
-  isAsync: true,
-  resolve,
-});
-
-export interface FunctionalComponent extends Function {
-  init?: () => Object;
-}
-
-export type DOMComponent = string;
-export type Component = DOMComponent | FunctionalComponent;
-
-export class ActivationRecord {
-  static nextId = 0;
-  id: number;
-  public name: string;
-  public scope: Object = {};
-  public children: Map<string, ActivationRecord> = new Map();
-  public depth: number;
-  public index = -1;
-  public key?: string = null;
-  public node: Node = null;
-  public firstChild: ActivationRecord = null;
-  public lastChild: ActivationRecord = null;
-  public dirty = false;
-  public subscriptions: Set<ActivationRecord>[] = [];
-
-  constructor(
-    public type: Component,
-    public parent: ActivationRecord = null,
-    public props: Object = {}
-  ) {
-    this.id = ActivationRecord.nextId++;
-    this.children = new Map();
-    this.depth = parent ? parent.depth + 1 : 0;
-    if (typeof type == "string") {
-      this.name = type;
-    } else {
-      this.name = type.name;
-      const locals = typeof type.init == "function" ? type.init() : {};
-      this.scope = Object.create(
-        parent ? parent.scope : null,
-        Object.getOwnPropertyDescriptors(locals)
-      );
-    }
-  }
-
-  clone(parent, context) {
-    if (__DEBUG__) {
-      // console.debug("[[Render]] cloning");
-    }
-    const clone = Object.create(ActivationRecord.prototype);
-    Object.assign(clone, this);
-    clone.id = ActivationRecord.nextId++;
-    clone.children = new Map(this.children);
-    clone.parent = parent ?? this.parent;
-    clone.depth = parent ? parent.depth + 1 : 0;
-    clone.subscriptions = [];
-    context.emit(() => {
-      this.transferSubscriptions(clone);
-      Scheduler.instance.cancelUpdate(this);
-    });
-    return clone;
-  }
-
-  destruct(context) {
-    if (__DEBUG__) {
-      // console.warn(this.id, "destruct");
-    }
-    if (typeof this.type == "function") {
-      context.emit(() => {
-        this.cancelSubscriptions();
-        Scheduler.instance.cancelUpdate(this);
-      });
-    }
-    this.children.forEach((c) => {
-      if (c.parent !== this) {
-        console.warn("NOT MY CHILD");
-      } else {
-        c.destruct(context);
-      }
-    });
-  }
-
-  subscribe(observers) {
-    observers.add(this);
-    this.subscriptions.push(observers);
-  }
-
-  private cancelSubscriptions(): void {
-    this.subscriptions.forEach((observers) => {
-      observers.delete(this);
-    });
-    this.subscriptions = [];
-  }
-  private transferSubscriptions(record: ActivationRecord): void {
-    this.subscriptions.forEach((observers) => {
-      observers.delete(this);
-      record.subscribe(observers);
-    });
-    this.subscriptions = [];
-  }
-
-  get parentNode() {
-    if (typeof this.type === "string") {
-      return this.node;
-    }
-    return this.parent?.parentNode;
-  }
-
-  get firstNode() {
-    return typeof this.type === "string"
-      ? this.node
-      : this.firstChild?.firstNode;
-  }
-
-  get lastNode() {
-    return typeof this.type === "string" ? this.node : this.lastChild?.lastNode;
-  }
-
-  insertAfter(previouSibling, context) {
-    const lastNode = this.lastNode;
-    let curNode = this.firstNode;
-    context.emit(() => {
-      if (__DEBUG__) {
-        // console.debug(
-        //   "[[Commit]] insert:",
-        //   this.name + this.id,
-        //   this.firstNode,
-        //   "after:",
-        //   previouSibling.name + previouSibling.id,
-        //   previouSibling.lastNode
-        // );
-      }
-      let prevNode = previouSibling.lastNode;
-      while (curNode !== lastNode) {
-        prevNode.after(curNode);
-        prevNode = curNode;
-        curNode = curNode.nextSibling;
-      }
-      prevNode.after(curNode);
-    });
-  }
-
-  remove(context) {
-    const firstNode = this.firstNode;
-    const lastNode = this.lastNode;
-    context.emit(() => {
-      if (__DEBUG__) {
-        console.debug(
-          "[[Commit]] remove",
-          this.name + this.id,
-          firstNode,
-          lastNode
-        );
-      }
-      let cur = firstNode;
-      let next = cur.nextSibling;
-      while (cur !== lastNode) {
-        cur.remove();
-        cur = next;
-        next = next.nextSibling;
-      }
-      cur.remove();
-    });
-  }
+function isGeneratorFunction(obj: Object): boolean {
+  const constructor = obj.constructor;
+  return constructor && constructor.name === "GeneratorFunction";
 }
 
 function* mountComponent(element, parent, context) {

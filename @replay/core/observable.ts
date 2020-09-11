@@ -1,5 +1,4 @@
-import { DefaultMap } from "./util";
-import { ActivationRecord } from "./renderer";
+import { ActivationRecord } from "./component";
 import { RenderTask, Scheduler } from "./scheduler";
 
 if (__DEBUG__) {
@@ -7,6 +6,18 @@ if (__DEBUG__) {
   globalThis.inspect = () => {
     return globalThis.__obs__.map((o) => [...o].map((x) => x.name + x.id));
   };
+}
+
+class DefaultMap<K, V> extends Map<K, V> {
+  constructor(private factory: () => V) {
+    super();
+  }
+  get(key: K): V {
+    if (!this.has(key)) {
+      this.set(key, this.factory());
+    }
+    return super.get(key);
+  }
 }
 
 export class Observable {
@@ -61,8 +72,4 @@ export class Observable {
       },
     });
   }
-}
-
-export function observable(obj: Object): Observable {
-  return new Observable(obj);
 }

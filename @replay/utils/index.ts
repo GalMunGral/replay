@@ -1,0 +1,1 @@
+export { decorator } from "./decorator";
