@@ -30,7 +30,8 @@ export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
 
 export class ActivationRecord {
   private static nextId = 0;
-  public id: number;
+
+  public id = ActivationRecord.nextId++;
   public readonly name: string;
   public readonly scope: Object = {};
   public props: Arguments = {};
@@ -48,7 +49,6 @@ export class ActivationRecord {
     public readonly type: string | RenderFunction,
     public parent: ActivationRecord = null
   ) {
-    this.id = ActivationRecord.nextId++;
     this.children = new Map();
     this.depth = parent ? parent.depth + 1 : 0;
     if (typeof type == "string") {
@@ -81,10 +81,7 @@ export class ActivationRecord {
   }
 
   public get parentNode(): ChildNode {
-    if (typeof this.type === "string") {
-      return this.node;
-    }
-    return this.parent?.parentNode;
+    return typeof this.type === "string" ? this.node : this.parent?.parentNode;
   }
 
   public get firstNode(): ChildNode {

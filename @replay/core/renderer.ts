@@ -1,9 +1,9 @@
 import {
-  ActivationRecord,
-  AsyncRenderFunction,
-  Arguments,
   Quasiquote,
+  ActivationRecord,
+  Arguments,
   RenderFunction,
+  AsyncRenderFunction,
 } from "./component";
 import { RenderTask } from "./scheduler";
 

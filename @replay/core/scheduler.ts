@@ -1,8 +1,8 @@
 import {
-  ActivationRecord,
-  AsyncRenderFunction,
   Quasiquote,
+  ActivationRecord,
   RenderFunction,
+  AsyncRenderFunction,
 } from "./component";
 import { renderComponent } from "./renderer";
 
