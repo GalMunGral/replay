@@ -4,7 +4,6 @@ const MailboxToolbar = ({ allSelected, toggleAll }) => [
   ),
   <Space />,
   <PageRange>
-    ,
     <PageRangeText
       innerHTML={`${$mails.pageStart}&ndash;${$mails.pageEnd} of ${$mails.total}`}
     />

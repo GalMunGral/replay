@@ -10,7 +10,7 @@ const AppBar = ({ toggle }) => [
       <SearchIcon className="fas fa-search" />
       <SearchInput placeholder="Search mail" />
     </SearchBar>
-    <Group />,
+    <Group />
   </Container>,
 ];
 
