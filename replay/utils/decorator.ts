@@ -56,14 +56,12 @@ const decorator: (
         });
       }
     }
-
     props = {
       ...props,
       className: props.className
         ? [className, props.className].join(" ")
         : className,
     };
-
     return [[type, props, props.children]];
   };
 
