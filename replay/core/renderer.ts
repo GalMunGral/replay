@@ -126,7 +126,11 @@ function* reconcileChildren(
   let oldChildren = parent.children;
   parent.children = new Map();
   for (let [index, element] of elements.entries()) {
-    element = element || ["comment", {}, "[slot]"];
+    if (!element) {
+      element = ["comment", {}, "[slot]"];
+    } else if (!Array.isArray(element)) {
+      element = ["text", {}, String(element)];
+    }
     const [type, props, children] = element;
     const key = props.key ?? String(index);
     props.children = children;

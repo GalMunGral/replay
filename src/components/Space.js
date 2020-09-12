@@ -1,5 +1,1 @@
-const Space = () =>
-  //// use transform
-  div((style = { flex: "1 1 auto" }));
-
-export default Space;
+export default () => [<div style={{ flex: "1 1 auto" }} />];
