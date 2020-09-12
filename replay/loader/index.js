@@ -6,10 +6,48 @@ const { default: generate } = require("@babel/generator");
 module.exports = (src) => {
   const ast = parser.parse(src, {
     sourceType: "module",
-    plugins: ["classProperties"],
+    plugins: ["jsx", "classProperties"],
   });
 
   traverse(ast, {
+    // JSX
+    JSXElement(path) {
+      const name = path.node.openingElement.name.name;
+      const type = /^[a-z_]/.test(name)
+        ? t.stringLiteral(name)
+        : t.identifier(name);
+      const props = t.objectExpression(
+        path.node.openingElement.attributes.map((attr) => {
+          return t.isJSXSpreadAttribute(attr)
+            ? t.spreadElement(attr.argument)
+            : t.objectProperty(
+                t.identifier(attr.name.name),
+                t.isJSXExpressionContainer(attr.value)
+                  ? attr.value.expression
+                  : attr.value
+              );
+        })
+      );
+      const children = t.arrayExpression(
+        path.node.children.map((child) => {
+          return t.isJSXText(child)
+            ? t.arrayExpression([
+                t.stringLiteral("text"),
+                t.objectExpression([]),
+                t.stringLiteral(child.value),
+              ])
+            : t.isJSXSpreadChild(child)
+            ? t.spreadElement(child.expression)
+            : t.isJSXExpressionContainer(child)
+            ? child.expression
+            : child;
+        })
+      );
+      const node = t.arrayExpression([type, props, children]);
+      path.replaceWith(node);
+    },
+
+    // Original
     ArrayExpression(path) {
       if (shouldTransform(path)) {
         path.node.elements = path.node.elements.map(transformChild);
@@ -26,7 +64,7 @@ module.exports = (src) => {
             mapperFn.body = transform(mapperFn.body);
           }
         } else {
-          path.replaceWith(t.ArrayExpression([transform(path.node)]));
+          path.replaceWith(t.arrayExpression([transform(path.node)]));
         }
       }
     },
@@ -39,7 +77,7 @@ module.exports = (src) => {
 
 function shouldTransform(path) {
   let comments = path.node.leadingComments;
-  return comments && comments[0] && comments[0].value.trim() == "use-transform";
+  return comments && comments[0] && comments[0].value.includes("use transform");
 }
 
 function isArrayMap(node) {
@@ -49,16 +87,16 @@ function isArrayMap(node) {
 
 function transform(node) {
   const name = node.callee.name;
-  let type = /^[a-z]/.test(name) ? t.stringLiteral(name) : t.Identifier(name);
-  let props = t.ObjectExpression([]);
-  let children = t.ArrayExpression([]);
+  let type = /^[a-z]/.test(name) ? t.stringLiteral(name) : t.identifier(name);
+  let props = t.objectExpression([]);
+  let children = t.arrayExpression([]);
   node.arguments.forEach((arg) => {
     if (t.isObjectExpression(arg)) {
       props.properties.push(...arg.properties);
     } else if (t.isAssignmentExpression(arg)) {
-      const key = t.Identifier(arg.left.name);
+      const key = t.identifier(arg.left.name);
       const value = arg.right;
-      props.properties.push(t.ObjectProperty(key, value));
+      props.properties.push(t.objectProperty(key, value));
     } else if (t.isArrayExpression(arg)) {
       children.elements = arg.elements.map(transformChild);
     } else {

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { Observable } from "@replay/utils";
+import { Observable } from "replay/utils";
 import $store from "@observables/store";
 import $history from "@observables/history";
 

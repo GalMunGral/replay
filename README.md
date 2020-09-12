@@ -42,7 +42,7 @@ Consider this example code:
 ```js
 // Child.js
 const Child = ({ text, onclick }, { color }) =>
-  // use-transform
+  //// use transform
   [p({ style: { color }, onclick }, text)];
 
 export default Child;
@@ -59,7 +59,7 @@ const local = () => ({
 });
 
 const Parent = ({ onclick }, { className }) =>
-  // use-transform
+  //// use transform
   [
     h1('Exmaple'),
     div({ className }, [
@@ -152,7 +152,7 @@ The [webpack loader](https://github.com/GalMunGral/replay/blob/master/lib/replay
 
 ```js
 const Component = () =>
-  // use-transform
+  //// use transform
   Container(
     id="container"
     className="fancy",
@@ -296,7 +296,7 @@ const Editor = (__, { $editor }) => {
   if (!$editor.open) return [null];
 
   return (
-    // use-transform
+    //// use transform
     Window([
       Header((onclick = () => ($editor.minimized = !minimized)), [
         span("New Message"),

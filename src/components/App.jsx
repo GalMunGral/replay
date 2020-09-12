@@ -1,13 +1,12 @@
-const App = Observer((__, { $sidebar }) =>
-  //// use transform
-  Container([
-    AppBar((toggle = () => ($sidebar.collapsed = !$sidebar.collapsed))),
-    Sidebar(($sidebar = $sidebar)),
-    $router.id ? Detail() : Mailbox(),
-    Editor(),
-    DragImage((key = "drag-image")),
-  ])
-);
+const App = Observer((__, { $sidebar }) => [
+  <Container>
+    <AppBar toggle={() => ($sidebar.collapsed = !$sidebar.collapsed)} />
+    <Sidebar $sidebar={$sidebar} />
+    {$router.id ? <Detail /> : <Mailbox />}
+    <Editor />
+    <DragImage key="drag-image" />
+  </Container>,
+]);
 
 import { lazy } from "replay/core";
 import { Observer, Observable, decorator as $$ } from "replay/utils";

@@ -1,48 +1,42 @@
 const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
   const collapsed = $sidebar.collapsed && !$sidebar.hovered;
-  return (
-    //// use transform
-    Menu(
-      (collapsed = collapsed),
-      (onmouseenter = () => ($sidebar.hovered = true)),
-      (onmouseleave = () => ($sidebar.hovered = false)),
-      [
-        EditorButton(
-          (collapsed = collapsed),
-          (onclick = () => $editor.openEditor()),
-          [
-            EditorButtonIcon((src = editorButtonIconImage)),
-            !collapsed && EditorButtonText("Compose"),
-          ]
-        ),
-        ...["inbox", "sent", "drafts"].map((f) =>
-          MenuItem(
-            (collapsed = collapsed),
-            (activated = $router.folder === f),
-            (onclick = () => $router.navigate("/" + f)),
-            [
-              MenuIcon((className = `fas fa-${iconMap[f]}`)),
-              !collapsed && span(f),
-            ]
-          )
-        ),
-        MenuItem(
-          (collapsed = collapsed),
-          (activated = $router.folder === "trash"),
-          (style = {
-            background: $dropzone.canDrop ? "var(--theme)" : "",
-            color: $dropzone.canDrop ? "white" : "",
-          }),
-          (onclick = $dropzone.onclick.bind($dropzone)),
-          (ondragenter = $dropzone.ondragenter.bind($dropzone)),
-          (ondragleave = $dropzone.ondragleave.bind($dropzone)),
-          (ondragover = $dropzone.ondragover.bind($dropzone)),
-          (ondrop = $dropzone.ondrop.bind($dropzone)),
-          [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
-        ),
-      ]
-    )
-  );
+  return [
+    <Menu
+      collapsed={collapsed}
+      onmouseenter={() => ($sidebar.hovered = true)}
+      onmouseleave={() => ($sidebar.hovered = false)}
+    >
+      <EditorButton collapsed={collapsed} onclick={() => $editor.openEditor()}>
+        <ButtonIcon src={editorButtonIconImage} />
+        {!collapsed && <ButtonText>Compose</ButtonText>}
+      </EditorButton>
+      {...["inbox", "sent", "drafts"].map((f) => (
+        <MenuItem
+          collapsed={collapsed}
+          activated={$router.folder === f}
+          onclick={() => $router.navigate("/" + f)}
+        >
+          <MenuIcon className={`fas fa-${iconMap[f]}`} />
+          {!collapsed && <span>{f}</span>}
+        </MenuItem>
+      ))}
+      <MenuItem
+        collapsed={collapsed}
+        activated={$router.folder === "trash"}
+        style={{
+          background: $dropzone.canDrop ? "var(--theme)" : "",
+          color: $dropzone.canDrop ? "white" : "",
+        }}
+        onclick={$dropzone.onclick.bind($dropzone)}
+        ondragenter={$dropzone.ondragenter.bind($dropzone)}
+        ondragleave={$dropzone.ondragleave.bind($dropzone)}
+        ondragover={$dropzone.ondragover.bind($dropzone)}
+        ondrop={$dropzone.ondrop.bind($dropzone)}
+      >
+        <MenuIcon className="fas fa-trash" /> {!collapsed && <span>trash</span>}
+      </MenuItem>
+    </Menu>,
+  ];
 });
 
 import { Observer, Observable, decorator as $$ } from "replay/utils";
@@ -113,7 +107,7 @@ const MenuIcon = $$.i`
   font-size: 1rem;
 `;
 
-const EditorButtonIcon = $$.img`
+const ButtonIcon = $$.img`
   --size: 32px;
   width: var(--size);
   height: var(--size);
@@ -147,7 +141,7 @@ const EditorButton = $$.button`
   }
 `;
 
-const EditorButtonText = $$.span`
+const ButtonText = $$.span`
   margin-left: 10px;
   font-size: 0.9rem;
   font-weight: 600;

@@ -5,7 +5,7 @@ import { Arguments, RenderFunction } from "../core/component";
 type StringRenderer = (props: Arguments) => string;
 
 interface StyleWrapper extends RenderFunction {
-  and: (segments: string[], ...fns: StringRenderer[]) => StyleWrapper;
+  $: (segments: string[], ...fns: StringRenderer[]) => StyleWrapper;
 }
 
 const usedDeclarations = new Map<string, string>();
@@ -56,18 +56,16 @@ const decorator: (
         });
       }
     }
-
     props = {
       ...props,
       className: props.className
         ? [className, props.className].join(" ")
         : className,
     };
-
     return [[type, props, props.children]];
   };
 
-  Styled.and = (segments: string[], ...fns: StringRenderer[]): StyleWrapper => {
+  Styled.$ = (segments: string[], ...fns: StringRenderer[]): StyleWrapper => {
     const renderer = parseTemplateCSS(segments, ...fns);
     subruleRenderers.push(renderer);
     return Styled;

@@ -102,8 +102,10 @@ function* renderDOMComponent(
     });
     return;
   }
+  // Only `text` and `comment` are allowed to have non-array children
+  // Convert `p('hello')` to  `p([ text('hello') ])`
   if (!Array.isArray(props.children)) {
-    props.children = [["text", {}, props.children]]; // p('hello') -> p([ text('hello') ])
+    props.children = [["text", {}, props.children]];
   }
 
   yield;
@@ -124,7 +126,11 @@ function* reconcileChildren(
   let oldChildren = parent.children;
   parent.children = new Map();
   for (let [index, element] of elements.entries()) {
-    element = element || ["comment", {}, "[slot]"];
+    if (!element) {
+      element = ["comment", {}, "[slot]"];
+    } else if (!Array.isArray(element)) {
+      element = ["text", {}, String(element)];
+    }
     const [type, props, children] = element;
     const key = props.key ?? String(index);
     props.children = children;

@@ -1,16 +1,18 @@
-const AppBar = ({ toggle }) =>
-  //// use transform
-  Container([
-    Group([
-      MenuButton((onclick = toggle), [MenuIcon((className = "fas fa-bars"))]),
-      AppLogo((src = appLogoImage), (alt = "logo")),
-    ]),
-    SearchBar([
-      SearchIcon((className = "fas fa-search")),
-      SearchInput((placeholder = "Search mail")),
-    ]),
-    Group(),
-  ]);
+const AppBar = ({ toggle }) => [
+  <Container>
+    <Group>
+      <MenuButton onclick={toggle}>
+        <MenuIcon className="fas fa-bars" />
+      </MenuButton>
+      <AppLogo src={appLogoImage} alt="logo" />
+    </Group>
+    <SearchBar>
+      <SearchIcon className="fas fa-search" />
+      <SearchInput placeholder="Search mail" />
+    </SearchBar>
+    <Group />,
+  </Container>,
+];
 
 import { decorator as $$ } from "replay/utils";
 import appLogoImage from "@assets/images/logo.png";

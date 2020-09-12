@@ -1,21 +1,19 @@
 const DragImage = Observer(() => {
   const { selected } = $selection;
   const { isDragging, x, y } = $dragState;
-  return (
-    //// use transform
-    Box(
-      (style = {
+  return [
+    <Box
+      style={{
         visibility: isDragging ? "visible" : "hidden",
         transform: `translate3d(${x}px, ${y}px, 0)`,
-      }),
-      [
-        Icon((className = "fas fa-mail-bulk")),
-        span(
-          `Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`
-        ),
-      ]
-    )
-  );
+      }}
+    >
+      <Icon className="fas fa-mail-bulk" />
+      <span>
+        {`Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`}
+      </span>
+    </Box>,
+  ];
 });
 
 import { Observer, decorator as $$ } from "replay/utils";
