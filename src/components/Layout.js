@@ -1,10 +1,9 @@
-const Layout = ({ children: [toolbar, body] }) =>
-  //// use transform
-  Container([
-    // prettier-ignore
-    ToolbarContainer([toolbar]),
-    Scrollable([body]),
-  ]);
+const Layout = ({ toolbar, body }) => [
+  <Container>
+    <ToolbarContainer>{toolbar}</ToolbarContainer>
+    <Scrollable>{body}</Scrollable>
+  </Container>,
+];
 
 import { decorator as $$ } from "replay/utils";
 

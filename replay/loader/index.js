@@ -13,7 +13,7 @@ module.exports = (src) => {
     // JSX
     JSXElement(path) {
       const name = path.node.openingElement.name.name;
-      const type = /^[a-z]/.test(name)
+      const type = /^[a-z_]/.test(name)
         ? t.stringLiteral(name)
         : t.identifier(name);
       const props = t.objectExpression(

@@ -7,8 +7,8 @@ const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
       onmouseleave={() => ($sidebar.hovered = false)}
     >
       <EditorButton collapsed={collapsed} onclick={() => $editor.openEditor()}>
-        <EditorButtonIcon src={editorButtonIconImage} />
-        {!collapsed && <EditorButtonText>Compose</EditorButtonText>}
+        <ButtonIcon src={editorButtonIconImage} />
+        {!collapsed && <ButtonText>Compose</ButtonText>}
       </EditorButton>
       {...["inbox", "sent", "drafts"].map((f) => (
         <MenuItem
@@ -107,7 +107,7 @@ const MenuIcon = $$.i`
   font-size: 1rem;
 `;
 
-const EditorButtonIcon = $$.img`
+const ButtonIcon = $$.img`
   --size: 32px;
   width: var(--size);
   height: var(--size);
@@ -141,7 +141,7 @@ const EditorButton = $$.button`
   }
 `;
 
-const EditorButtonText = $$.span`
+const ButtonText = $$.span`
   margin-left: 10px;
   font-size: 0.9rem;
   font-weight: 600;
