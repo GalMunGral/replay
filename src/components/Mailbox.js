@@ -7,22 +7,23 @@ const Tab = ({ name, key, active, onclick }) =>
 
 const Tabs = () => {
   const { folder, tab: activeTab } = $router;
-  return folder === "inbox"
-    ? //// use transform
-      TabBar(
-        allTabs.map((tab) =>
-          Tab(
-            (name = tab),
-            (key = tab),
-            (active = tab === activeTab),
-            (onclick = () => {
-              $router.tab = tab;
-              $mails.pageIndex = 0;
-            })
-          )
+  if (folder !== "inbox") return [null];
+  return (
+    //// use transform
+    TabBar(
+      allTabs.map((tab) =>
+        Tab(
+          (name = tab),
+          (key = tab),
+          (active = tab === activeTab),
+          (onclick = () => {
+            $router.tab = tab;
+            $mails.pageIndex = 0;
+          })
         )
       )
-    : [null];
+    )
+  );
 };
 
 const Mailbox = Observer(() => {
