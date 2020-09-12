@@ -6,10 +6,42 @@ const { default: generate } = require("@babel/generator");
 module.exports = (src) => {
   const ast = parser.parse(src, {
     sourceType: "module",
-    plugins: ["classProperties"],
+    plugins: ["jsx", "classProperties"],
   });
 
   traverse(ast, {
+    // JSX
+    JSXElement(path) {
+      const name = path.node.openingElement.name.name;
+      const type = /^[a-z]/.test(name)
+        ? t.stringLiteral(name)
+        : t.identifier(name);
+      const props = t.objectExpression(
+        path.node.openingElement.attributes.map((attr) => {
+          const key = t.identifier(attr.name.name);
+          const value = t.isJSXExpressionContainer(attr.value)
+            ? attr.value.expression
+            : attr.value;
+          return t.objectProperty(key, value);
+        })
+      );
+      const children = t.arrayExpression(
+        path.node.children.map((child) => {
+          return t.isJSXText(child)
+            ? t.arrayExpression([
+                t.stringLiteral("text"),
+                t.objectExpression([]),
+                t.stringLiteral(child.value),
+              ])
+            : t.isJSXExpressionContainer(child)
+            ? child.expression
+            : child;
+        })
+      );
+      const node = t.arrayExpression([type, props, children]);
+      path.replaceWith(node);
+    },
+    // Original
     ArrayExpression(path) {
       if (shouldTransform(path)) {
         path.node.elements = path.node.elements.map(transformChild);

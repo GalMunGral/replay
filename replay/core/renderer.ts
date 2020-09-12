@@ -102,8 +102,10 @@ function* renderDOMComponent(
     });
     return;
   }
+  // Only `text` and `comment` are allowed to have non-array children
+  // Convert `p('hello')` to  `p([ text('hello') ])`
   if (!Array.isArray(props.children)) {
-    props.children = [["text", {}, props.children]]; // p('hello') -> p([ text('hello') ])
+    props.children = [["text", {}, props.children]];
   }
 
   yield;
