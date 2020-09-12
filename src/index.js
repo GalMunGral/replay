@@ -1,14 +1,13 @@
-import { render } from "@replay/core";
-import App from "@components/App";
+import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
+import "@fortawesome/fontawesome-free/css/solid.min.css";
 import "@assets/style.css";
 import "@assets/favicon.ico";
 
-if (process.env.NODE_ENV === "production") {
-  import("@fortawesome/fontawesome-free/css/all.min.css");
-} else {
-  import("@fortawesome/fontawesome-free/css/all.css");
-}
+import { render } from "replay/core";
+import App from "@components/App";
 
-window.addEventListener("load", () => {
-  render(/* use-transform */ App(), document.body);
-});
+render(
+  //// use transform
+  App(),
+  document.body
+);

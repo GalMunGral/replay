@@ -1,4 +1,14 @@
-import { decorator as $$ } from "@replay/utils";
+const Layout = ({ children: [toolbar, body] }) =>
+  //// use transform
+  Container([
+    // prettier-ignore
+    ToolbarContainer([toolbar]),
+    Scrollable([body]),
+  ]);
+
+import { decorator as $$ } from "replay/utils";
+
+export default Layout;
 
 const Container = $$.div`
   grid-area: c;
@@ -22,20 +32,10 @@ const Scrollable = $$.div`
   overflow-y: auto;
   padding-bottom: 80px;
 
-`.and`::-webkit-scrollbar-thumb {
+`.$`::-webkit-scrollbar-thumb {
     background: var(--gray);
   }
-`.and`::-webkit-scrollbar {
+`.$`::-webkit-scrollbar {
     width: 10px;
   }
 `;
-
-const Layout = ({ children: [toolbar, body] }) =>
-  // use-transform
-  Container([
-    // prettier-ignore
-    ToolbarContainer([toolbar]),
-    Scrollable([body]),
-  ]);
-
-export default Layout;

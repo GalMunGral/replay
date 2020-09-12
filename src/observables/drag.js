@@ -1,4 +1,4 @@
-import { Observable } from "@replay/utils";
+import { Observable } from "replay/utils";
 import { throttle } from "lodash";
 
 const DELAY = 33.33;

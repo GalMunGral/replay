@@ -1,4 +1,26 @@
-import { Observer } from "@replay/utils";
+const MailList = () => {
+  return (
+    //// use transform
+    [
+      ...$mails.currentPage.map((mail) =>
+        MailItem(
+          // (key = mail.id),
+          (mail = mail),
+          (folder = $router.folder),
+          (selected = $selection.selected.includes(mail.id)),
+          (toggleItem = () => toggleItem(mail.id)),
+          (deleteItem = () => deleteItem(mail.id)),
+          (selectItem = () => selectAfter(mail, 300)),
+          (viewItem = () => cancelSelectAndOpen(mail)),
+          (ondrag = ondrag),
+          (ondragstart = ondragstart),
+          (ondragend = ondragend)
+        )
+      ),
+    ]
+  );
+};
+
 import $mails from "@observables/mails";
 import $router from "@observables/router";
 import $selection from "@observables/selection";
@@ -59,29 +81,6 @@ const ondragstart = (e) => {
 
 const ondragend = () => {
   $dragState.setIsDragging(false);
-};
-
-const MailList = () => {
-  return (
-    // use-transform
-    [
-      ...$mails.currentPage.map((mail) =>
-        MailItem(
-          // (key = mail.id),
-          (mail = mail),
-          (folder = $router.folder),
-          (selected = $selection.selected.includes(mail.id)),
-          (toggleItem = () => toggleItem(mail.id)),
-          (deleteItem = () => deleteItem(mail.id)),
-          (selectItem = () => selectAfter(mail, 300)),
-          (viewItem = () => cancelSelectAndOpen(mail)),
-          (ondrag = ondrag),
-          (ondragstart = ondragstart),
-          (ondragend = ondragend)
-        )
-      ),
-    ]
-  );
 };
 
 export default MailList;

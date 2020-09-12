@@ -1,4 +1,4 @@
-import { Observable } from "@replay/utils";
+import { Observable } from "replay/utils";
 
 const historyReducer = (state, action) => {
   switch (action.type) {

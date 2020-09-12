@@ -1,4 +1,21 @@
-import { decorator as $$ } from "@replay/utils";
+const Checkbox = ({ checked, onchange }) =>
+  //// use transform
+  Clickable(
+    (onclick = onchange),
+    (onmousedown = (e) => e.stopPropagation()),
+    (onmouseup = (e) => e.stopPropagation()),
+    [
+      div([
+        Background((checked = checked)),
+        CheckMark((checked = checked), [i((className = "fas fa-check"))]),
+        input((type = "checkbox"), (checked = checked)),
+      ]),
+    ]
+  );
+
+import { decorator as $$ } from "replay/utils";
+
+export default Checkbox;
 
 const Background = $$.div`
   --border-size: 2px;
@@ -49,17 +66,17 @@ const Clickable = $$.div`
   height: var(--size);
   border-radius: calc(0.5 * var(--size));
 
-`.and`:hover {
+`.$`:hover {
     background: ${({ checked }) => (checked ? "none" : "var(--light-gray)")};
   }
-`.and` > div {
+`.$` > div {
     flex: 0 0 auto;
     position: relative;
     width: 0.8rem;
     height: 0.8rem;
     margin: 5px;
   }
-`.and` > div > input {
+`.$` > div > input {
     opacity: 0;
     width: 1rem;
     height: 1rem;
@@ -70,23 +87,3 @@ const Clickable = $$.div`
     cursor: pointer;
   }
 `;
-
-const Checkbox = ({ checked, onchange }) =>
-  // use-transform
-  Clickable(
-    (onclick = onchange),
-    (onmousedown = (e) => e.stopPropagation()),
-    (onmouseup = (e) => e.stopPropagation()),
-    [
-      div([
-        Background((checked = checked)),
-        CheckMark((checked = checked), [
-          // prettier-ignore
-          i((className = "fas fa-check")),
-        ]),
-        input((type = "checkbox"), (checked = checked)),
-      ]),
-    ]
-  );
-
-export default Checkbox;

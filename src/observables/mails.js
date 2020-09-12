@@ -1,4 +1,4 @@
-import { Observable } from "@replay/utils";
+import { Observable } from "replay/utils";
 import $store from "./store";
 import $router from "./router";
 

@@ -1,5 +1,21 @@
-import { Observer, decorator as $$ } from "@replay/utils";
+const AppBar = ({ toggle }) =>
+  //// use transform
+  Container([
+    Group([
+      MenuButton((onclick = toggle), [MenuIcon((className = "fas fa-bars"))]),
+      AppLogo((src = appLogoImage), (alt = "logo")),
+    ]),
+    SearchBar([
+      SearchIcon((className = "fas fa-search")),
+      SearchInput((placeholder = "Search mail")),
+    ]),
+    Group(),
+  ]);
+
+import { decorator as $$ } from "replay/utils";
 import appLogoImage from "@assets/images/logo.png";
+
+export default AppBar;
 
 const Container = $$.div`
   grid-area: a;
@@ -31,7 +47,7 @@ const MenuButton = $$.button`
   outline: none;
   cursor: pointer;\
 
-`.and`:hover {
+`.$`:hover {
     background: var(--light-gray);
   }
 `;
@@ -65,7 +81,7 @@ const SearchBar = $$.div`
   display: flex;
   align-items: center;
 
-`.and`:focus-within {
+`.$`:focus-within {
     box-shadow: 0 1px 4px 0px var(--gray);
     background: white;
   }
@@ -76,19 +92,3 @@ const SearchIcon = $$.i`
   color: var(--dark-gray);
   margin: 20px;
 `;
-
-const AppBar = ({ toggle }) =>
-  // use-transform
-  Container([
-    Group([
-      MenuButton((onclick = toggle), [MenuIcon((className = "fas fa-bars"))]),
-      AppLogo((src = appLogoImage), (alt = "logo")),
-    ]),
-    SearchBar([
-      SearchIcon((className = "fas fa-search")),
-      SearchInput((placeholder = "Search mail")),
-    ]),
-    Group(),
-  ]);
-
-export default AppBar;

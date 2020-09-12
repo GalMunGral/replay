@@ -1,4 +1,49 @@
-import { Observer, decorator as $$ } from "@replay/utils";
+const Tab = ({ name, key, active, onclick }) =>
+  //// use transform
+  Box({ name, key, active, onclick }, [
+    Icon({ className: `fas fa-${iconMap[name]}` }),
+    p(name),
+  ]);
+
+const Tabs = () => {
+  const { folder, tab: activeTab } = $router;
+  return folder === "inbox"
+    ? //// use transform
+      TabBar(
+        allTabs.map((tab) =>
+          Tab(
+            (name = tab),
+            (key = tab),
+            (active = tab === activeTab),
+            (onclick = () => {
+              $router.tab = tab;
+              $mails.pageIndex = 0;
+            })
+          )
+        )
+      )
+    : [null];
+};
+
+const Mailbox = Observer(() => {
+  const page = $mails.currentPage;
+  return (
+    //// use transform
+    Layout([
+      MailboxToolbar(
+        (allSelected = $selection.allSelected(page)),
+        (toggleAll = () => $selection.toggleAll(page))
+      ),
+      section([
+        // prettier-ignore
+        Tabs(),
+        MailList(),
+      ]),
+    ])
+  );
+});
+
+import { Observer, decorator as $$ } from "replay/utils";
 import $mails from "@observables/mails";
 import $router from "@observables/router";
 import $selection from "@observables/selection";
@@ -20,18 +65,20 @@ const colorMap = {
   promotions: "#2e7d32",
 };
 
-export const TabBar = $$.div`
+export default Mailbox;
+
+const TabBar = $$.div`
   flex: 0 0 50px;
   display: flex;
   justify-content: start;
   border-bottom: 1px solid var(--light-gray);
 `;
 
-export const Icon = $$.i`
+const Icon = $$.i`
   margin: 0 20px;
 `;
 
-export const Box = $$.div`
+const Box = $$.div`
   --height: 55px;
   display: inline-block;
   position: relative;
@@ -48,7 +95,7 @@ export const Box = $$.div`
   cursor: pointer;
   transition: background 0.02s ease-in-out;
   
-`.and`::after {
+`.$`::after {
     content: "";
     position: absolute;
     left: 5%;
@@ -59,54 +106,7 @@ export const Box = $$.div`
     background: ${({ active, name }) =>
       active ? colorMap[name] : "transparent"};
   }
-`.and`:hover {
+`.$`:hover {
     background: var(--light-gray);
   }
 `;
-
-const Tab = ({ name, key, active, onclick }) =>
-  // use-transform
-  Box({ name, key, active, onclick }, [
-    Icon({ className: `fas fa-${iconMap[name]}` }),
-    p(name),
-  ]);
-
-const Tabs = () => {
-  const { folder, tab: activeTab } = $router;
-  return folder === "inbox"
-    ? // use-transform
-      TabBar(
-        allTabs.map((tab) =>
-          Tab(
-            (name = tab),
-            (key = tab),
-            (active = tab === activeTab),
-            (onclick = () => {
-              $router.tab = tab;
-              $mails.pageIndex = 0;
-            })
-          )
-        )
-      )
-    : [null];
-};
-
-const Mailbox = Observer(() => {
-  const page = $mails.currentPage;
-  return (
-    // use-transform
-    Layout([
-      MailboxToolbar(
-        (allSelected = $selection.allSelected(page)),
-        (toggleAll = () => $selection.toggleAll(page))
-      ),
-      section([
-        // prettier-ignore
-        Tabs(),
-        MailList(),
-      ]),
-    ])
-  );
-});
-
-export default Mailbox;

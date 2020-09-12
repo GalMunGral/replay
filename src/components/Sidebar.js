@@ -1,4 +1,51 @@
-import { Observer, Observable, decorator as $$ } from "@replay/utils";
+const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
+  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
+  return (
+    //// use transform
+    Menu(
+      (collapsed = collapsed),
+      (onmouseenter = () => ($sidebar.hovered = true)),
+      (onmouseleave = () => ($sidebar.hovered = false)),
+      [
+        EditorButton(
+          (collapsed = collapsed),
+          (onclick = () => $editor.openEditor()),
+          [
+            EditorButtonIcon((src = editorButtonIconImage)),
+            !collapsed && EditorButtonText("Compose"),
+          ]
+        ),
+        ...["inbox", "sent", "drafts"].map((f) =>
+          MenuItem(
+            (collapsed = collapsed),
+            (activated = $router.folder === f),
+            (onclick = () => $router.navigate("/" + f)),
+            [
+              MenuIcon((className = `fas fa-${iconMap[f]}`)),
+              !collapsed && span(f),
+            ]
+          )
+        ),
+        MenuItem(
+          (collapsed = collapsed),
+          (activated = $router.folder === "trash"),
+          (style = {
+            background: $dropzone.canDrop ? "var(--theme)" : "",
+            color: $dropzone.canDrop ? "white" : "",
+          }),
+          (onclick = $dropzone.onclick.bind($dropzone)),
+          (ondragenter = $dropzone.ondragenter.bind($dropzone)),
+          (ondragleave = $dropzone.ondragleave.bind($dropzone)),
+          (ondragover = $dropzone.ondragover.bind($dropzone)),
+          (ondrop = $dropzone.ondrop.bind($dropzone)),
+          [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
+        ),
+      ]
+    )
+  );
+});
+
+import { Observer, Observable, decorator as $$ } from "replay/utils";
 import $store from "@observables/store";
 import $editor from "@observables/editor";
 import $selection from "@observables/selection";
@@ -10,6 +57,44 @@ const iconMap = {
   sent: "paper-plane",
   drafts: "scroll",
 };
+
+Sidebar.init = () => ({
+  $dropzone: new Observable({
+    canDrop: false,
+    onclick() {
+      $router.navigate("/trash");
+    },
+    ondragenter(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.canDrop = true;
+    },
+    ondragleave() {
+      this.canDrop = false;
+    },
+    ondragover(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    ondrop() {
+      $store.dispatch((dispatch) => {
+        setTimeout(() => {
+          dispatch({
+            type: $store.T.DELETE_SELECTED,
+            payload: {
+              folder: $router.folder,
+              selected: $selection.selected,
+            },
+          });
+          $selection.reset();
+        }, 200);
+      });
+      this.canDrop = false;
+    },
+  }),
+});
+
+export default Sidebar;
 
 const Menu = $$.div`
   grid-area: b;
@@ -54,10 +139,10 @@ const EditorButton = $$.button`
   cursor: pointer;
   transition: box-shadow 0.2s;
 
-`.and`:hover {
+`.$`:hover {
     box-shadow: 0 5px 10px 0 var(--gray);
   }
-`.and`:active {
+`.$`:active {
     background: var(--light-gray);
   }
 `;
@@ -96,104 +181,19 @@ const MenuItem = $$.div`
   cursor: pointer;
   transition: all 0.2s;
 
-`.and`:hover {
+`.$`:hover {
     background: ${({ activated }) =>
       activated ? "var(--theme-light)" : "var(--light-gray)"};
   }
-`.and`:active {
+`.$`:active {
     background: ${({ activated }) =>
       activated ? "var(--theme-light)" : "var(--gray)"};
   }
-`.and` > i {
+`.$` > i {
     margin: 0 ${({ collapsed }) => (collapsed ? "0" : "20px")};
     color: inherit;
   }
-`.and` * {
+`.$` * {
     pointer-events: none;
   }
 `;
-
-const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
-  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
-  return (
-    // use-transform
-    Menu(
-      (collapsed = collapsed),
-      (onmouseenter = () => ($sidebar.hovered = true)),
-      (onmouseleave = () => ($sidebar.hovered = false)),
-      [
-        EditorButton(
-          (collapsed = collapsed),
-          (onclick = () => $editor.openEditor()),
-          [
-            EditorButtonIcon((src = editorButtonIconImage)),
-            !collapsed && EditorButtonText("Compose"),
-          ]
-        ),
-        ...["inbox", "sent", "drafts"].map((f) =>
-          MenuItem(
-            (collapsed = collapsed),
-            (activated = $router.folder === f),
-            (onclick = () => $router.navigate("/" + f)),
-            [
-              MenuIcon((className = `fas fa-${iconMap[f]}`)),
-              !collapsed && span(f),
-            ]
-          )
-        ),
-        MenuItem(
-          (collapsed = collapsed),
-          (activated = $router.folder === "trash"),
-          (style = {
-            background: $dropzone.canDrop ? "var(--theme)" : "",
-            color: $dropzone.canDrop ? "white" : "",
-          }),
-          (onclick = $dropzone.onclick.bind($dropzone)),
-          (ondragenter = $dropzone.ondragenter.bind($dropzone)),
-          (ondragleave = $dropzone.ondragleave.bind($dropzone)),
-          (ondragover = $dropzone.ondragover.bind($dropzone)),
-          (ondrop = $dropzone.ondrop.bind($dropzone)),
-          [MenuIcon((className = "fas fa-trash")), !collapsed && span("trash")]
-        ),
-      ]
-    )
-  );
-});
-
-Sidebar.init = () => ({
-  $dropzone: new Observable({
-    canDrop: false,
-    onclick() {
-      $router.navigate("/trash");
-    },
-    ondragenter(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      this.canDrop = true;
-    },
-    ondragleave() {
-      this.canDrop = false;
-    },
-    ondragover(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    ondrop() {
-      $store.dispatch((dispatch) => {
-        setTimeout(() => {
-          dispatch({
-            type: $store.T.DELETE_SELECTED,
-            payload: {
-              folder: $router.folder,
-              selected: $selection.selected,
-            },
-          });
-          $selection.reset();
-        }, 200);
-      });
-      this.canDrop = false;
-    },
-  }),
-});
-
-export default Sidebar;

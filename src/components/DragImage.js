@@ -1,6 +1,28 @@
-import { Observer, decorator as $$ } from "@replay/utils";
+const DragImage = Observer(() => {
+  const { selected } = $selection;
+  const { isDragging, x, y } = $dragState;
+  return (
+    //// use transform
+    Box(
+      (style = {
+        visibility: isDragging ? "visible" : "hidden",
+        transform: `translate3d(${x}px, ${y}px, 0)`,
+      }),
+      [
+        Icon((className = "fas fa-mail-bulk")),
+        span(
+          `Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`
+        ),
+      ]
+    )
+  );
+});
+
+import { Observer, decorator as $$ } from "replay/utils";
 import $selection from "@observables/selection";
 import $dragState from "@observables/drag";
+
+export default DragImage;
 
 const Box = $$.div`
   position: fixed;
@@ -22,25 +44,3 @@ const Box = $$.div`
 const Icon = $$.i`
   margin-right: 15px;
 `;
-
-const DragImage = Observer(() => {
-  const { selected } = $selection;
-  const { isDragging, x, y } = $dragState;
-  return (
-    // use-transform
-    Box(
-      (style = {
-        visibility: isDragging ? "visible" : "hidden",
-        transform: `translate3d(${x}px, ${y}px, 0)`,
-      }),
-      [
-        Icon((className = "fas fa-mail-bulk")),
-        span(
-          `Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`
-        ),
-      ]
-    )
-  );
-});
-
-export default DragImage;

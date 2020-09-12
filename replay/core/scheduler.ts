@@ -189,7 +189,7 @@ export class Scheduler {
           .catch((err) => console.log("[[TEST]]", err));
         return;
       }
-    } while (deadline.timeRemaining() > 0);
+    } while (deadline.timeRemaining() > 5);
     this.continuation = new CancelableExecution((deadline) => {
       this.run(deadline);
     });
