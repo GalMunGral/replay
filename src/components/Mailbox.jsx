@@ -1,47 +1,48 @@
-const Tab = ({ name, key, active, onclick }) =>
-  //// use transform
-  Box({ name, key, active, onclick }, [
-    Icon({ className: `fas fa-${iconMap[name]}` }),
-    p(name),
-  ]);
+const Tab = ({ name, key, active, onclick }) => [
+  <Box {...{ name, key, active, onclick }}>
+    <Icon className={`fas fa-${iconMap[name]}`} />
+    <p>{name}</p>{" "}
+  </Box>,
+];
 
 const Tabs = () => {
   const { folder, tab: activeTab } = $router;
   if (folder !== "inbox") return [null];
-  return (
-    //// use transform
-    TabBar(
-      allTabs.map((tab) =>
-        Tab(
-          (name = tab),
-          (key = tab),
-          (active = tab === activeTab),
-          (onclick = () => {
+  return [
+    <TabBar>
+      {...allTabs.map((tab) => (
+        <Tab
+          name={tab}
+          key={tab}
+          active={tab === activeTab}
+          onclick={() => {
             $router.tab = tab;
             $mails.pageIndex = 0;
-          })
-        )
-      )
-    )
-  );
+          }}
+        />
+      ))}
+    </TabBar>,
+  ];
 };
 
 const Mailbox = Observer(() => {
   const page = $mails.currentPage;
-  return (
-    //// use transform
-    Layout([
-      MailboxToolbar(
-        (allSelected = $selection.allSelected(page)),
-        (toggleAll = () => $selection.toggleAll(page))
-      ),
-      section([
-        // prettier-ignore
-        Tabs(),
-        MailList(),
-      ]),
-    ])
-  );
+  return [
+    <Layout
+      toolbar={
+        <MailboxToolbar
+          allSelected={$selection.allSelected(page)}
+          toggleAll={() => $selection.toggleAll(page)}
+        />
+      }
+      body={
+        <section>
+          <Tabs />
+          <MailList />
+        </section>
+      }
+    />,
+  ];
 });
 
 import { Observer, decorator as $$ } from "replay/utils";

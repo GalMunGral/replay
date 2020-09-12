@@ -6,36 +6,41 @@ const MailItem = ({
   deleteItem,
   selectItem,
   viewItem,
-  dragEventListeners,
+  ondrag,
+  ondragstart,
+  ondragend,
 }) => {
   const { senderName, senderEmail, subject, content } = mail;
   const isInTrash = folder === "trash";
-  return [
-    <ListItem
-      selected={selected}
-      draggable={!isInTrash}
-      onmousedown={selectItem}
-      onmouseup={viewItem}
-      {...dragEventListeners}
-    >
-      {!isInTrash && <Checkbox checked={selected} onchange={toggleItem} />}
-      <SenderInfo>{senderName || senderEmail || "(no name)"}</SenderInfo>
-      <Summary>
-        <Title>{format(subject, 30)}</Title>
-        <Preheader innerHTML={`&nbsp;&mdash;&nbsp;${format(content, 50)}`} />
-      </Summary>
-      {!isInTrash && (
-        <Actions>
-          <IconButton
-            type="trash"
-            onclick={deleteItem}
-            onmousedown={(e) => e.stopPropagation()}
-            onmouseup={(e) => e.stopPropagation()}
-          />
-        </Actions>
-      )}
-    </ListItem>,
-  ];
+  return (
+    //// use transform
+    ListItem(
+      (selected = selected),
+      (draggable = !isInTrash),
+      (onmousedown = selectItem),
+      (onmouseup = viewItem),
+      (ondrag = ondrag),
+      (ondragstart = ondragstart),
+      (ondragend = ondragend),
+      [
+        !isInTrash && Checkbox((checked = selected), (onchange = toggleItem)),
+        SenderInfo(senderName || senderEmail || "(no name)"),
+        Summary([
+          Title("" + format(subject, 30)),
+          Preheader((innerHTML = `&nbsp;&mdash;&nbsp;${format(content, 50)}`)),
+        ]),
+        !isInTrash &&
+          Actions([
+            IconButton(
+              (type = "trash"),
+              (onclick = deleteItem),
+              (onmousedown = (e) => e.stopPropagation()),
+              (onmouseup = (e) => e.stopPropagation())
+            ),
+          ]),
+      ]
+    )
+  );
 };
 
 import { decorator as $$ } from "replay/utils";

@@ -1,17 +1,21 @@
-const MailboxToolbar = ({ allSelected, toggleAll }) => [
-  $router.folder !== "trash" && (
-    <Checkbox checked={allSelected} onchange={toggleAll} />
-  ),
-  <Space />,
-  <PageRange>
-    ,
-    <PageRangeText
-      innerHTML={`${$mails.pageStart}&ndash;${$mails.pageEnd} of ${$mails.total}`}
-    />
-  </PageRange>,
-  <IconButton type="angle-left" onclick={() => $mails.prevPage()} />,
-  <IconButton type="angle-right" onclick={() => $mails.nextPage()} />,
-];
+const MailboxToolbar = ({ allSelected, toggleAll }) => {
+  return (
+    //// use transform
+    [
+      $router.folder !== "trash"
+        ? Checkbox((checked = allSelected), (onchange = toggleAll))
+        : null,
+      Space(),
+      PageRange([
+        PageRangeText({
+          innerHTML: `${$mails.pageStart}&ndash;${$mails.pageEnd} of ${$mails.total}`,
+        }),
+      ]),
+      IconButton((type = "angle-left"), (onclick = () => $mails.prevPage())),
+      IconButton((type = "angle-right"), (onclick = () => $mails.nextPage())),
+    ]
+  );
+};
 
 import { decorator as $$ } from "replay/utils";
 import $mails from "@observables/mails";

@@ -1,18 +1,19 @@
 const EditorInput = Observer(
   ({ value, setValue, label, placeholder }, { $self }) => {
     const activated = $self.focused || value;
-    return [
-      <InputBox>
-        {activated && <label>{label}</label>}
-        <input
-          value={value}
-          placeholder={!activated ? placeholder : ""}
-          onfocus={() => ($self.focused = true)}
-          onblur={() => ($self.focused = false)}
-          onchange={(e) => setValue(e.target.value)}
-        />
-      </InputBox>,
-    ];
+    return (
+      //// use transform
+      InputBox([
+        activated && label(label),
+        input(
+          (value = value),
+          (placeholder = !activated ? placeholder : ""),
+          (onfocus = () => ($self.focused = true)),
+          (onblur = () => ($self.focused = false)),
+          (onchange = (e) => setValue(e.target.value))
+        ),
+      ])
+    );
   }
 );
 
@@ -20,54 +21,53 @@ const Editor = Observer(() => {
   const { minimized } = $editor;
   const { recipientEmail, subject, content } = $editor;
 
-  return [
-    $editor.open && (
-      <Window>
-        <Header onclick={() => ($editor.minimized = !minimized)}>
-          <span>New Message</span>
-          <CloseButton
-            onclick={() => {
-              $editor.saveDraft();
+  if (!$editor.open) return [null];
+
+  return (
+    //// use transform
+    Window([
+      Header((onclick = () => ($editor.minimized = !minimized)), [
+        span("New Message"),
+        CloseButton(
+          (onclick = () => {
+            $editor.saveDraft();
+            $editor.open = false;
+          }),
+          [i((className = "fas fa-times"))]
+        ),
+      ]),
+      Body({ minimized }, [
+        EditorInput(
+          (label = "To:"),
+          (placeholder = "Recipient"),
+          (value = recipientEmail),
+          (setValue = (v) => ($editor.recipientEmail = v))
+        ),
+        EditorInput(
+          (label = "Subject:"),
+          (placeholder = "Subject"),
+          (value = subject),
+          (setValue = (v) => ($editor.subject = v))
+        ),
+        TextArea(
+          (value = content),
+          (oninput = (e) => $editor.updateHistory(e.target.value))
+        ),
+        ButtonGroup([
+          SendButton(
+            (onclick = () => {
+              $editor.sendMail();
               $editor.open = false;
-            }}
-          >
-            <i className="fas fa-times" />
-          </CloseButton>
-        </Header>
-        <Body minimized={minimized}>
-          <EditorInput
-            label="To:"
-            placeholder="Recipient"
-            value={recipientEmail}
-            setValue={(v) => ($editor.recipientEmail = v)}
-          />
-          <EditorInput
-            label="Subject:"
-            placeholder="Subject"
-            value={subject}
-            setValue={(v) => ($editor.subject = v)}
-          />
-          <TextArea
-            value={content}
-            oninput={(e) => $editor.updateHistory(e.target.value)}
-          />
-          <ButtonGroup>
-            <SendButton
-              onclick={() => {
-                $editor.sendMail();
-                $editor.open = false;
-              }}
-            >
-              Send
-            </SendButton>
-            <IconButton type="undo" onclick={() => $editor.undo()} />
-            <IconButton type="redo" onclick={() => $editor.redo()} />
-            <Space />
-          </ButtonGroup>
-        </Body>
-      </Window>
-    ),
-  ];
+            }),
+            "Send"
+          ),
+          IconButton((type = "undo"), (onclick = () => $editor.undo())),
+          IconButton((type = "redo"), (onclick = () => $editor.redo())),
+          Space(),
+        ]),
+      ]),
+    ])
+  );
 });
 
 import { Observer, Observable, decorator as $$ } from "replay/utils";

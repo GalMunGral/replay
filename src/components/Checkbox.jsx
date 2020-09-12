@@ -1,17 +1,18 @@
-const Checkbox = ({ checked, onchange }) =>
-  //// use transform
-  Clickable(
-    (onclick = onchange),
-    (onmousedown = (e) => e.stopPropagation()),
-    (onmouseup = (e) => e.stopPropagation()),
-    [
-      div([
-        Background((checked = checked)),
-        CheckMark((checked = checked), [i((className = "fas fa-check"))]),
-        input((type = "checkbox"), (checked = checked)),
-      ]),
-    ]
-  );
+const Checkbox = ({ checked, onchange }) => [
+  <Clickable
+    onclick={onchange}
+    onmousedown={(e) => e.stopPropagation()}
+    onmouseup={(e) => e.stopPropagation()}
+  >
+    <div>
+      <Background checked={checked} />
+      <CheckMark checked={checked}>
+        <i className="fas fa-check" />
+      </CheckMark>
+      <input type="checkbox" checked={checked} />
+    </div>
+  </Clickable>,
+];
 
 import { decorator as $$ } from "replay/utils";
 

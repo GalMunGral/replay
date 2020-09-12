@@ -1,17 +1,25 @@
-const MailList = () =>
-  $mails.currentPage.map((mail, i) => (
-    <MailItem
-      key={i}
-      mail={mail}
-      folder={$router.folder}
-      selected={$selection.selected.includes(mail.id)}
-      toggleItem={() => toggleItem(mail.id)}
-      deleteItem={() => deleteItem(mail.id)}
-      selectItem={() => selectAfter(mail, 300)}
-      viewItem={() => cancelSelectAndOpen(mail)}
-      dragEventListeners={dragEventListeners}
-    />
-  ));
+const MailList = () => {
+  return (
+    //// use transform
+    [
+      ...$mails.currentPage.map((mail) =>
+        MailItem(
+          // (key = mail.id),
+          (mail = mail),
+          (folder = $router.folder),
+          (selected = $selection.selected.includes(mail.id)),
+          (toggleItem = () => toggleItem(mail.id)),
+          (deleteItem = () => deleteItem(mail.id)),
+          (selectItem = () => selectAfter(mail, 300)),
+          (viewItem = () => cancelSelectAndOpen(mail)),
+          (ondrag = ondrag),
+          (ondragstart = ondragstart),
+          (ondragend = ondragend)
+        )
+      ),
+    ]
+  );
+};
 
 import $mails from "@observables/mails";
 import $router from "@observables/router";
@@ -60,19 +68,19 @@ const cancelSelectAndOpen = (mail) => {
   }
 };
 
-const dragEventListeners = {
-  ondrag: (e) => {
-    $dragState.setCoordinates(e.clientX - OFFSET, e.clientY - OFFSET);
-  },
-  ondragstart: (e) => {
-    e.dataTransfer.setDragImage(new Image(), 0, 0);
-    setTimeout(() => {
-      $dragState.setIsDragging(true);
-    }, 100);
-  },
-  ondragend: () => {
-    $dragState.setIsDragging(false);
-  },
+const ondrag = (e) => {
+  $dragState.setCoordinates(e.clientX - OFFSET, e.clientY - OFFSET);
+};
+
+const ondragstart = (e) => {
+  e.dataTransfer.setDragImage(new Image(), 0, 0);
+  setTimeout(() => {
+    $dragState.setIsDragging(true);
+  }, 100);
+};
+
+const ondragend = () => {
+  $dragState.setIsDragging(false);
 };
 
 export default MailList;

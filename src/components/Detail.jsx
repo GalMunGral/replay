@@ -1,20 +1,11 @@
-const DetailToolbar = ({ canDelete, deleteMail }) => {
-  return (
-    //// use transform
-    [
-      IconButton((type = "arrow-left"), (onclick = () => history.back())),
-      canDelete ? IconButton((type = "trash"), (onclick = deleteMail)) : null,
-    ]
-  );
-};
+const DetailToolbar = ({ canDelete, deleteMail }) => [
+  <IconButton type="arrow-left" onclick={() => history.back()} />,
+  canDelete && <IconButton type="trash" onclick={deleteMail} />,
+];
 
 const Detail = () => {
-  if (!$mails.mail) {
-    return (
-      //// use transform
-      h1((style = { margin: "50px auto" }), "Redirecting")
-    );
-  }
+  if (!$mails.mail)
+    return [<h1 style={{ margin: "50px auto" }}>Redirecting</h1>];
   const {
     subject,
     senderName = "(no name)",
@@ -25,21 +16,24 @@ const Detail = () => {
   } = $mails.mail;
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
-  return (
-    //// use transform
-    Layout([
-      DetailToolbar(
-        (canDelete = $router.folder !== "trash"),
-        (deleteMail = () => $mails.deleteMail())
-      ),
-      Main([
-        Header(subject),
-        SenderInfo((innerHTML = senderInfo)),
-        RecipientInfo((innerHTML = recipientInfo)),
-        Body(content),
-      ]),
-    ])
-  );
+  return [
+    <Layout
+      toolbar={
+        <DetailToolbar
+          canDelete={$router.folder !== "trash"}
+          deleteMail={() => $mails.deleteMail()}
+        />
+      }
+      body={
+        <Main>
+          <Header>{subject}</Header>
+          <SenderInfo innerHTML={senderInfo} />
+          <RecipientInfo innerHTML={recipientInfo} />
+          <Body>{content}</Body>
+        </Main>
+      }
+    />,
+  ];
 };
 
 import { decorator as $$ } from "replay/utils";

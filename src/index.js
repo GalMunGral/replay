@@ -6,4 +6,8 @@ import "@assets/favicon.ico";
 import { render } from "replay/core";
 import App from "@components/App";
 
-render([<App />], document.body);
+render(
+  //// use transform
+  App(),
+  document.body
+);
