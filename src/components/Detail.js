@@ -15,7 +15,6 @@ const Detail = () => {
       h1((style = { margin: "50px auto" }), "Redirecting")
     );
   }
-
   const {
     subject,
     senderName = "(no name)",
@@ -26,7 +25,6 @@ const Detail = () => {
   } = $mails.mail;
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
-
   return (
     //// use transform
     Layout([

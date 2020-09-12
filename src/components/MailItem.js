@@ -1,7 +1,3 @@
-import { decorator as $$ } from "replay/utils";
-import Checkbox from "@components/Checkbox";
-import IconButton from "@components/IconButton";
-
 const MailItem = ({
   mail,
   folder,
@@ -46,6 +42,10 @@ const MailItem = ({
     )
   );
 };
+
+import { decorator as $$ } from "replay/utils";
+import Checkbox from "@components/Checkbox";
+import IconButton from "@components/IconButton";
 
 export default MailItem;
 
