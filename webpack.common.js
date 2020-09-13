@@ -11,8 +11,7 @@ const babelLoader = {
 };
 
 module.exports = (env) => ({
-  // entry: "./src-original/index.js",
-  entry: "./src/index.js",
+  entry: "./src/index",
   output: {
     path: path.resolve(__dirname, "public"),
     publicPath: "/",
@@ -20,12 +19,7 @@ module.exports = (env) => ({
     chunkFilename: "[name].[contenthash].js",
   },
   resolve: {
-    extensions: [".ts", ".js"],
-    alias: {
-      "@assets": path.resolve(__dirname, "src/assets"),
-      "@components": path.resolve(__dirname, "src/components"),
-      "@observables": path.resolve(__dirname, "src/observables"),
-    },
+    extensions: [".ts", ".js", ".jsx"],
   },
   module: {
     noParse: /lodash/,
@@ -35,7 +29,7 @@ module.exports = (env) => ({
         use: [babelLoader, "ts-loader"],
       },
       {
-        test: /\.js$/,
+        test: /\.jsx?$/,
         exclude: /node_modules/,
         use: [babelLoader, "replay/loader"],
       },
@@ -60,6 +54,5 @@ module.exports = (env) => ({
       title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
-    // new CleanWebpackPlugin(),
   ],
 });

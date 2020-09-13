@@ -1,35 +1,27 @@
 import { Observable } from "replay/utils";
 
 const $router = new Observable({
-  folder: null,
-  tab: "primary",
-  id: null,
-  updateStateWithPath(path) {
-    const result = path.match(/^\/(?<folder>[\w-]+)(\/(?<id>[\w-]+))?/);
-    this.folder = result.groups.folder;
-    this.id = result.groups.id;
+  params: {
+    folder: null,
+    id: null,
   },
-  updateHistoryWithState(replace = false) {
-    const path = this.id ? `/${this.folder}/${this.id}` : `/${this.folder}`;
-    replace
-      ? window.history.replaceState(null, "", path)
-      : window.history.pushState(null, "", path);
-    document.title = `CMail - ${
-      this.folder[0].toUpperCase() + this.folder.slice(1)
-    }`;
+  update() {
+    this.params = location.pathname.match(
+      /^\/(?<folder>[\w-]+)(\/(?<id>[\w-]+))?/
+    ).groups;
   },
   navigate(path) {
-    this.updateStateWithPath(path);
-    this.updateHistoryWithState(false);
+    window.history.pushState(null, "", path);
+    this.update();
   },
   redirect(path) {
-    this.updateStateWithPath(path);
-    this.updateHistoryWithState(true);
+    window.history.replaceState(null, "", path);
+    this.update();
   },
 });
 
 window.onpopstate = () => {
-  $router.updateStateWithPath(location.pathname);
+  $router.update();
 };
 
 /^inbox|sent|drafts|trash$/.test(location.pathname)

@@ -6,7 +6,8 @@ const Tab = ({ name, key, active, onclick }) => [
 ];
 
 const Tabs = () => {
-  const { folder, tab: activeTab } = $router;
+  const { folder } = $router.params;
+  const activeTab = $mails.tab;
   if (folder !== "inbox") return [null];
   return [
     <TabBar>
@@ -16,7 +17,7 @@ const Tabs = () => {
           key={tab}
           active={tab === activeTab}
           onclick={() => {
-            $router.tab = tab;
+            $mails.tab = tab;
             $mails.pageIndex = 0;
           }}
         />
@@ -28,30 +29,26 @@ const Tabs = () => {
 const Mailbox = Observer(() => {
   const page = $mails.currentPage;
   return [
-    <Layout
-      toolbar={
-        <MailboxToolbar
-          allSelected={$selection.allSelected(page)}
-          toggleAll={() => $selection.toggleAll(page)}
-        />
-      }
-      body={
-        <section>
-          <Tabs />
-          <MailList />
-        </section>
-      }
-    />,
+    <Layout>
+      <MailboxToolbar
+        allSelected={$selection.allSelected(page)}
+        toggleAll={() => $selection.toggleAll(page)}
+      />
+      <section>
+        <Tabs />
+        <MailList />
+      </section>
+    </Layout>,
   ];
 });
 
 import { Observer, decorator as $$ } from "replay/utils";
-import $mails from "@observables/mails";
-import $router from "@observables/router";
-import $selection from "@observables/selection";
-import MailList from "@components/MailList";
-import Layout from "@components/Layout";
-import MailboxToolbar from "@components/MailboxToolbar";
+import $mails from "../observables/mails";
+import $router from "../observables/router";
+import $selection from "../observables/selection";
+import MailList from "./MailList";
+import Layout from "./Layout";
+import MailboxToolbar from "./MailboxToolbar";
 
 const allTabs = ["primary", "social", "promotions"];
 

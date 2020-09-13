@@ -4,6 +4,7 @@ import {
   Arguments,
   RenderFunction,
   AsyncRenderFunction,
+  DynamicScope,
 } from "./component";
 import { RenderTask } from "./scheduler";
 
@@ -21,7 +22,7 @@ function toKebabCase(s: string): string {
   return s.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
 }
 
-export function* renderComponent(
+export function* evaluate(
   record: ActivationRecord,
   props: Arguments,
   context: RenderTask
@@ -29,7 +30,7 @@ export function* renderComponent(
   props = props ?? record.props;
   if (shallowEquals(props, record.props) && !record.dirty) {
     if (__DEBUG__) {
-      LOG("[[Render]] early exit");
+      // LOG(`[[Render]] ${record.name} early exit`);
     }
     context.emit(() => {
       record.children.forEach((child) => {
@@ -41,44 +42,42 @@ export function* renderComponent(
         child.parent = record;
       });
     });
-    return;
-  }
-  // Clear dirty bit *before* rather than *after* rendering,
-  // so if further updates occur while rendering is in process, the dirty bit doesn't get cleared mistakenly.
-  record.dirty = false;
-  if (typeof record.type === "string") {
-    yield* renderDOMComponent(record, props, context);
   } else {
-    yield* renderCompositeComponent(record, props, context);
+    // Clear dirty bit *before* rather than *after* rendering,
+    // so if further updates occur while rendering is in process, the dirty bit doesn't get cleared mistakenly.
+    // record.dirty = false;
+    if (typeof record.type === "string") {
+      yield* render(record, props, context);
+    } else {
+      yield* expand(record, props, context);
+    }
+    record.dirty = false;
+    record.props = props;
   }
-  record.props = props;
 }
 
-function* renderCompositeComponent(
+function* expand(
   record: ActivationRecord,
   props: Arguments,
   context: RenderTask
 ) {
-  const { type: render, scope } = record;
-  const elements = (render as RenderFunction).call(
-    record,
-    props,
-    scope,
-    context
-  );
-  yield;
-  yield* reconcileChildren(record, elements, context);
+  const type = record.type as RenderFunction | AsyncRenderFunction;
+  const scope = record.scope;
+  const fn: RenderFunction = typeof type == "object" ? yield type : type;
+  record.name = fn.name;
+  const elements = fn.call(record, props, scope, context);
+  yield* enter(record, elements, context);
 }
 
-function* renderDOMComponent(
+function* render(
   record: ActivationRecord,
   props: Arguments,
   context: RenderTask
 ) {
   const memoized = record.props;
   for (let [name, value] of Object.entries(props)) {
-    if (name === "children") continue;
-    if (name === "style") {
+    if (name == "children") continue;
+    if (name == "style") {
       for (let [k, v] of Object.entries(value)) {
         k = toKebabCase(k);
         if (!memoized.style || memoized.style[k] !== v) {
@@ -100,37 +99,39 @@ function* renderDOMComponent(
     context.emit(() => {
       (record.node as HTMLElement).textContent = String(props.children);
     });
-    return;
+  } else {
+    // Only `text` and `comment` are allowed to have non-array children
+    // Convert `p('hello')` to  `p([ text('hello') ])`
+    // if (!Array.isArray(props.children)) {
+    //   props.children = [["text", {}, props.children]];
+    // }
+    context.stack.push(context.cursor);
+    const dummy = new ActivationRecord("_");
+    context.emit(() => {
+      dummy.node = record.node.firstChild;
+    });
+    context.cursor = dummy;
+    yield* enter(record, props.children as Quasiquote[], context);
+    context.cursor = context.stack.pop();
   }
-  // Only `text` and `comment` are allowed to have non-array children
-  // Convert `p('hello')` to  `p([ text('hello') ])`
-  if (!Array.isArray(props.children)) {
-    props.children = [["text", {}, props.children]];
-  }
-
-  yield;
-
-  context.stack.push(context.cursor);
-  context.cursor = new ActivationRecord("_");
-  context.cursor.node = record.node.firstChild;
-  yield* reconcileChildren(record, props.children, context);
-  context.cursor = context.stack.pop();
 }
 
-function* reconcileChildren(
+function* enter(
   parent: ActivationRecord,
   elements: Quasiquote[],
   context: RenderTask
 ) {
+  yield;
   let lastIndex = -1;
   let oldChildren = parent.children;
   parent.children = new Map();
+  if (elements.length == 0) {
+    // Insert a placeholder for the next component to attach itself to
+    elements = [["comment", {}, "[slot]"]];
+  }
   for (let [index, element] of elements.entries()) {
-    if (!element) {
-      element = ["comment", {}, "[slot]"];
-    } else if (!Array.isArray(element)) {
-      element = ["text", {}, String(element)];
-    }
+    if (!element) element = ["comment", {}, "[slot]"];
+    if (!Array.isArray(element)) element = ["text", {}, String(element)];
     const [type, props, children] = element;
     const key = props.key ?? String(index);
     props.children = children;
@@ -140,14 +141,15 @@ function* reconcileChildren(
       record = oldChildren.get(key).clone(parent, context);
       oldChildren.delete(key);
       if (record.index < lastIndex) {
-        record.insertAfter(context.cursor, context);
+        const prev = context.cursor;
+        context.emit(() => record.insertAfter(prev));
       } else {
         lastIndex = record.index;
       }
-      yield* renderComponent(record, props, context);
+      yield* evaluate(record, props, context);
     } else {
       // Create a new record
-      record = yield* mountComponent(element, parent, context);
+      record = yield* initialize(element, parent, context);
     }
     if (index === 0) parent.firstChild = record;
     if (index === elements.length - 1) parent.lastChild = record;
@@ -157,49 +159,49 @@ function* reconcileChildren(
     context.cursor = record;
   }
   oldChildren.forEach((record) => {
-    unmountComponent(record, context);
+    deinitialize(record, context);
   });
   oldChildren.clear();
 }
 
-function* mountComponent(
+function* initialize(
   element: Quasiquote,
   parent: ActivationRecord,
   context: RenderTask
 ) {
   let [type, props, children] = element;
+  const record = new ActivationRecord(type, parent);
   props.children = children;
-  if (typeof type == "object" && type.isAsync) {
-    if (__DEBUG__) {
-      LOG("[[Resolve]] (async component)");
-    }
-    type = (yield type) as RenderFunction;
-    if (__DEBUG__) {
-      LOG("[[Resolve]] loaded:", type.name);
-    }
-  }
-  const record = new ActivationRecord(type as string | RenderFunction, parent);
   if (typeof type == "string") {
+    // DOM Component
     switch (type) {
       case "text":
-        record.node = new Text();
+        context.emit(() => (record.node = new Text()));
         break;
       case "comment":
-        record.node = new Comment();
+        context.emit(() => (record.node = new Comment()));
         break;
       default:
-        record.node = document.createElement(type);
-        (record.node as Element).append(new Text()); // dummy node
+        context.emit(() => {
+          record.node = document.createElement(type as string);
+          (record.node as Element).append(new Text()); // dummy node
+        });
     }
-    yield* renderComponent(record, props, context);
-    record.insertAfter(context.cursor, context);
+    yield* evaluate(record, props, context);
+    const prev = context.cursor;
+    context.emit(() => record.insertAfter(prev));
   } else {
-    yield* renderComponent(record, props, context);
+    // Functional Component
+    const fn: RenderFunction = typeof type == "object" ? yield type : type;
+    if (fn.init) {
+      Object.assign(record.scope, fn.init(props, record.scope));
+    }
+    yield* evaluate(record, props, context);
   }
   return record;
 }
 
-function unmountComponent(record: ActivationRecord, context: RenderTask): void {
+function deinitialize(record: ActivationRecord, context: RenderTask): void {
   if (__DEBUG__) {
     LOG(
       "[[Render]] unmount:",
@@ -208,6 +210,6 @@ function unmountComponent(record: ActivationRecord, context: RenderTask): void {
       record.lastNode
     );
   }
-  record.remove(context);
-  record.destruct(context);
+  context.emit(() => record.removeNodes());
+  record.destructSubtree(context);
 }

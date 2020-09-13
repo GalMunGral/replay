@@ -1,10 +1,9 @@
 import {
-  Quasiquote,
   ActivationRecord,
   RenderFunction,
   AsyncRenderFunction,
 } from "./component";
-import { renderComponent } from "./renderer";
+import { evaluate } from "./renderer";
 
 type Effect = () => void;
 
@@ -79,11 +78,10 @@ export class RenderTask implements Context {
       context.cursor = new ActivationRecord("_");
       context.cursor.node = entry.firstNode.previousSibling;
       const root = entry.clone(entry.parent, context);
-      yield* renderComponent(root, null, context);
+      yield* evaluate(root, null, context);
       if (entry.parent) {
         const parent = entry.parent;
         const children = parent.children;
-        children.get(entry.key)?.destruct(context);
         context.emit(() => {
           if (__DEBUG__) {
             LOG("[[Commit]] replace:", children.get(entry.key), "with:", root);
@@ -186,7 +184,11 @@ export class Scheduler {
               this.run(deadline, component);
             });
           })
-          .catch((err) => console.log("[[TEST]]", err));
+          .catch((err) => {
+            if (__DEBUG__) {
+              LOG("[[Render]] CANCELED");
+            }
+          });
         return;
       }
     } while (deadline.timeRemaining() > 5);
@@ -196,6 +198,11 @@ export class Scheduler {
   }
 
   public requestUpdate(notified: Set<ActivationRecord>): void {
+    if (__DEBUG__) {
+      notified.forEach((record) => {
+        LOG(record, record.firstNode, record.lastNode);
+      });
+    }
     if (this.currentTask) {
       const entry = this.currentTask.entry;
       this.currentTask = null;

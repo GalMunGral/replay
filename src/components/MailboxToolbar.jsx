@@ -1,5 +1,5 @@
 const MailboxToolbar = ({ allSelected, toggleAll }) => [
-  $router.folder !== "trash" && (
+  $router.params.folder !== "trash" && (
     <Checkbox checked={allSelected} onchange={toggleAll} />
   ),
   <Space />,
@@ -13,11 +13,11 @@ const MailboxToolbar = ({ allSelected, toggleAll }) => [
 ];
 
 import { decorator as $$ } from "replay/utils";
-import $mails from "@observables/mails";
-import $router from "@observables/router";
-import Checkbox from "@components/Checkbox";
-import IconButton from "@components/IconButton";
-import Space from "@components/Space";
+import $mails from "../observables/mails";
+import $router from "../observables/router";
+import Checkbox from "./Checkbox";
+import IconButton from "./IconButton";
+import Space from "./Space";
 
 export default MailboxToolbar;
 

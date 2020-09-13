@@ -24,9 +24,10 @@ const cache = new DefaultMap(() => {
 const $mails = new Observable({
   pageSize: 50,
   pageIndex: 0,
+  tab: "primary",
   get mail() {
     const state = $store.state;
-    const { folder, id } = $router;
+    const { folder, id } = $router.params;
     const folderCache = cache.get(state).get(folder);
     if (!folderCache.has(id)) {
       const mail = state[folder].find((it) => it.id === id);
@@ -36,16 +37,16 @@ const $mails = new Observable({
   },
   get mails() {
     const state = $store.state;
-    const { folder, tab } = $router;
+    const { folder } = $router.params;
     const folderCache = cache.get(state).get(folder);
-    if (!folderCache.get(tab)) {
+    if (!folderCache.get(this.tab)) {
       const mails =
         folder === "inbox"
-          ? state[folder].filter((it) => it.category === tab)
+          ? state[folder].filter((it) => it.category === this.tab)
           : state[folder];
-      folderCache.set(tab, mails);
+      folderCache.set(this.tab, mails);
     }
-    return folderCache.get(tab);
+    return folderCache.get(this.tab);
   },
   get total() {
     return this.mails.length;
@@ -70,7 +71,7 @@ const $mails = new Observable({
   },
   deleteMail() {
     $store.dispatch((dispatch) => {
-      const { folder, id } = $router;
+      const { folder, id } = $router.params;
       window.history.back();
       setTimeout(() => {
         dispatch({

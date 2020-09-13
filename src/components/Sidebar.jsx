@@ -13,7 +13,7 @@ const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
       {...["inbox", "sent", "drafts"].map((f) => (
         <MenuItem
           collapsed={collapsed}
-          activated={$router.folder === f}
+          activated={$router.params.folder === f}
           onclick={() => $router.navigate("/" + f)}
         >
           <MenuIcon className={`fas fa-${iconMap[f]}`} />
@@ -22,7 +22,7 @@ const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
       ))}
       <MenuItem
         collapsed={collapsed}
-        activated={$router.folder === "trash"}
+        activated={$router.params.folder === "trash"}
         style={{
           background: $dropzone.canDrop ? "var(--theme)" : "",
           color: $dropzone.canDrop ? "white" : "",
@@ -40,11 +40,11 @@ const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
 });
 
 import { Observer, Observable, decorator as $$ } from "replay/utils";
-import $store from "@observables/store";
-import $editor from "@observables/editor";
-import $selection from "@observables/selection";
-import $router from "@observables/router";
-import editorButtonIconImage from "@assets/images/create.png";
+import $store from "../observables/store";
+import $editor from "../observables/editor";
+import $selection from "../observables/selection";
+import $router from "../observables/router";
+import editorButtonIconImage from "../assets/images/create.png";
 
 const iconMap = {
   inbox: "inbox",
@@ -76,7 +76,7 @@ Sidebar.init = () => ({
           dispatch({
             type: $store.T.DELETE_SELECTED,
             payload: {
-              folder: $router.folder,
+              folder: $router.params.folder,
               selected: $selection.selected,
             },
           });

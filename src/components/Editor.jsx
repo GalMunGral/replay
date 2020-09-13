@@ -71,9 +71,9 @@ const Editor = Observer(() => {
 });
 
 import { Observer, Observable, decorator as $$ } from "replay/utils";
-import $editor from "@observables/editor";
-import IconButton from "@components/IconButton";
-import Space from "@components/Space";
+import $editor from "../observables/editor";
+import IconButton from "./IconButton";
+import Space from "./Space";
 
 EditorInput.init = () => ({
   $self: new Observable({

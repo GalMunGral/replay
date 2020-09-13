@@ -29,25 +29,32 @@ module.exports = (src) => {
         })
       );
       const children = t.arrayExpression(
-        path.node.children.map((child) => {
-          return t.isJSXText(child)
-            ? t.arrayExpression([
-                t.stringLiteral("text"),
-                t.objectExpression([]),
-                t.stringLiteral(child.value),
-              ])
-            : t.isJSXSpreadChild(child)
-            ? t.spreadElement(child.expression)
-            : t.isJSXExpressionContainer(child)
-            ? child.expression
-            : child;
-        })
+        path.node.children
+          .flatMap((child) => {
+            return t.isJSXText(child)
+              ? child.value.trim()
+                ? t.arrayExpression([
+                    t.stringLiteral("text"),
+                    t.objectExpression([]),
+                    t.stringLiteral(child.value),
+                  ])
+                : null // remove extraneous text nodes
+              : t.isJSXSpreadChild(child)
+              ? t.spreadElement(child.expression)
+              : t.isJSXExpressionContainer(child)
+              ? t.isJSXEmptyExpression(child.expression)
+                ? null // {/* ...comments */} -> null
+                : child.expression
+              : child;
+          })
+          .filter((x) => x)
       );
       const node = t.arrayExpression([type, props, children]);
       path.replaceWith(node);
     },
 
-    // Original
+    // function call syntax
+
     ArrayExpression(path) {
       if (shouldTransform(path)) {
         path.node.elements = path.node.elements.map(transformChild);

@@ -3,7 +3,7 @@ const MailList = () =>
     <MailItem
       key={i}
       mail={mail}
-      folder={$router.folder}
+      folder={$router.params.folder}
       selected={$selection.selected.includes(mail.id)}
       toggleItem={() => toggleItem(mail.id)}
       deleteItem={() => deleteItem(mail.id)}
@@ -13,13 +13,13 @@ const MailList = () =>
     />
   ));
 
-import $mails from "@observables/mails";
-import $router from "@observables/router";
-import $selection from "@observables/selection";
-import $editor from "@observables/editor";
-import $store from "@observables/store";
-import $dragState from "@observables/drag";
-import MailItem from "@components/MailItem";
+import $mails from "../observables/mails";
+import $router from "../observables/router";
+import $selection from "../observables/selection";
+import $editor from "../observables/editor";
+import $store from "../observables/store";
+import $dragState from "../observables/drag";
+import MailItem from "./MailItem";
 
 const OFFSET = 30;
 var timer = null;
@@ -33,7 +33,7 @@ const deleteItem = (id) => {
     setTimeout(() => {
       dispatch({
         type: $store.T.DELETE,
-        payload: { folder: $router.folder, id },
+        payload: { folder: $router.params.folder, id },
       });
     }, 200);
   });
@@ -50,12 +50,12 @@ const cancelSelectAndOpen = (mail) => {
   if (timer) {
     clearTimeout(timer);
     timer = null;
-    if ($router.folder === "drafts") {
+    if ($router.params.folder === "drafts") {
       $editor.replaceDraft(mail);
       $editor.minimized = false;
       $editor.open = true;
     } else {
-      $router.navigate(`/${$router.folder}/${mail.id}`);
+      $router.navigate(`/${$router.params.folder}/${mail.id}`);
     }
   }
 };

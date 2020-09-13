@@ -17,8 +17,8 @@ const DragImage = Observer(() => {
 });
 
 import { Observer, decorator as $$ } from "replay/utils";
-import $selection from "@observables/selection";
-import $dragState from "@observables/drag";
+import $selection from "../observables/selection";
+import $dragState from "../observables/drag";
 
 export default DragImage;
 

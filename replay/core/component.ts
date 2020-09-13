@@ -6,15 +6,20 @@ export type Quasiquote = [
   string | Quasiquote[] // children
 ];
 
+export interface RenderFunction extends Function {
+  (props: Arguments, scope: DynamicScope, context: RenderTask): Quasiquote[];
+  init?: (props: Arguments, scope: DynamicScope) => DynamicScope;
+  [key: string]: any;
+}
+
 export interface Arguments {
   key?: string;
   children?: string | Quasiquote[];
-  [prop: string]: any;
+  [key: string]: any;
 }
 
-export interface RenderFunction extends Function {
-  (props: Arguments, scope: Object, context: RenderTask): Quasiquote[];
-  init?: () => Object;
+export interface DynamicScope extends Object {
+  deinit?: () => void;
   [key: string]: any;
 }
 
@@ -33,10 +38,10 @@ export class ActivationRecord {
   private static nextId = 0;
 
   public id = ActivationRecord.nextId++;
-  public readonly name: string;
-  public readonly scope: Object = {};
+  public name: string;
+  public readonly scope = {} as DynamicScope;
   public props: Arguments = {};
-  public children: Map<string, ActivationRecord> = new Map();
+  public children = new Map<string, ActivationRecord>();
   public depth: number;
   public index = -1;
   public key?: string = null;
@@ -44,41 +49,83 @@ export class ActivationRecord {
   public firstChild: ActivationRecord = null;
   public lastChild: ActivationRecord = null;
   public dirty = false;
-  public subscriptions: Set<ActivationRecord>[] = [];
+  public subscriptions = new Set<Set<ActivationRecord>>();
+
+  // TODO: cancellation effects
 
   constructor(
-    public readonly type: string | RenderFunction,
+    public readonly type: string | RenderFunction | AsyncRenderFunction,
     public parent: ActivationRecord = null
   ) {
-    this.children = new Map();
-    this.depth = parent ? parent.depth + 1 : 0;
     if (typeof type == "string") {
       this.name = type;
     } else if (typeof type == "function") {
       this.name = type.name;
-      if (type.init) this.scope = type.init();
-      Object.setPrototypeOf(this.scope, parent?.scope);
+    } else {
+      this.name = "(async component)";
     }
+    this.depth = parent ? parent.depth + 1 : 0;
+    if (parent) {
+      Object.setPrototypeOf(this.scope, parent.scope);
+    }
+  }
+
+  public clone(parent: ActivationRecord, context: Context): ActivationRecord {
+    const clone: ActivationRecord = Object.create(ActivationRecord.prototype);
+    Object.assign(clone, this);
+    clone.id = ActivationRecord.nextId++;
+    clone.children = new Map(this.children);
+    clone.parent = parent ?? this.parent;
+    clone.depth = parent ? parent.depth + 1 : 0;
+    clone.subscriptions = new Set<Set<ActivationRecord>>();
+    if (typeof this.type != "string") {
+      context.emit(() => {
+        this.transferSubscriptions(clone);
+        // This record is already up to date, because
+        // if newer updates did occur, this commit wouldn't happen
+        Scheduler.instance.cancelUpdate(this);
+      });
+    }
+    return clone;
+  }
+
+  public destructSubtree(context: Context): void {
+    if (typeof this.type != "string") {
+      context.emit(() => {
+        if (this.scope.hasOwnProperty("deinit")) this.scope.deinit();
+        this.cancelSubscriptions();
+        Scheduler.instance.cancelUpdate(this);
+      });
+    }
+    this.children.forEach((c) => {
+      if (c.parent === this) {
+        c.destructSubtree(context);
+      } else {
+        if (__DEBUG__) {
+          LOG("[[DESTRUCT]] STOP: NOT MY CHILD");
+        }
+      }
+    });
   }
 
   subscribe(observers: Set<ActivationRecord>): void {
     observers.add(this);
-    this.subscriptions.push(observers);
+    this.subscriptions.add(observers);
   }
 
   private cancelSubscriptions(): void {
     this.subscriptions.forEach((observers) => {
       observers.delete(this);
     });
-    this.subscriptions = [];
+    this.subscriptions.clear();
   }
 
-  private transferSubscriptions(record: ActivationRecord): void {
+  private transferSubscriptions(clone: ActivationRecord): void {
     this.subscriptions.forEach((observers) => {
       observers.delete(this);
-      record.subscribe(observers);
+      clone.subscribe(observers);
     });
-    this.subscriptions = [];
+    this.subscriptions.clear();
   }
 
   public get parentNode(): ChildNode {
@@ -95,87 +142,46 @@ export class ActivationRecord {
     return typeof this.type === "string" ? this.node : this.lastChild?.lastNode;
   }
 
-  public insertAfter(
-    previouSibling: ActivationRecord,
-    context: RenderTask
-  ): void {
+  public insertAfter(previouSibling: ActivationRecord): void {
+    if (__DEBUG__) {
+      // LOG(
+      //   "[[Commit]] insert:",
+      //   this.name + this.id,
+      //   this.firstNode,
+      //   "after:",
+      //   previouSibling.name + previouSibling.id,
+      //   previouSibling.lastNode
+      // );
+    }
     const lastNode = this.lastNode;
     let curNode = this.firstNode;
-    context.emit(() => {
-      if (__DEBUG__) {
-        // LOG(
-        //   "[[Commit]] insert:",
-        //   this.name + this.id,
-        //   this.firstNode,
-        //   "after:",
-        //   previouSibling.name + previouSibling.id,
-        //   previouSibling.lastNode
-        // );
-      }
-      let prevNode = previouSibling.lastNode;
-      while (curNode !== lastNode) {
-        prevNode.after(curNode);
-        prevNode = curNode;
-        curNode = curNode.nextSibling;
-      }
+    let prevNode = previouSibling.lastNode;
+    while (curNode !== lastNode) {
       prevNode.after(curNode);
-    });
+      prevNode = curNode;
+      curNode = curNode.nextSibling;
+    }
+    prevNode.after(curNode);
   }
 
-  public remove(context: RenderTask): void {
+  public removeNodes(): void {
+    if (__DEBUG__) {
+      LOG(
+        "[[Commit]] remove",
+        this.name + this.id,
+        this.firstNode,
+        this.lastNode
+      );
+    }
     const firstNode = this.firstNode;
     const lastNode = this.lastNode;
-    context.emit(() => {
-      if (__DEBUG__) {
-        LOG("[[Commit]] remove", this.name + this.id, firstNode, lastNode);
-      }
-      let cur = firstNode;
-      let next = cur.nextSibling;
-      while (cur !== lastNode) {
-        cur.remove();
-        cur = next;
-        next = next.nextSibling;
-      }
+    let cur = firstNode;
+    let next = cur.nextSibling;
+    while (cur !== lastNode) {
       cur.remove();
-    });
-  }
-
-  public clone(parent: ActivationRecord, context: Context): ActivationRecord {
-    if (__DEBUG__) {
-      // LOG("[[Render]] clone record");
+      cur = next;
+      next = next.nextSibling;
     }
-    const clone: ActivationRecord = Object.create(ActivationRecord.prototype);
-    Object.assign(clone, this);
-    clone.id = ActivationRecord.nextId++;
-    clone.children = new Map(this.children);
-    clone.parent = parent ?? this.parent;
-    clone.depth = parent ? parent.depth + 1 : 0;
-    clone.subscriptions = [];
-    context.emit(() => {
-      this.transferSubscriptions(clone);
-      Scheduler.instance.cancelUpdate(this);
-    });
-    return clone;
-  }
-
-  public destruct(context: Context): void {
-    if (__DEBUG__) {
-      // LOG(this.id, "DESTRUCT");
-    }
-    if (typeof this.type == "function") {
-      context.emit(() => {
-        this.cancelSubscriptions();
-        Scheduler.instance.cancelUpdate(this);
-      });
-    }
-    this.children.forEach((c) => {
-      if (c.parent !== this) {
-        if (__DEBUG__) {
-          LOG("[[DESTRUCT]] STOP: NOT MY CHILD");
-        }
-        return;
-      }
-      c.destruct(context);
-    });
+    cur.remove();
   }
 }

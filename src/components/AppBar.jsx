@@ -15,7 +15,7 @@ const AppBar = ({ toggle }) => [
 ];
 
 import { decorator as $$ } from "replay/utils";
-import appLogoImage from "@assets/images/logo.png";
+import appLogoImage from "../assets/images/logo.png";
 
 export default AppBar;
 

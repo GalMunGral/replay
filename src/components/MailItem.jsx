@@ -38,9 +38,18 @@ const MailItem = ({
   ];
 };
 
+MailItem.init = () => {
+  console.log("init");
+  return {
+    deinit() {
+      console.log("deinit");
+    },
+  };
+};
+
 import { decorator as $$ } from "replay/utils";
-import Checkbox from "@components/Checkbox";
-import IconButton from "@components/IconButton";
+import Checkbox from "./Checkbox";
+import IconButton from "./IconButton";
 
 export default MailItem;
 

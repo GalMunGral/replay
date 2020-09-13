@@ -1,7 +1,7 @@
-const Layout = ({ toolbar, body }) => [
+const Layout = (props) => [
   <Container>
-    <ToolbarContainer>{toolbar}</ToolbarContainer>
-    <Scrollable>{body}</Scrollable>
+    <ToolbarContainer>{props.children[0]}</ToolbarContainer>
+    <Scrollable>{props.children[1]}</Scrollable>
   </Container>,
 ];
 

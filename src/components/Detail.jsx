@@ -17,30 +17,26 @@ const Detail = () => {
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
   return [
-    <Layout
-      toolbar={
-        <DetailToolbar
-          canDelete={$router.folder !== "trash"}
-          deleteMail={() => $mails.deleteMail()}
-        />
-      }
-      body={
-        <Main>
-          <Header>{subject}</Header>
-          <SenderInfo innerHTML={senderInfo} />
-          <RecipientInfo innerHTML={recipientInfo} />
-          <Body>{content}</Body>
-        </Main>
-      }
-    />,
+    <Layout>
+      <DetailToolbar
+        canDelete={$router.params.folder !== "trash"}
+        deleteMail={() => $mails.deleteMail()}
+      />
+      <Main>
+        <Header>{subject}</Header>
+        <SenderInfo innerHTML={senderInfo} />
+        <RecipientInfo innerHTML={recipientInfo} />
+        <Body>{content}</Body>
+      </Main>
+    </Layout>,
   ];
 };
 
 import { decorator as $$ } from "replay/utils";
-import $mails from "@observables/mails";
-import $router from "@observables/router";
-import Layout from "@components/Layout";
-import IconButton from "@components/IconButton";
+import $mails from "../observables/mails";
+import $router from "../observables/router";
+import Layout from "./Layout";
+import IconButton from "./IconButton";
 
 export default Detail;
 
