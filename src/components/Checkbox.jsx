@@ -1,3 +1,5 @@
+import { decorator as $$ } from "replay/utils";
+
 const Checkbox = ({ checked, onchange }) => [
   <Clickable
     onclick={onchange}
@@ -13,8 +15,6 @@ const Checkbox = ({ checked, onchange }) => [
     </div>
   </Clickable>,
 ];
-
-import { decorator as $$ } from "replay/utils";
 
 export default Checkbox;
 

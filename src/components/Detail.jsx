@@ -1,11 +1,15 @@
-const DetailToolbar = ({ canDelete, deleteMail }) => [
-  <IconButton type="arrow-left" onclick={() => history.back()} />,
-  canDelete && <IconButton type="trash" onclick={deleteMail} />,
-];
+import { decorator as $$, Redirect, Fragment, navigate } from "replay/utils";
+import $store from "../observables/store";
+import Sidebar from "./Sidebar";
+import Layout from "./Layout";
+import IconButton from "./IconButton";
 
-const Detail = () => {
-  if (!$mails.mail)
-    return [<h1 style={{ margin: "50px auto" }}>Redirecting</h1>];
+const Detail = (__, { $route }) => {
+  const { folder, id } = $route.params;
+  const mail = $store.state[folder].find((m) => m.id === id);
+  if (!mail) {
+    return [<Redirect to={"/" + $route.params.folder} />];
+  }
   const {
     subject,
     senderName = "(no name)",
@@ -13,15 +17,30 @@ const Detail = () => {
     recipientName = "(no name)",
     recipientEmail = "(no email)",
     content,
-  } = $mails.mail;
+  } = mail;
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
+  const deleteMail = () => {
+    $store.dispatch((dispatch) => {
+      const { folder, id } = $route.params;
+      setTimeout(() => {
+        dispatch({
+          type: $store.T.DELETE,
+          payload: { folder, id },
+        });
+      }, 200);
+      history.back();
+    });
+  };
   return [
+    <Sidebar />,
     <Layout>
-      <DetailToolbar
-        canDelete={$router.params.folder !== "trash"}
-        deleteMail={() => $mails.deleteMail()}
-      />
+      <Fragment>
+        <IconButton type="arrow-left" onclick={() => history.back()} />
+        {$route.params.folder !== "trash" ? (
+          <IconButton type="trash" onclick={deleteMail} />
+        ) : null}
+      </Fragment>
       <Main>
         <Header>{subject}</Header>
         <SenderInfo innerHTML={senderInfo} />
@@ -31,12 +50,6 @@ const Detail = () => {
     </Layout>,
   ];
 };
-
-import { decorator as $$ } from "replay/utils";
-import $mails from "../observables/mails";
-import $router from "../observables/router";
-import Layout from "./Layout";
-import IconButton from "./IconButton";
 
 export default Detail;
 

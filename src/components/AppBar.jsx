@@ -1,10 +1,15 @@
+import { Link, decorator as $$ } from "replay/utils";
+import appLogoImage from "../assets/images/logo.png";
+
 const AppBar = ({ toggle }) => [
   <Container>
     <Group>
       <MenuButton onclick={toggle}>
         <MenuIcon className="fas fa-bars" />
       </MenuButton>
-      <AppLogo src={appLogoImage} alt="logo" />
+      <Link to="/inbox">
+        <AppLogo src={appLogoImage} alt="logo" />
+      </Link>
     </Group>
     <SearchBar>
       <SearchIcon className="fas fa-search" />
@@ -13,9 +18,6 @@ const AppBar = ({ toggle }) => [
     <Group />
   </Container>,
 ];
-
-import { decorator as $$ } from "replay/utils";
-import appLogoImage from "../assets/images/logo.png";
 
 export default AppBar;
 

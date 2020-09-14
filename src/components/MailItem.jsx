@@ -1,3 +1,10 @@
+import { decorator as $$ } from "replay/utils";
+import Checkbox from "./Checkbox";
+import IconButton from "./IconButton";
+
+const format = (s, length) =>
+  s ? (s.length <= length ? s : s.slice(0, length) + "...") : "(empty)";
+
 const MailItem = ({
   mail,
   folder,
@@ -38,23 +45,7 @@ const MailItem = ({
   ];
 };
 
-MailItem.init = () => {
-  console.log("init");
-  return {
-    deinit() {
-      console.log("deinit");
-    },
-  };
-};
-
-import { decorator as $$ } from "replay/utils";
-import Checkbox from "./Checkbox";
-import IconButton from "./IconButton";
-
 export default MailItem;
-
-const format = (s, length) =>
-  s ? (s.length <= length ? s : s.slice(0, length) + "...") : "(empty)";
 
 const ListItem = $$.div`
   --height: 40px;

@@ -1,3 +1,5 @@
+import { decorator as $$ } from "replay/utils";
+
 const IconButton = ({ type, onclick }) => [
   <Button
     onclick={onclick}
@@ -7,8 +9,6 @@ const IconButton = ({ type, onclick }) => [
     <Icon className={`fas fa-${type}`} />
   </Button>,
 ];
-
-import { decorator as $$ } from "replay/utils";
 
 export default IconButton;
 

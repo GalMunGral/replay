@@ -39,6 +39,15 @@ export class CancelablePromise<T> implements Cancelable {
   private reject: (reason: any) => void;
   private promise: Promise<T>;
 
+  // Cancellation can only happen before a promise is resolved or
+  // after its resolution has been handled and fresh cancelable has been set.
+  // This canceled bit is used for the unlikely edge case where a cancellation (part of a microtask, see below)
+  // happens right between the resolution of the promise and the execution of its callbacks,
+  // in which case the cancel token would have no effect, and the `onFulfilled` callback would be called.
+  // Cancellation can be detected in this case by checking the canceled bit first and rejecting if its set.
+
+  private canceled = false;
+
   constructor(promise: Promise<T>) {
     this.promise = Promise.race([
       promise,
@@ -49,13 +58,22 @@ export class CancelablePromise<T> implements Cancelable {
   }
 
   public then(
-    onFulfilled: (value: T) => any,
-    onRejected?: (reason: any) => any
+    onFulfilled: (value: T) => any
+    // onRejected?: (reason: any) => any
   ): Promise<unknown> {
-    return this.promise.then(onFulfilled, onRejected);
+    return this.promise.then(
+      (value: T) => {
+        if (this.canceled) {
+          return Promise.reject("CANCELED");
+        }
+        return onFulfilled(value);
+      }
+      // onRejected
+    );
   }
 
   public cancel(): void {
+    this.canceled = true;
     this.reject("CANCELED");
   }
 }
@@ -203,15 +221,6 @@ export class Scheduler {
         LOG(record, record.firstNode, record.lastNode);
       });
     }
-    if (this.currentTask) {
-      const entry = this.currentTask.entry;
-      this.currentTask = null;
-      this.continuation.cancel();
-      this.pendingUpdates.add(entry);
-      if (__DEBUG__) {
-        LOG(`[[Schedule]] ${entry.name} (${entry.id}) CANCELED`);
-      }
-    }
     notified.forEach((record) => {
       record.dirty = true;
       this.pendingUpdates.add(record);
@@ -223,6 +232,21 @@ export class Scheduler {
       this.signaled = true;
       queueMicrotask(() => {
         this.signaled = false;
+
+        // Cancellation cannot happen during a macrotask because `this.continuation` (set by previous task)
+        // *is* the current running task, which cannot be cancelled and will schedule a new task when it finishes.
+        // Cancellation needs to wait for this *new* task to be scheduled, at which point `this.continuation` is actually cancellable.
+
+        if (this.currentTask) {
+          const entry = this.currentTask.entry;
+          this.currentTask = null;
+          this.continuation.cancel();
+          this.pendingUpdates.add(entry);
+          if (__DEBUG__) {
+            LOG(`[[Schedule]] ${entry.name} (${entry.id}) CANCELED`);
+          }
+        }
+
         const entry = this.nextUpdate();
         if (entry) {
           this.currentTask = new RenderTask(entry);

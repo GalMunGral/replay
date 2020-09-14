@@ -8,7 +8,11 @@ export type Quasiquote = [
 
 export interface RenderFunction extends Function {
   (props: Arguments, scope: DynamicScope, context: RenderTask): Quasiquote[];
-  init?: (props: Arguments, scope: DynamicScope) => DynamicScope;
+  init?: (
+    props: Arguments,
+    scope: DynamicScope,
+    context: RenderTask
+  ) => DynamicScope;
   [key: string]: any;
 }
 

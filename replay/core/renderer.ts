@@ -125,10 +125,13 @@ function* enter(
   let lastIndex = -1;
   let oldChildren = parent.children;
   parent.children = new Map();
+
+  // The elements array must not be empty. There must be at least a placeholder
+  // for the next component to attach itself to due to the way the current algorithm works
   if (elements.length == 0) {
-    // Insert a placeholder for the next component to attach itself to
     elements = [["comment", {}, "[slot]"]];
   }
+
   for (let [index, element] of elements.entries()) {
     if (!element) element = ["comment", {}, "[slot]"];
     if (!Array.isArray(element)) element = ["text", {}, String(element)];
@@ -193,8 +196,9 @@ function* initialize(
   } else {
     // Functional Component
     const fn: RenderFunction = typeof type == "object" ? yield type : type;
+
     if (fn.init) {
-      Object.assign(record.scope, fn.init(props, record.scope));
+      Object.assign(record.scope, fn.init(props, record.scope, context));
     }
     yield* evaluate(record, props, context);
   }

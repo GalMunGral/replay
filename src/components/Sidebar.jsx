@@ -1,50 +1,8 @@
-const Sidebar = Observer(({ $sidebar }, { $dropzone }) => {
-  const collapsed = $sidebar.collapsed && !$sidebar.hovered;
-  return [
-    <Menu
-      collapsed={collapsed}
-      onmouseenter={() => ($sidebar.hovered = true)}
-      onmouseleave={() => ($sidebar.hovered = false)}
-    >
-      <EditorButton collapsed={collapsed} onclick={() => $editor.openEditor()}>
-        <ButtonIcon src={editorButtonIconImage} />
-        {!collapsed && <ButtonText>Compose</ButtonText>}
-      </EditorButton>
-      {...["inbox", "sent", "drafts"].map((f) => (
-        <MenuItem
-          collapsed={collapsed}
-          activated={$router.params.folder === f}
-          onclick={() => $router.navigate("/" + f)}
-        >
-          <MenuIcon className={`fas fa-${iconMap[f]}`} />
-          {!collapsed && <span>{f}</span>}
-        </MenuItem>
-      ))}
-      <MenuItem
-        collapsed={collapsed}
-        activated={$router.params.folder === "trash"}
-        style={{
-          background: $dropzone.canDrop ? "var(--theme)" : "",
-          color: $dropzone.canDrop ? "white" : "",
-        }}
-        onclick={$dropzone.onclick.bind($dropzone)}
-        ondragenter={$dropzone.ondragenter.bind($dropzone)}
-        ondragleave={$dropzone.ondragleave.bind($dropzone)}
-        ondragover={$dropzone.ondragover.bind($dropzone)}
-        ondrop={$dropzone.ondrop.bind($dropzone)}
-      >
-        <MenuIcon className="fas fa-trash" /> {!collapsed && <span>trash</span>}
-      </MenuItem>
-    </Menu>,
-  ];
-});
-
-import { Observer, Observable, decorator as $$ } from "replay/utils";
-import $store from "../observables/store";
+import { Observer, Link, decorator as $$ } from "replay/utils";
 import $editor from "../observables/editor";
-import $selection from "../observables/selection";
-import $router from "../observables/router";
 import editorButtonIconImage from "../assets/images/create.png";
+import Dropzone from "./Dropzone";
+import { MenuItem, MenuIcon } from "./Menu";
 
 const iconMap = {
   inbox: "inbox",
@@ -52,40 +10,30 @@ const iconMap = {
   drafts: "scroll",
 };
 
-Sidebar.init = () => ({
-  $dropzone: new Observable({
-    canDrop: false,
-    onclick() {
-      $router.navigate("/trash");
-    },
-    ondragenter(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      this.canDrop = true;
-    },
-    ondragleave() {
-      this.canDrop = false;
-    },
-    ondragover(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    ondrop() {
-      $store.dispatch((dispatch) => {
-        setTimeout(() => {
-          dispatch({
-            type: $store.T.DELETE_SELECTED,
-            payload: {
-              folder: $router.params.folder,
-              selected: $selection.selected,
-            },
-          });
-          $selection.reset();
-        }, 200);
-      });
-      this.canDrop = false;
-    },
-  }),
+const Sidebar = Observer((__, { $sidebar, $route }) => {
+  const { collapsed, hovered } = $sidebar;
+  const hidden = collapsed && !hovered;
+  return [
+    <Menu
+      hidden={hidden}
+      onmouseenter={() => ($sidebar.hovered = true)}
+      onmouseleave={() => ($sidebar.hovered = false)}
+    >
+      <EditorButton hidden={hidden} onclick={() => $editor.openEditor()}>
+        <ButtonIcon src={editorButtonIconImage} />
+        {!hidden && <ButtonText>Compose</ButtonText>}
+      </EditorButton>
+      {...["inbox", "sent", "drafts"].map((folder) => (
+        <Link to={"/" + folder}>
+          <MenuItem hidden={hidden} activated={$route.params.folder === folder}>
+            <MenuIcon className={`fas fa-${iconMap[folder]}`} />
+            {!hidden && <span>{folder}</span>}
+          </MenuItem>
+        </Link>
+      ))}
+      <Dropzone hidden={hidden} />
+    </Menu>,
+  ];
 });
 
 export default Sidebar;
@@ -96,26 +44,15 @@ const Menu = $$.div`
   transition: width 0.05s ease-out;
   background: white;
   overflow: hidden;
-  width: ${({ collapsed }) => (collapsed ? 72 : 250)}px;
+  width: ${({ hidden }) => (hidden ? 72 : 250)}px;
   display: flex;
   flex-direction: column;
-  align-items: ${({ collapsed }) => (collapsed ? "center" : "start")};
-`;
-
-const MenuIcon = $$.i`
-  width: 1rem;
-  font-size: 1rem;
-`;
-
-const ButtonIcon = $$.img`
-  --size: 32px;
-  width: var(--size);
-  height: var(--size);
+  align-items: ${({ hidden }) => (hidden ? "center" : "start")};
 `;
 
 const EditorButton = $$.button`
   --size: 50px;
-  width: ${({ collapsed }) => (collapsed ? "var(--size)" : "150px")};
+  width: ${({ hidden }) => (hidden ? "var(--size)" : "150px")};
   height: var(--size);
   min-height: var(--size);
   margin: 15px 10px;
@@ -141,53 +78,15 @@ const EditorButton = $$.button`
   }
 `;
 
+const ButtonIcon = $$.img`
+  --size: 32px;
+  width: var(--size);
+  height: var(--size);
+`;
+
 const ButtonText = $$.span`
   margin-left: 10px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--dark-gray);
-`;
-
-const MenuItem = $$.div`
-  --size: 35px;
-  height: var(--size);
-  min-height: var(--size);
-  line-height: 1rem;
-  width: ${({ collapsed }) => (collapsed ? "var(--size)" : "80%")};
-  padding: 0 ${({ collapsed }) => (collapsed ? "0" : "10px")};
-  margin: 0 ${({ collapsed }) => (collapsed ? "10px" : "0")};
-  display: flex;
-  align-items: center;
-  justify-content: ${({ collapsed }) => (collapsed ? "center" : "start")};
-  border-top-right-radius: calc(0.5 * var(--size));
-  border-bottom-right-radius: calc(0.5 * var(--size));
-  border-top-left-radius: ${({ collapsed }) =>
-    collapsed ? "calc(0.5 * var(--size))" : "0"};
-  border-bottom-left-radius: ${({ collapsed }) =>
-    collapsed ? "calc(0.5 * var(--size))" : "0"};
-  background: white;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: ${({ activated }) => (activated ? "700" : "600")};
-  color: ${({ activated }) => (activated ? "var(--theme)" : "gray")};
-  background: ${({ activated }) =>
-    activated ? "var(--theme-light)" : "white"};
-  cursor: pointer;
-  transition: all 0.2s;
-
-`.$`:hover {
-    background: ${({ activated }) =>
-      activated ? "var(--theme-light)" : "var(--light-gray)"};
-  }
-`.$`:active {
-    background: ${({ activated }) =>
-      activated ? "var(--theme-light)" : "var(--gray)"};
-  }
-`.$` > i {
-    margin: 0 ${({ collapsed }) => (collapsed ? "0" : "20px")};
-    color: inherit;
-  }
-`.$` * {
-    pointer-events: none;
-  }
 `;

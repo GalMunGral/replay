@@ -1,25 +1,12 @@
-const EditorInput = Observer(
-  ({ value, setValue, label, placeholder }, { $self }) => {
-    const activated = $self.focused || value;
-    return [
-      <InputBox>
-        {activated && <label>{label}</label>}
-        <input
-          value={value}
-          placeholder={!activated ? placeholder : ""}
-          onfocus={() => ($self.focused = true)}
-          onblur={() => ($self.focused = false)}
-          onchange={(e) => setValue(e.target.value)}
-        />
-      </InputBox>,
-    ];
-  }
-);
+import { Observer, Observable, decorator as $$ } from "replay/utils";
+import $editor from "../observables/editor";
+import IconButton from "./IconButton";
+import EditorInput from "./EditorInput";
+import Space from "./Space";
 
 const Editor = Observer(() => {
   const { minimized } = $editor;
   const { recipientEmail, subject, content } = $editor;
-
   return [
     $editor.open && (
       <Window>
@@ -69,11 +56,6 @@ const Editor = Observer(() => {
     ),
   ];
 });
-
-import { Observer, Observable, decorator as $$ } from "replay/utils";
-import $editor from "../observables/editor";
-import IconButton from "./IconButton";
-import Space from "./Space";
 
 EditorInput.init = () => ({
   $self: new Observable({
@@ -136,28 +118,6 @@ const Body = $$.section`
   display: flex;
   flex-direction: column;
   transition: all 0.2s;
-`;
-
-const InputBox = $$.div`
-  line-height: 1rem;
-  font-size: 1rem;
-  margin: 0 20px;
-  padding: 0;
-  border-bottom: 1px solid var(--light-gray);
-
-`.$` > label {
-    color: gray;
-    margin-right: 5px;
-  }
-`.$` > input {
-    line-height: 1rem;
-    font-size: 1rem;
-    padding: 8px 0;
-    border: none;
-    outline: none;
-    background: white;
-    font-family: inherit;
-  }
 `;
 
 const TextArea = $$.textarea`
