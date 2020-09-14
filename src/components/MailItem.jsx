@@ -1,4 +1,4 @@
-import { decorator as $$ } from "replay/utils";
+import { Link, decorator as $$ } from "replay/utils";
 import Checkbox from "./Checkbox";
 import IconButton from "./IconButton";
 
@@ -11,20 +11,12 @@ const MailItem = ({
   selected,
   toggleItem,
   deleteItem,
-  selectItem,
-  viewItem,
-  dragEventListeners,
+  eventListeners,
 }) => {
   const { senderName, senderEmail, subject, content } = mail;
   const isInTrash = folder === "trash";
   return [
-    <ListItem
-      selected={selected}
-      draggable={!isInTrash}
-      onmousedown={selectItem}
-      onmouseup={viewItem}
-      {...dragEventListeners}
-    >
+    <ListItem selected={selected} draggable={!isInTrash} {...eventListeners}>
       {!isInTrash && <Checkbox checked={selected} onchange={toggleItem} />}
       <SenderInfo>{senderName || senderEmail || "(no name)"}</SenderInfo>
       <Summary>
@@ -35,9 +27,10 @@ const MailItem = ({
         <Actions>
           <IconButton
             type="trash"
-            onclick={deleteItem}
-            onmousedown={(e) => e.stopPropagation()}
-            onmouseup={(e) => e.stopPropagation()}
+            onclick={(e) => {
+              e.stopPropagation();
+              deleteItem();
+            }}
           />
         </Actions>
       )}

@@ -1,32 +1,26 @@
 import { Observable } from "replay/utils";
 
-const Type = {
-  LOAD: "LOAD",
-  DELETE: "DELETE",
-  SEND: "SEND",
-  SAVE_DRAFT: "SAVE_DRAFT",
-  DELETE_SELECTED: "DELETE_SELECTED",
-};
-
 const reducer = (state, action) => {
   switch (action.type) {
-    case Type.LOAD: {
+    case "LOAD": {
       const { folder, data } = action.payload;
       return {
         ...state,
         [folder]: data,
       };
     }
-    case Type.DELETE: {
+    case "DELETE": {
       const { id, folder } = action.payload;
       const item = state[folder].find((item) => item.id === id);
-      return {
-        ...state,
-        [folder]: state[folder].filter((item) => item.id !== id),
-        trash: [item, ...state.trash],
-      };
+      return item
+        ? {
+            ...state,
+            [folder]: state[folder].filter((item) => item.id !== id),
+            trash: [item, ...state.trash],
+          }
+        : state;
     }
-    case Type.SAVE_DRAFT: {
+    case "SAVE_DRAFT": {
       return {
         ...state,
         drafts: [
@@ -35,7 +29,7 @@ const reducer = (state, action) => {
         ],
       };
     }
-    case Type.DELETE_SELECTED: {
+    case "DELETE_SELECTED": {
       const { folder, selected } = action.payload;
       const selectedSet = new Set(selected);
       return {
@@ -47,7 +41,7 @@ const reducer = (state, action) => {
         ],
       };
     }
-    case Type.SEND: {
+    case "SEND": {
       const message = action.payload;
       return {
         ...state,
@@ -61,7 +55,6 @@ const reducer = (state, action) => {
 };
 
 const $store = new Observable({
-  T: Type,
   state: {
     inbox: [],
     sent: [],
@@ -81,7 +74,7 @@ $store.dispatch(async (dispatch) => {
   const res = await fetch("/data.json");
   const data = await res.json();
   dispatch({
-    type: $store.T.LOAD,
+    type: "LOAD",
     payload: { folder: "inbox", data },
   });
 });

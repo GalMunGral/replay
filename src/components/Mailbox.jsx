@@ -7,23 +7,6 @@ import Layout from "./Layout";
 import MailboxToolbar from "./MailboxToolbar";
 import Tabs from "./Tabs";
 
-const Mailbox = Observer((__, { $mails }) => {
-  const page = $mails.currentPage;
-  return [
-    <Sidebar />,
-    <Layout>
-      <MailboxToolbar
-        allSelected={$selection.allSelected(page)}
-        toggleAll={() => $selection.toggleAll(page)}
-      />
-      <Fragment>
-        <Tabs />
-        <MailList />
-      </Fragment>
-    </Layout>,
-  ];
-});
-
 class DefaultMap extends Map {
   constructor(factory) {
     super();
@@ -43,33 +26,41 @@ const cache = new DefaultMap(() => {
   });
 });
 
+const Mailbox = Observer((__, { $mails }) => {
+  const page = $mails.currentPage;
+  return [
+    <Sidebar />,
+    <Layout>
+      <MailboxToolbar
+        allSelected={$selection.allSelected(page)}
+        toggleAll={() => $selection.toggleAll(page)}
+      />
+      <Fragment>
+        <Tabs />
+        <MailList />
+      </Fragment>
+    </Layout>,
+  ];
+});
+
 Mailbox.init = (__, { $route }) => ({
   $mails: new Observable({
+    tab: "primary",
     pageSize: 50,
     pageIndex: 0,
-    tab: "primary",
-    get mail() {
-      const state = $store.state;
-      const { folder, id } = $route.params;
-      const folderCache = cache.get(state).get(folder);
-      if (!folderCache.has(id)) {
-        const mail = state[folder].find((it) => it.id === id);
-        folderCache.set(id, mail);
-      }
-      return folderCache.get(id);
-    },
     get mails() {
       const state = $store.state;
       const { folder } = $route.params;
       const folderCache = cache.get(state).get(folder);
-      if (!folderCache.get(this.tab)) {
+      const key = folder === "inbox" ? this.tab : "all";
+      if (!folderCache.get(key)) {
         const mails =
           folder === "inbox"
             ? state[folder].filter((it) => it.category === this.tab)
             : state[folder];
-        folderCache.set(this.tab, mails);
+        folderCache.set(key, mails);
       }
-      return folderCache.get(this.tab);
+      return folderCache.get(key);
     },
     get total() {
       return this.mails.length;

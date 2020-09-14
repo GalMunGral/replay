@@ -25,7 +25,7 @@ const Detail = (__, { $route }) => {
       const { folder, id } = $route.params;
       setTimeout(() => {
         dispatch({
-          type: $store.T.DELETE,
+          type: "DELETE",
           payload: { folder, id },
         });
       }, 200);

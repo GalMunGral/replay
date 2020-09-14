@@ -44,7 +44,7 @@ const $editor = new Observable({
     $store.dispatch((dispatch) => {
       setTimeout(() => {
         dispatch({
-          type: $store.T.SAVE_DRAFT,
+          type: "SAVE_DRAFT",
           payload: this.message,
         });
       }, 200);
@@ -61,7 +61,7 @@ const $editor = new Observable({
     $store.dispatch((dispatch) => {
       setTimeout(() => {
         dispatch({
-          type: $store.T.SEND,
+          type: "SEND",
           payload: this.message,
         });
       }, 200);

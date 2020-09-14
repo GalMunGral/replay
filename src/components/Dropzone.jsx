@@ -1,24 +1,25 @@
-import { Observable, Observer, navigate } from "replay/utils";
+import { Observable, Observer, Link } from "replay/utils";
 import $store from "../observables/store";
 import $selection from "../observables/selection";
 import { MenuItem, MenuIcon } from "./Menu";
 
 const Dropzone = Observer(({ hidden }, { $drop, $route }) => [
-  <MenuItem
-    hidden={hidden}
-    activated={$route.params.folder === "trash"}
-    style={{
-      background: $drop.canDrop ? "var(--theme)" : "",
-      color: $drop.canDrop ? "white" : "",
-    }}
-    onclick={() => navigate("/trash")}
-    ondragenter={$drop.dragenter.bind($drop)}
-    ondragleave={$drop.drageleave.bind($drop)}
-    ondragover={$drop.drageover.bind($drop)}
-    ondrop={$drop.drop.bind($drop)}
-  >
-    <MenuIcon className="fas fa-trash" /> {!hidden && <span>trash</span>}
-  </MenuItem>,
+  <Link to="/trash">
+    <MenuItem
+      hidden={hidden}
+      activated={$route.params.folder === "trash"}
+      style={{
+        background: $drop.canDrop ? "var(--theme)" : "",
+        color: $drop.canDrop ? "white" : "",
+      }}
+      ondragenter={$drop.dragenter.bind($drop)}
+      ondragleave={$drop.drageleave.bind($drop)}
+      ondragover={$drop.drageover.bind($drop)}
+      ondrop={$drop.drop.bind($drop)}
+    >
+      <MenuIcon className="fas fa-trash" /> {!hidden && <span>trash</span>}
+    </MenuItem>
+  </Link>,
 ]);
 
 Dropzone.init = (__, { $route }) => ({
@@ -40,7 +41,7 @@ Dropzone.init = (__, { $route }) => ({
       $store.dispatch((dispatch) => {
         setTimeout(() => {
           dispatch({
-            type: $store.T.DELETE_SELECTED,
+            type: "DELETE_SELECTED",
             payload: {
               folder: $route.params.folder,
               selected: $selection.selected,

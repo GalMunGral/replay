@@ -39,17 +39,19 @@ export function redirect(path) {
   window.dispatchEvent(new Event("popstate"));
 }
 
-export const Link = ({ to: path, children }) => {
+export const Link = decorator(({ to: path, className, children }) => {
   if (!Array.isArray(children) || !children.length) return children;
   const child = children[0];
-  child[0] = decorator(child[0])`cursor: pointer;`;
   const onclick = child[1].onclick;
   child[1].onclick = (e) => {
     if (onclick) onclick(e);
     navigate(path);
   };
+  child[1].className = [className, child[1].className].join(" ");
   return [child];
-};
+})`
+  cursor: pointer;
+`;
 
 export const Redirect = ({ to: path }, __, context) => {
   // `redirect` dispatches "popstate" event

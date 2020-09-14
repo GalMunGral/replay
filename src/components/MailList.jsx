@@ -5,18 +5,7 @@ import $store from "../observables/store";
 import $dragState from "../observables/drag";
 import MailItem from "./MailItem";
 
-const MailList = (
-  __,
-  {
-    $route,
-    $mails,
-    toggleItem,
-    deleteItem,
-    selectAfter,
-    cancelSelectAndOpen,
-    dragEventListeners,
-  }
-) =>
+const MailList = (__, { $route, $mails, toggleItem, deleteItem, selectItem }) =>
   $mails.currentPage.map((mail, i) => (
     <MailItem
       key={i}
@@ -25,16 +14,39 @@ const MailList = (
       selected={$selection.selected.includes(mail.id)}
       toggleItem={() => toggleItem(mail.id)}
       deleteItem={() => deleteItem(mail.id)}
-      selectItem={() => selectAfter(mail, 300)}
-      viewItem={() => cancelSelectAndOpen(mail)}
-      dragEventListeners={dragEventListeners}
+      eventListeners={{
+        onclick() {
+          if ($route.params.folder === "drafts") {
+            $editor.replaceDraft(mail);
+            $editor.minimized = false;
+            $editor.open = true;
+          } else {
+            navigate(`/${$route.params.folder}/${mail.id}`);
+          }
+        },
+        ondrag(e) {
+          $dragState.setCoordinates(e.clientX - OFFSET, e.clientY - OFFSET);
+        },
+        ondragstart(e) {
+          e.dataTransfer.setDragImage(new Image(), 0, 0);
+          selectItem(mail.id);
+          setTimeout(() => {
+            $dragState.setIsDragging(true);
+          }, 100);
+        },
+        ondragend() {
+          $dragState.setIsDragging(false);
+        },
+      }}
     />
   ));
 
 const OFFSET = 30;
-var timer = null;
 
 MailList.init = (__, { $route }) => ({
+  selectItem: (id) => {
+    $selection.set(id, true);
+  },
   toggleItem: (id) => {
     $selection.set(id, !$selection.selected.includes(id));
   },
@@ -42,44 +54,11 @@ MailList.init = (__, { $route }) => ({
     $store.dispatch((dispatch) => {
       setTimeout(() => {
         dispatch({
-          type: $store.T.DELETE,
+          type: "DELETE",
           payload: { folder: $route.params.folder, id },
         });
       }, 200);
     });
-  },
-  selectAfter: (mail, delay) => {
-    timer = setTimeout(() => {
-      $selection.set(mail.id, true);
-      timer = null;
-    }, delay);
-  },
-  cancelSelectAndOpen: (mail) => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-      if ($route.params.folder === "drafts") {
-        $editor.replaceDraft(mail);
-        $editor.minimized = false;
-        $editor.open = true;
-      } else {
-        navigate(`/${$route.params.folder}/${mail.id}`);
-      }
-    }
-  },
-  dragEventListeners: {
-    ondrag: (e) => {
-      $dragState.setCoordinates(e.clientX - OFFSET, e.clientY - OFFSET);
-    },
-    ondragstart: (e) => {
-      e.dataTransfer.setDragImage(new Image(), 0, 0);
-      setTimeout(() => {
-        $dragState.setIsDragging(true);
-      }, 100);
-    },
-    ondragend: () => {
-      $dragState.setIsDragging(false);
-    },
   },
 });
 
