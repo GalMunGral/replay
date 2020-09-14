@@ -53,12 +53,12 @@ export const Link = ({ to: path, children }) => {
 
 export const Redirect = ({ to: path }, __, context) => {
   // `redirect` dispatches "popstate" event
-  // -> `window.onpopstate` (sync) <---- EDGE CASE: UNDEFINED DURING FIRST RENDER
+  // -> `window.onpopstate` (sync) <---- EDGE CASE: this is undefined during initial render
   // -> `$route` updated, set trap triggered
   // -> `Scheduler.requestUpdate`
   // -> (in microtask) current rendering is aborted
 
-  // Defer calls to `redirect` until the commit phase (after `window.onpostate` is set)
+  // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
   context.emit(() => redirect(path));
   return [];
 };
