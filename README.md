@@ -2,24 +2,24 @@
 
 This project is highly inspired by React.
 
-The basic idea is to create UI as a composition of **expressions** derived from state (i.e. FP) as opposed to _entities_ that manage state internally (i.e. OOP). Using this model, component instances are never explicitly constructed, rather, they correspond to _invocations_ of the component function, reified as _stack frames_.
+The basic idea is that UI can be expressed as a composition of pure render functions that gets re-evaluated whenever relevant state changes, as opposed to instances that actively manage their internal states. The instances that are created are in fact the activation records (i.e. stack frames) that store information such as input arguments and local variables for each invocation of a render function. 
 
-Just like how the generators need their stack frames kept alive so that execution could be paused and resumed, component are also "spcecial" functions whose stack frames need to be retained so that they could be re-evaluated (i.e. re-rendered) whenever their dependencies change as a result of event handling. Thus, we need to manually manage a tree of **simulated stack frames**, which at the same time functions as the _view tree_. In React, such frame are called ["fibers"](https://github.com/acdlite/react-fiber-architecture).
-
-## Dynamic Scope
-
-My formulation of this kind of model can be summarized as follows: A component depends on its _arguments_ and _context_ and evaluates to a sequence of child components. The arguments passed to each child component is derived solely from the parent's arguments and context, the context for each child constructed by extending the parent's context with the child's own local variables. Expressed more formally:
-
+The signature for such render functions  differs slightly from React:
+```js
+function SomeComponent(props, scope, context) {
+  context.emit(() => { /* Some side effect */})
+  return (
+    <AnotherComponent someProp={scope.someVariableFromWayAbove}>
+      <SomeChild onclick={() => this.forceUpdate()}/>
+      <SomeOtherChild {...moreProps} />
+    </AnotherComponent>
+  )
+}
 ```
-view := (args, c) => compose(
-  root(args, c),
-  subviews.map((view, i) => view(f(args, c, i), merge(c, bindings[i])))
-)
-```
-
-Here the free variables are **dynamically-scoped**. Since JavaScript only supports statical/lexical scoping, I had to simulate dynamic scoping by attaching a "local binding" object to each stack frame and using prototype chains to connect these objects.
 
 To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
+
+
 
 ```js
 const init = () => ({
@@ -138,41 +138,6 @@ In a [homoiconic language](https://en.wikipedia.org/wiki/Homoiconicity) such as 
 ;;  }
 ```
 
-Obviously JavaScript doesn't represent code as data within the language itself, but we could always create our own representations &mdash; this is how I see React elements. In my own implementation, I used arrays instead of objects with string keys so that it is possible to write readable code without resorting to a DSL that requires transpilation (read: JSX):
-
-```js
-[type, { ...props }, [...children]]; // suspended evaluation
-
-// evaluates to
-type({ ...props, children: [...children] }); // immediate evaluation
-```
-
-## Syntactic Sugar
-The [webpack loader](https://github.com/GalMunGral/replay/blob/master/lib/replay-loader.js) enables a more readable syntax:
-
-```js
-const Component = () =>
-  //// use transform
-  Container(
-    id="container"
-    className="fancy",
-    [
-      Box(id="box", "Hello World")
-    ]);
-
-// transpiles to
-const Component = () =>
-  [
-    [Container, {
-      id: "container",
-      className:"fancy",
-      children: [
-        [Box, { id: "box", children: "Hello World" }]
-      ]
-    }]
-  ];
-```
-
 ## Auxiliary Modules
 
 ### observable: Reactivity
@@ -236,114 +201,10 @@ The scheduler can decide what to do with those thunks. For example, it could exe
 
 Using generators also allows for asynchronous rendering &mdash; which means that long-running render tasks could be split into chunks and spread across multiple frames &mdash; using the [Cooperative Scheduling of Background Tasks API](https://www.w3.org/TR/requestidlecallback/) (i.e. [`window.requestIdleCallback`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)) and batching DOM updates using [`window.requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). My implementation is as follows:
 
-```js
-// scheduler.js
-
-// ...
-function resume(deadline) {
-  while (deadline.timeRemaining() > THRESHOLD) {
-    const { done, value } = currentTask.next();
-    if (done) {
-      return window.requestAnimationFrame(commit);
-    } else {
-      if (Array.isArray(value)) {
-        effects.push(...value);
-      } else {
-        effects.push(value);
-      }
-    }
-  }
-  return window.requestIdleCallback(resume);
-}
-
-function commit() {
-  for (let effect of effects) {
-    effect();
-  }
-  effects = [];
-  currentTask = null;
-
-  // Poll next task
-}
-
-// ...
-```
-
 ## Demo Project
 
 ![screenshot](screenshots/demo.png)
 
-### Sample code
-
-```js
-import IconButton from "./IconButton";
-import Space from "./Space";
-import EditorInput from "./EditorInput";
-import {
-  Window,
-  Header,
-  CloseButton,
-  Body,
-  TextArea,
-  ButtonGroup,
-  SendButton,
-} from "../elements/Editor";
-
-const Editor = (__, { $editor }) => {
-  const { minimized } = $editor;
-  const { recipientEmail, subject, content } = $editor;
-
-  if (!$editor.open) return [null];
-
-  return (
-    //// use transform
-    Window([
-      Header((onclick = () => ($editor.minimized = !minimized)), [
-        span("New Message"),
-        CloseButton(
-          (onclick = () => {
-            $editor.saveDraft();
-            $editor.open = false;
-          }),
-          [i((className = "fas fa-times"))]
-        ),
-      ]),
-      Body({ minimized }, [
-        EditorInput(
-          (label = "To:"),
-          (placeholder = "Recipient"),
-          (value = recipientEmail),
-          (setValue = (v) => ($editor.recipientEmail = v))
-        ),
-        EditorInput(
-          (label = "Subject:"),
-          (placeholder = "Subject"),
-          (value = subject),
-          (setValue = (v) => ($editor.subject = v))
-        ),
-        TextArea(
-          (value = content),
-          (oninput = (e) => $editor.updateHistory(e.target.value))
-        ),
-        ButtonGroup([
-          SendButton(
-            (onclick = () => {
-              $editor.sendMail();
-              $editor.open = false;
-            }),
-            "Send"
-          ),
-          IconButton((type = "undo"), (onclick = () => $editor.undo())),
-          IconButton((type = "redo"), (onclick = () => $editor.redo())),
-          Space(),
-        ]),
-      ]),
-    ])
-  );
-};
-
-export default Editor;
-```
 
 ### Performance
 
