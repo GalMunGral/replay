@@ -17,6 +17,7 @@ interface StateReference<T extends Object> {
 }
 
 type ActionType = string;
+
 interface Action {
   type: ActionType;
   payload: any;
@@ -154,18 +155,18 @@ export function createStore<T extends Object>({
     // Only methods invoked on this object directly can mutate its state
     // Both access to methods and mutations are blocked from the outside
 
-    const state = observable(mutableState);
+    const protectedState = observable(mutableState);
     stateRef = {
-      current: { current: dataonly(state) } as HistorySnapshot<T>,
+      current: { current: dataonly(protectedState) } as HistorySnapshot<T>,
     };
     dispatch = (action, ...args) => {
       action = String(action);
-      if (typeof state[action] == "function") {
-        state[action](...args);
+      if (typeof protectedState[action] == "function") {
+        protectedState[action](...args);
       } else if (action.startsWith("set")) {
         const key = action[3].toLowerCase() + action.slice(4);
         const value = args[0];
-        state[key] = value;
+        protectedState[key] = value;
       } else {
         console.warn(`Action '${action}' is undefined`);
       }

@@ -1,6 +1,4 @@
 import { Context, RenderTask, Scheduler } from "./Scheduler";
-import tags from "html-tags";
-import { stats } from "./Stats";
 
 export interface Quasiquote extends Iterable<any> {
   0: string | RenderFunction | AsyncRenderFunction; // type
@@ -48,7 +46,6 @@ export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
 }
 
 const hostRenderFunction: RenderFunction = function (props, {}, context) {
-  // console.log(this, props);
   const record: ActivationRecord = this;
   const memoized = record.props;
   for (let [name, value] of Object.entries(props)) {
@@ -94,8 +91,7 @@ export function getHostRenderFunction(htmlTag: string): RenderFunction {
 }
 
 export class ActivationRecord {
-  private static nextId = 0;
-
+  static nextId = 0;
   public id = ActivationRecord.nextId++;
   public name: string;
   public renderFunction: RenderFunction;
@@ -111,16 +107,11 @@ export class ActivationRecord {
   public dirty = false;
   public subscriptions = new Set<Set<ActivationRecord>>();
 
-  // TODO: cancellation effects
-
   constructor(
     public readonly type: string | RenderFunction | AsyncRenderFunction,
     public parent: ActivationRecord = null
   ) {
     this.depth = parent ? parent.depth + 1 : 0;
-    if (__DEBUG__) {
-      stats.maxDepth = Math.max(stats.maxDepth, this.depth);
-    }
     if (parent) Object.setPrototypeOf(this.scope, parent.scope);
     if (isHostType(type)) {
       this.node =
@@ -135,7 +126,6 @@ export class ActivationRecord {
         (this.node as Element).append(new Text()); // dummy node
       }
     }
-    // console.log(type, parent, this.node);
   }
 
   public clone(parent: ActivationRecord, context: Context): ActivationRecord {
@@ -149,36 +139,42 @@ export class ActivationRecord {
     if (!isHostType(this.type)) {
       context.emit(() => {
         this.transferSubscriptions(clone);
-        // This record is already up to date, because
-        // if newer updates did occur, this commit wouldn't happen
+        // It is already up to date, because later updates always cause render to fail
         Scheduler.instance.cancelUpdate(this);
       });
     }
     return clone;
   }
 
-  public destructSubtree(context: Context): void {
+  public deinitSubtree(context: Context): void {
     if (!isHostType(this.type)) {
       context.emit(() => {
-        if (this.scope.hasOwnProperty("deinit")) this.scope.deinit();
         this.cancelSubscriptions();
         Scheduler.instance.cancelUpdate(this);
+        if (
+          // Must check if 'deinit' method belongs to itself
+          // because it could be *inherited* from above
+          this.scope.hasOwnProperty("deinit") &&
+          typeof this.scope.deinit == "function"
+        ) {
+          this.scope.deinit();
+        }
       });
     }
     this.children.forEach((c) => {
       if (c.parent === this) {
-        c.destructSubtree(context);
-      } else {
-        if (__DEBUG__) {
-          LOG("[[DESTRUCT]] STOP: NOT MY CHILD");
-        }
+        c.deinitSubtree(context);
       }
     });
   }
 
-  subscribe(observers: Set<ActivationRecord>): void {
+  public subscribe(observers: Set<ActivationRecord>): void {
     observers.add(this);
     this.subscriptions.add(observers);
+  }
+
+  public forceUpdate() {
+    Scheduler.instance.requestUpdate(new Set([this]));
   }
 
   private cancelSubscriptions(): void {
@@ -200,28 +196,18 @@ export class ActivationRecord {
     return isHostType(this.type) ? this.node : this.parent?.parentNode;
   }
 
-  public get firstLeaf(): ActivationRecord {
-    return isHostType(this.type) ? this : this.firstChild?.firstLeaf;
+  public get firstHostRecord(): ActivationRecord {
+    return isHostType(this.type) ? this : this.firstChild?.firstHostRecord;
   }
 
-  public get lastLeaf(): ActivationRecord {
-    return isHostType(this.type) ? this : this.lastChild?.lastLeaf;
+  public get lastHostRecord(): ActivationRecord {
+    return isHostType(this.type) ? this : this.lastChild?.lastHostRecord;
   }
 
   public insertAfter(previouSibling: ActivationRecord): void {
-    if (__DEBUG__) {
-      // LOG(
-      //   "[[Commit]] insert:",
-      //   this.name + this.id,
-      //   this.firstLeaf.node,
-      //   "after:",
-      //   previouSibling.name + previouSibling.id,
-      //   previouSibling.lastLeaf.node
-      // );
-    }
-    const lastNode = this.lastLeaf.node;
-    let curNode = this.firstLeaf.node;
-    let prevNode = previouSibling.lastLeaf.node;
+    const lastNode = this.lastHostRecord.node;
+    let curNode = this.firstHostRecord.node;
+    let prevNode = previouSibling.lastHostRecord.node;
     while (curNode !== lastNode) {
       prevNode.after(curNode);
       prevNode = curNode;
@@ -231,16 +217,8 @@ export class ActivationRecord {
   }
 
   public removeNodes(): void {
-    if (__DEBUG__) {
-      LOG(
-        "[[Commit]] remove"
-        // this.name + this.id,
-        // this.firstLeaf.node,
-        // this.lastLeaf.node
-      );
-    }
-    const firstNode = this.firstLeaf.node;
-    const lastNode = this.lastLeaf.node;
+    const firstNode = this.firstHostRecord.node;
+    const lastNode = this.lastHostRecord.node;
     let cur = firstNode;
     let next = cur.nextSibling;
     while (cur !== lastNode) {

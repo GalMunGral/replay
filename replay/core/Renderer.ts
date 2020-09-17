@@ -8,7 +8,20 @@ import {
   isHostType,
 } from "./Component";
 import { RenderTask } from "./Scheduler";
-import { stats } from "./Stats";
+
+export const stats = {
+  renderCount: 0,
+  reuseCount: 0,
+  birthCount: 0,
+  deathCount: 0,
+  maxDepth: 0,
+  get reuseRate() {
+    return this.reuseCount / this.renderCount;
+  },
+  get deathRate() {
+    return this.deathCount / this.birthCount;
+  },
+};
 
 function shallowEquals(a: any, b: any): boolean {
   if (typeof a != typeof b) return false;
@@ -20,6 +33,36 @@ function shallowEquals(a: any, b: any): boolean {
   return true;
 }
 
+function* init(
+  element: Quasiquote,
+  parent: ActivationRecord,
+  context: RenderTask
+) {
+  let [type, props, children] = element;
+  props.children = children;
+  const record = new ActivationRecord(type, parent);
+
+  // Resolve render functions
+  record.renderFunction =
+    typeof type == "string"
+      ? getHostRenderFunction(type)
+      : typeof type == "object"
+      ? yield type
+      : type;
+
+  record.name = record.renderFunction.name;
+  const init = record.renderFunction.init;
+  if (typeof init == "function") {
+    Object.assign(record.scope, init(props, record.scope, context));
+  }
+  return record;
+}
+
+function deinit(record: ActivationRecord, context: RenderTask): void {
+  context.emit(() => record.removeNodes());
+  record.deinitSubtree(context);
+}
+
 export function* evaluate(
   record: ActivationRecord,
   props: Arguments,
@@ -27,42 +70,24 @@ export function* evaluate(
 ): Generator<AsyncRenderFunction, void, RenderFunction> {
   props = props ?? record.props;
   if (shallowEquals(props, record.props) && !record.dirty) {
-    if (__DEBUG__) {
-      // LOG(`[[Render]] ${record.name} early exit`);
-    }
     context.emit(() => {
       record.children.forEach((child) => {
-        if (__DEBUG__) {
-          // const oldParent = child.parent.name + child.parent.id;
-          // const newParent = record.name + record.id;
-          // LOG(`[[Commit]] HANDOVER: ${oldParent} => ${newParent}`);
-        }
         child.parent = record;
       });
     });
   } else {
-    // Clear dirty bit *before* rather than *after* rendering,
-    // so if further updates occur while rendering is in process, the dirty bit doesn't get cleared mistakenly.
-    // record.dirty = false;
-
     const elements: string | Quasiquote[] = record.renderFunction.apply(
       record,
       [props, record.scope, context]
     );
-
+    // Only Text and Comment nodes are allowed to have non-array children
     if (record.type === "text" || record.type === "comment") {
       context.emit(() => {
         (record.node as HTMLElement).textContent = elements as string;
       });
       return;
     }
-
     if (isHostType(record.type)) {
-      // Only `text` and `comment` are allowed to have non-array children
-      // Convert `p('hello')` to  `p([ text('hello') ])`
-      // if (!Array.isArray(props.children)) {
-      //   props.children = [["text", {}, props.children]];
-      // }
       context.stack.push(context.cursor);
       const dummy = new ActivationRecord("_");
       context.emit(() => {
@@ -71,18 +96,17 @@ export function* evaluate(
       context.cursor = dummy;
     }
 
-    yield* enter(record, elements as Quasiquote[], context);
+    yield* diff(record, elements as Quasiquote[], context);
 
     if (isHostType(record.type)) {
       context.cursor = context.stack.pop();
     }
-
     record.dirty = false;
     record.props = props;
   }
 }
 
-function* enter(
+function* diff(
   parent: ActivationRecord,
   elements: Quasiquote[],
   context: RenderTask
@@ -99,19 +123,15 @@ function* enter(
   }
 
   for (let [index, element] of elements.entries()) {
-    if (__DEBUG__) {
-      stats.renderCount++;
-    }
     if (!element) element = ["comment", {}, "[slot]"];
     if (!Array.isArray(element)) element = ["text", {}, String(element)];
     const [type, props, children] = element;
     const key = props.key ?? String(index);
     props.children = children;
     let record: ActivationRecord;
+
     if (oldChildren.has(key) && oldChildren.get(key).type === type) {
-      if (__DEBUG__) {
-        stats.reuseCount++; // Reuse existing record
-      }
+      // Reuse existing record
       record = oldChildren.get(key).clone(parent, context);
       oldChildren.delete(key);
       if (record.index < lastIndex) {
@@ -122,10 +142,8 @@ function* enter(
       }
       yield* evaluate(record, props, context);
     } else {
-      if (__DEBUG__) {
-        stats.birthCount++; // Create a new record
-      }
-      record = yield* initialize(element, parent, context);
+      // Create a new record
+      record = yield* init(element, parent, context);
       yield* evaluate(record, props, context);
       if (isHostType(type)) {
         const cursor = context.cursor;
@@ -137,52 +155,11 @@ function* enter(
     parent.children.set(key, record);
     record.key = key;
     record.index = index;
-    context.cursor = record.lastLeaf;
+    context.cursor = record.lastHostRecord;
   }
+  // Delete old records
   oldChildren.forEach((record) => {
-    if (__DEBUG__) {
-      stats.deathCount++;
-    }
-    deinitialize(record, context);
+    deinit(record, context);
   });
   oldChildren.clear();
-}
-
-function* initialize(
-  element: Quasiquote,
-  parent: ActivationRecord,
-  context: RenderTask
-) {
-  let [type, props, children] = element;
-  const record = new ActivationRecord(type, parent);
-  props.children = children;
-
-  record.renderFunction =
-    typeof type == "string"
-      ? getHostRenderFunction(type)
-      : typeof type == "object"
-      ? yield type
-      : type;
-
-  record.name = record.renderFunction.name;
-
-  const init = record.renderFunction.init;
-  if (typeof init == "function") {
-    Object.assign(record.scope, init(props, record.scope, context));
-  }
-
-  return record;
-}
-
-function deinitialize(record: ActivationRecord, context: RenderTask): void {
-  if (__DEBUG__) {
-    LOG(
-      "[[Render]] unmount:"
-      // record.name + record.id,
-      // record.firstLeaf.node,
-      // record.lastLeaf.node
-    );
-  }
-  context.emit(() => record.removeNodes());
-  record.destructSubtree(context);
 }

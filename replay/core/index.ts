@@ -1,9 +1,9 @@
+import { Scheduler } from "./Scheduler";
 import {
   Quasiquote,
   ActivationRecord,
   getHostRenderFunction,
 } from "./Component";
-import { Scheduler } from "./Scheduler";
 
 export { lazy } from "./Component";
 
@@ -16,8 +16,7 @@ export function render(elements: Quasiquote[], container: HTMLElement): void {
   container.innerHTML = "";
   container.append(new Text());
 
-  // Hack: Use memoized props to simulate passing in props as arguments,
-  // and use dirty bit to trigger re-render
+  // Hack: Use memoized props to simulate props passed in as arguments. Use dirty bit to trigger re-render.
   entry.renderFunction = getHostRenderFunction("body");
   entry.props = { children: elements };
   entry.dirty = true;
