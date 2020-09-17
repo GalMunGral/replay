@@ -154,7 +154,6 @@ Router.init = (props: RouterProps, scope: RouterScope, context) => {
       Object.assign(scope.route, matchPath(routeTable));
     };
     scope.deinit = () => {
-      console.log("Router deinit");
       window.onpopstate = null;
     };
   });

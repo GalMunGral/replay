@@ -5,6 +5,7 @@ import store from "../observables/store";
 import AppBar from "./AppBar";
 import DragImage from "./DragImage";
 import Debug from "./Debug";
+import { getHostRenderFunction } from "replay/core/Component";
 
 const Mailbox = lazy(() => import("./Mailbox"));
 const Detail = lazy(() => import("./Detail"));

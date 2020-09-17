@@ -1,11 +1,14 @@
 import { Context, RenderTask, Scheduler } from "./Scheduler";
 import tags from "html-tags";
+import { stats } from "./Stats";
 
 export interface Quasiquote extends Iterable<any> {
   0: string | RenderFunction | AsyncRenderFunction; // type
   1: Arguments; // props
   2: string | Quasiquote[]; // children
 }
+
+export const $$isHostRenderFunction = Symbol();
 
 export interface RenderFunction extends Function {
   (props: Arguments, scope: DynamicScope, context: RenderTask):
@@ -16,7 +19,10 @@ export interface RenderFunction extends Function {
     scope: DynamicScope,
     context: RenderTask
   ) => DynamicScope | void;
-  [key: string]: any;
+}
+
+export interface HostRenderFunction extends RenderFunction {
+  [$$isHostRenderFunction]: boolean;
 }
 
 export interface Arguments {
@@ -41,11 +47,8 @@ export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
   return { isAsync: true, resolver };
 }
 
-export const hostRenderFunction: RenderFunction = function (
-  props,
-  {},
-  context
-) {
+const hostRenderFunction: RenderFunction = function (props, {}, context) {
+  // console.log(this, props);
   const record: ActivationRecord = this;
   const memoized = record.props;
   for (let [name, value] of Object.entries(props)) {
@@ -70,6 +73,25 @@ export const hostRenderFunction: RenderFunction = function (
   }
   return props.children;
 };
+
+export function isHostType(
+  type: string | RenderFunction | AsyncRenderFunction
+): boolean {
+  return (
+    typeof type == "string" ||
+    (typeof type == "function" && type[$$isHostRenderFunction])
+  );
+}
+
+export function getHostRenderFunction(htmlTag: string): RenderFunction {
+  return new Proxy(hostRenderFunction, {
+    get(target, key, receiver) {
+      if (key === "name") return htmlTag;
+      if (key === $$isHostRenderFunction) return true;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+}
 
 export class ActivationRecord {
   private static nextId = 0;
@@ -96,18 +118,24 @@ export class ActivationRecord {
     public parent: ActivationRecord = null
   ) {
     this.depth = parent ? parent.depth + 1 : 0;
+    if (__DEBUG__) {
+      stats.maxDepth = Math.max(stats.maxDepth, this.depth);
+    }
     if (parent) Object.setPrototypeOf(this.scope, parent.scope);
-    if (typeof type == "string") {
+    if (isHostType(type)) {
       this.node =
-        type == "text"
-          ? new Text()
-          : type == "comment"
-          ? new Comment()
-          : document.createElement(type as string);
+        typeof type == "string"
+          ? type == "text"
+            ? new Text()
+            : type == "comment"
+            ? new Comment()
+            : document.createElement(type)
+          : document.createElement((type as RenderFunction).name);
       if (this.node.nodeType == 1) {
         (this.node as Element).append(new Text()); // dummy node
       }
     }
+    // console.log(type, parent, this.node);
   }
 
   public clone(parent: ActivationRecord, context: Context): ActivationRecord {
@@ -118,7 +146,7 @@ export class ActivationRecord {
     clone.parent = parent ?? this.parent;
     clone.depth = parent ? parent.depth + 1 : 0;
     clone.subscriptions = new Set<Set<ActivationRecord>>();
-    if (typeof this.type != "string") {
+    if (!isHostType(this.type)) {
       context.emit(() => {
         this.transferSubscriptions(clone);
         // This record is already up to date, because
@@ -130,7 +158,7 @@ export class ActivationRecord {
   }
 
   public destructSubtree(context: Context): void {
-    if (typeof this.type != "string") {
+    if (!isHostType(this.type)) {
       context.emit(() => {
         if (this.scope.hasOwnProperty("deinit")) this.scope.deinit();
         this.cancelSubscriptions();
@@ -169,15 +197,15 @@ export class ActivationRecord {
   }
 
   public get parentNode(): ChildNode {
-    return typeof this.type === "string" ? this.node : this.parent?.parentNode;
+    return isHostType(this.type) ? this.node : this.parent?.parentNode;
   }
 
   public get firstLeaf(): ActivationRecord {
-    return typeof this.type === "string" ? this : this.firstChild?.firstLeaf;
+    return isHostType(this.type) ? this : this.firstChild?.firstLeaf;
   }
 
   public get lastLeaf(): ActivationRecord {
-    return typeof this.type === "string" ? this : this.lastChild?.lastLeaf;
+    return isHostType(this.type) ? this : this.lastChild?.lastLeaf;
   }
 
   public insertAfter(previouSibling: ActivationRecord): void {
@@ -205,10 +233,10 @@ export class ActivationRecord {
   public removeNodes(): void {
     if (__DEBUG__) {
       LOG(
-        "[[Commit]] remove",
-        this.name + this.id,
-        this.firstLeaf.node,
-        this.lastLeaf.node
+        "[[Commit]] remove"
+        // this.name + this.id,
+        // this.firstLeaf.node,
+        // this.lastLeaf.node
       );
     }
     const firstNode = this.firstLeaf.node;

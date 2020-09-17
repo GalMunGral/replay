@@ -1,15 +1,13 @@
 import { ActivationRecord, RenderFunction } from "../core/Component";
 import { RenderTask, Scheduler } from "../core/Scheduler";
 
-if (__DEBUG__) {
-  globalThis.__observers__ = [];
-  globalThis.inspect = () => {
-    const observerNameId = globalThis.__observers__.map((o) =>
-      [...o].map((x) => x.name + x.id)
-    );
-    console.log(observerNameId);
-  };
-}
+// globalThis.__observers__ = [];
+// globalThis.inspect = () => {
+//   const observerNameId = globalThis.__observers__.map((o) =>
+//     [...o].map((x) => x.name + x.id)
+//   );
+//   console.log(observerNameId);
+// };
 
 export class DefaultMap<K, V> extends Map<K, V> {
   constructor(private factory: () => V) {

@@ -4,9 +4,11 @@ import {
   Arguments,
   RenderFunction,
   AsyncRenderFunction,
-  hostRenderFunction,
+  getHostRenderFunction,
+  isHostType,
 } from "./Component";
 import { RenderTask } from "./Scheduler";
+import { stats } from "./Stats";
 
 function shallowEquals(a: any, b: any): boolean {
   if (typeof a != typeof b) return false;
@@ -31,9 +33,9 @@ export function* evaluate(
     context.emit(() => {
       record.children.forEach((child) => {
         if (__DEBUG__) {
-          const oldParent = child.parent.name + child.parent.id;
-          const newParent = record.name + record.id;
-          LOG(`[[Commit]] HANDOVER: ${oldParent} => ${newParent}`);
+          // const oldParent = child.parent.name + child.parent.id;
+          // const newParent = record.name + record.id;
+          // LOG(`[[Commit]] HANDOVER: ${oldParent} => ${newParent}`);
         }
         child.parent = record;
       });
@@ -55,7 +57,7 @@ export function* evaluate(
       return;
     }
 
-    if (typeof record.type == "string") {
+    if (isHostType(record.type)) {
       // Only `text` and `comment` are allowed to have non-array children
       // Convert `p('hello')` to  `p([ text('hello') ])`
       // if (!Array.isArray(props.children)) {
@@ -71,7 +73,7 @@ export function* evaluate(
 
     yield* enter(record, elements as Quasiquote[], context);
 
-    if (typeof record.type == "string") {
+    if (isHostType(record.type)) {
       context.cursor = context.stack.pop();
     }
 
@@ -97,6 +99,9 @@ function* enter(
   }
 
   for (let [index, element] of elements.entries()) {
+    if (__DEBUG__) {
+      stats.renderCount++;
+    }
     if (!element) element = ["comment", {}, "[slot]"];
     if (!Array.isArray(element)) element = ["text", {}, String(element)];
     const [type, props, children] = element;
@@ -104,7 +109,9 @@ function* enter(
     props.children = children;
     let record: ActivationRecord;
     if (oldChildren.has(key) && oldChildren.get(key).type === type) {
-      // Reuse existing record
+      if (__DEBUG__) {
+        stats.reuseCount++; // Reuse existing record
+      }
       record = oldChildren.get(key).clone(parent, context);
       oldChildren.delete(key);
       if (record.index < lastIndex) {
@@ -115,10 +122,12 @@ function* enter(
       }
       yield* evaluate(record, props, context);
     } else {
-      // Create a new record
+      if (__DEBUG__) {
+        stats.birthCount++; // Create a new record
+      }
       record = yield* initialize(element, parent, context);
       yield* evaluate(record, props, context);
-      if (typeof type == "string") {
+      if (isHostType(type)) {
         const cursor = context.cursor;
         context.emit(() => record.insertAfter(cursor));
       }
@@ -131,6 +140,9 @@ function* enter(
     context.cursor = record.lastLeaf;
   }
   oldChildren.forEach((record) => {
+    if (__DEBUG__) {
+      stats.deathCount++;
+    }
     deinitialize(record, context);
   });
   oldChildren.clear();
@@ -147,12 +159,12 @@ function* initialize(
 
   record.renderFunction =
     typeof type == "string"
-      ? hostRenderFunction
+      ? getHostRenderFunction(type)
       : typeof type == "object"
       ? yield type
       : type;
 
-  record.name = typeof type == "string" ? type : record.renderFunction.name;
+  record.name = record.renderFunction.name;
 
   const init = record.renderFunction.init;
   if (typeof init == "function") {
@@ -165,10 +177,10 @@ function* initialize(
 function deinitialize(record: ActivationRecord, context: RenderTask): void {
   if (__DEBUG__) {
     LOG(
-      "[[Render]] unmount:",
-      record.name + record.id,
-      record.firstLeaf.node,
-      record.lastLeaf.node
+      "[[Render]] unmount:"
+      // record.name + record.id,
+      // record.firstLeaf.node,
+      // record.lastLeaf.node
     );
   }
   context.emit(() => record.removeNodes());

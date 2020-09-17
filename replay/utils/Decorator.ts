@@ -1,11 +1,17 @@
 import uid from "uid";
 import htmlTags from "html-tags";
-import { Arguments, RenderFunction } from "../core/Component";
+import {
+  $$isHostRenderFunction,
+  Arguments,
+  getHostRenderFunction,
+  RenderFunction,
+} from "../core/Component";
 
 type StringRenderer = (props: Arguments) => string;
 
 interface StyleWrapper extends RenderFunction {
   $: (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
+  [$$isHostRenderFunction]?: boolean;
 }
 
 const usedDeclarations = new Map<string, string>();
@@ -34,10 +40,10 @@ const decorator: (
   ...fns: StringRenderer[]
 ) => StyleWrapper = (type) => (segments, ...fns) => {
   const subruleRenderers: StringRenderer[] = [];
-
   const renderCSS = parseTemplateCSS(segments, ...fns);
-
-  const Styled: StyleWrapper = (props, _scope, context) => {
+  const wrappedRenderFunction =
+    typeof type == "string" ? getHostRenderFunction(type) : type;
+  const Styled: StyleWrapper = function (props, scope, context) {
     const declaration = renderCSS(props);
     let className: string;
     if (!usedDeclarations.has(declaration)) {
@@ -64,19 +70,28 @@ const decorator: (
         ? [className, props.className].join(" ")
         : className,
     };
-    return [[type, props, props.children]];
+    return wrappedRenderFunction.apply(this, [props, scope, context]);
+    // return [[type, props, props.children]];
   };
 
-  Styled.$ = (
+  Styled.$ = function (
     segments: TemplateStringsArray,
     ...fns: StringRenderer[]
-  ): StyleWrapper => {
+  ): StyleWrapper {
     const renderer = parseTemplateCSS(segments, ...fns);
     subruleRenderers.push(renderer);
-    return Styled;
+    return this;
   };
 
-  return Styled;
+  return new Proxy(Styled, {
+    get(target, key, receiver) {
+      if (key === "name" || key === $$isHostRenderFunction) {
+        // console.log(key, wrappedRenderFunction[key]);
+        return wrappedRenderFunction[key];
+      }
+      return Reflect.get(target, key, receiver);
+    },
+  });
 };
 
 htmlTags.forEach((tag) => {

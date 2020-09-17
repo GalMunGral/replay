@@ -4,6 +4,7 @@ import {
   AsyncRenderFunction,
 } from "./Component";
 import { evaluate } from "./Renderer";
+import { stats } from "./Stats";
 
 type Effect = () => void;
 
@@ -126,6 +127,9 @@ export class RenderTask implements Context {
 
   public commit(): void {
     this.effects.forEach((effect) => effect());
+    if (__DEBUG__) {
+      console.log({ ...stats });
+    }
   }
 }
 
