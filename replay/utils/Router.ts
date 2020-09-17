@@ -13,6 +13,7 @@ interface Route {
 }
 
 type RouteTable = Map<string, Route>;
+
 type RouteValidator = (params: RouteMatchParams) => boolean;
 
 interface RouteMatchParams {
@@ -42,6 +43,7 @@ interface RouterProps extends Arguments {
 interface RouterScope extends DynamicScope {
   route: RouteMatch;
 }
+
 interface LinkProps extends Arguments {
   to: string;
   className: string; // supplied by decorator

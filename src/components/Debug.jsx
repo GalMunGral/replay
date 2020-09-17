@@ -1,22 +1,34 @@
+import { throttle } from "lodash";
 import { decorator as $$ } from "replay/utils";
 import googleLogo from "../assets/images/google.png";
 import robotImage from "../assets/images/robot.png";
 
-const Debug = () => {
+var someColor = "red";
+
+const Debug = function () {
   return [
-    <div />,
+    <div>{/* placeholder */}</div>,
     <Centered>
       <Logo src={googleLogo} />
       <PullRight src={robotImage} />
       <p>
         <strong>404. </strong>
-        <Hint>That’s an error.</Hint>
+        <Hint color={someColor}>That’s an error.</Hint>
       </p>
       <p>
         The requested URL <code>{location.pathname}</code> was not found on this
         server.
       </p>
-      <Hint>That’s all we know.</Hint>
+      <p>
+        <Hint color={someColor}>That’s all we know.</Hint>
+      </p>
+      <input
+        type="color"
+        oninput={throttle((e) => {
+          someColor = e.target.value;
+          this.forceUpdate();
+        }, 30)}
+      />
     </Centered>,
   ];
 };
@@ -38,5 +50,6 @@ const PullRight = $$.img`
 `;
 
 const Hint = $$.span`
-  color: gray;
+  color: ${({ color }) => color};
+  font-weight: 600;
 `;
