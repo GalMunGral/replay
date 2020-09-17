@@ -1,14 +1,14 @@
 import { Link, decorator as $$ } from "replay/utils";
-import appLogoImage from "../assets/images/logo.png";
+import logo from "../assets/images/logo.png";
 
-const AppBar = ({ toggle }) => [
+const AppBar = ({}, { sidebar }) => [
   <Container>
     <Group>
-      <MenuButton onclick={toggle}>
+      <MenuButton onclick={() => sidebar.toggle()}>
         <MenuIcon className="fas fa-bars" />
       </MenuButton>
       <Link to="/inbox">
-        <AppLogo src={appLogoImage} alt="logo" />
+        <AppLogo src={logo} alt="logo" />
       </Link>
     </Group>
     <SearchBar>

@@ -1,36 +1,33 @@
 import { decorator as $$ } from "replay/utils";
 
-const Tab = ({ name, key, active, onclick }) => [
-  <Box {...{ name, key, active, onclick }}>
-    <Icon className={`fas fa-${iconMap[name]}`} />
-    <p>{name}</p>{" "}
+const allTabs = ["primary", "social", "promotions"];
+
+const Tab = (props) => [
+  <Box {...props}>
+    <Icon className={`fas fa-${iconMap[props.name]}`} />
+    <p>{props.name}</p>{" "}
   </Box>,
 ];
 
-const Tabs = (__, { $route, $mails }) => {
-  const { folder } = $route.params;
-  const activeTab = $mails.tab;
-  if (folder !== "inbox") return [null];
+const Tabs = (__, { route, mailbox }) => {
+  const { folder: currentFolder } = route.params;
+  const { tab: currentTab } = mailbox.state;
   return [
-    <TabBar>
-      {...allTabs.map((tab) => (
-        <Tab
-          name={tab}
-          key={tab}
-          active={tab === activeTab}
-          onclick={() => {
-            $mails.tab = tab;
-            $mails.pageIndex = 0;
-          }}
-        />
-      ))}
-    </TabBar>,
+    currentFolder === "inbox" ? (
+      <TabBar>
+        {...allTabs.map((tab) => (
+          <Tab
+            name={tab}
+            active={tab === currentTab}
+            onclick={() => mailbox.dispatch("setTab", tab)}
+          />
+        ))}
+      </TabBar>
+    ) : null,
   ];
 };
 
 export default Tabs;
-
-const allTabs = ["primary", "social", "promotions"];
 
 const iconMap = {
   primary: "inbox",

@@ -1,10 +1,9 @@
-import { Observer, decorator as $$ } from "replay/utils";
-import $selection from "../observables/selection";
-import $dragState from "../observables/drag";
+import { observer, decorator as $$ } from "replay/utils";
 
-const DragImage = Observer(() => {
-  const { selected } = $selection;
-  const { isDragging, x, y } = $dragState;
+const DragImage = observer((__, { store, dragState }) => {
+  const { isDragging, x, y } = dragState;
+  const selected = store.state.selection.current;
+
   return [
     <Box
       style={{
@@ -13,9 +12,9 @@ const DragImage = Observer(() => {
       }}
     >
       <Icon className="fas fa-mail-bulk" />
-      <span>
-        {`Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`}
-      </span>
+      <span>{`Move ${selected.length} ${
+        selected.length > 1 ? "items" : "item"
+      }`}</span>
     </Box>,
   ];
 });

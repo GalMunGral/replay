@@ -1,15 +1,14 @@
-import { decorator as $$, Redirect, Fragment, navigate } from "replay/utils";
-import $store from "../observables/store";
+import { decorator as $$, Redirect, Fragment } from "replay/utils";
 import Sidebar from "./Sidebar";
 import Layout from "./Layout";
 import IconButton from "./IconButton";
 
-const Detail = (__, { $route }) => {
-  const { folder, id } = $route.params;
-  const mail = $store.state[folder].find((m) => m.id === id);
-  if (!mail) {
-    return [<Redirect to={"/" + $route.params.folder} />];
-  }
+const Detail = (__, { store, route }) => {
+  const { folder, id } = route.params;
+  const mail = store.state.mails[folder].find((mail) => mail.id === id);
+
+  if (!mail) return [<Redirect to={"/" + folder} />];
+
   const {
     subject,
     senderName = "(no name)",
@@ -18,27 +17,26 @@ const Detail = (__, { $route }) => {
     recipientEmail = "(no email)",
     content,
   } = mail;
+
   const senderInfo = `${senderName}&nbsp;&lt;${senderEmail}&gt;`;
   const recipientInfo = `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
-  const deleteMail = () => {
-    $store.dispatch((dispatch) => {
-      const { folder, id } = $route.params;
+
+  const deleteAsync = () => {
+    store.dispatch((dispatch) => {
       setTimeout(() => {
-        dispatch({
-          type: "DELETE",
-          payload: { folder, id },
-        });
+        dispatch("mails/delete", { folder, id });
       }, 200);
-      history.back();
     });
+    history.back();
   };
+
   return [
     <Sidebar />,
     <Layout>
       <Fragment>
         <IconButton type="arrow-left" onclick={() => history.back()} />
-        {$route.params.folder !== "trash" ? (
-          <IconButton type="trash" onclick={deleteMail} />
+        {route.params.folder !== "trash" ? (
+          <IconButton type="trash" onclick={deleteAsync} />
         ) : null}
       </Fragment>
       <Main>

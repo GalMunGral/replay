@@ -1,11 +1,11 @@
 import uid from "uid";
 import htmlTags from "html-tags";
-import { Arguments, RenderFunction } from "../core/component";
+import { Arguments, RenderFunction } from "../core/Component";
 
 type StringRenderer = (props: Arguments) => string;
 
 interface StyleWrapper extends RenderFunction {
-  $: (segments: string[], ...fns: StringRenderer[]) => StyleWrapper;
+  $: (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
 }
 
 const usedDeclarations = new Map<string, string>();
@@ -14,7 +14,7 @@ const styleEl = document.createElement("style");
 document.head.append(styleEl);
 
 function parseTemplateCSS(
-  segments: string[],
+  segments: TemplateStringsArray,
   ...fns: StringRenderer[]
 ): StringRenderer {
   return (props: Arguments) => {
@@ -29,9 +29,10 @@ function parseTemplateCSS(
 
 const decorator: (
   type: string | RenderFunction
-) => (segments: string[], ...fns: StringRenderer[]) => StyleWrapper = (
-  type
-) => (segments, ...fns) => {
+) => (
+  segments: TemplateStringsArray,
+  ...fns: StringRenderer[]
+) => StyleWrapper = (type) => (segments, ...fns) => {
   const subruleRenderers: StringRenderer[] = [];
 
   const renderCSS = parseTemplateCSS(segments, ...fns);
@@ -65,7 +66,10 @@ const decorator: (
     return [[type, props, props.children]];
   };
 
-  Styled.$ = (segments: string[], ...fns: StringRenderer[]): StyleWrapper => {
+  Styled.$ = (
+    segments: TemplateStringsArray,
+    ...fns: StringRenderer[]
+  ): StyleWrapper => {
     const renderer = parseTemplateCSS(segments, ...fns);
     subruleRenderers.push(renderer);
     return Styled;

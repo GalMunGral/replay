@@ -1,32 +1,37 @@
-import { Observable } from "replay/utils";
+import { createStore } from "replay/utils";
 
-const $selection = new Observable({
-  selected: [], // Immutable
-  set(id, shouldSelect) {
-    if (shouldSelect) {
-      if (!this.selected.includes(id)) {
-        this.selected = this.selected.concat(id);
+const selection = createStore({
+  mutableState: {
+    current: [], // immutable!
+    reset() {
+      this.current = [];
+    },
+    select(mail) {
+      if (!this.current.includes(mail.id)) {
+        this.current = this.current.concat(mail.id);
       }
-    } else {
-      if (this.selected.includes(id)) {
-        this.selected = this.selected.filter((i) => i !== id);
+    },
+    deselect(mail) {
+      if (this.current.has(mail.id)) {
+        this.current = this.current.filter((id) => id !== mail.id);
       }
-    }
-  },
-  reset() {
-    this.selected = [];
-  },
-  allSelected(mails) {
-    if (!mails.length) return false;
-    return mails.every((item) => this.selected.includes(item.id));
-  },
-  toggleAll(mails) {
-    if (this.allSelected(mails)) {
-      this.selected = [];
-    } else {
-      this.selected = mails.map((item) => item.id);
-    }
+    },
+    toggle(mail) {
+      if (!this.current.includes(mail.id)) {
+        this.current = this.current.concat(mail.id);
+      } else {
+        this.current = this.current.filter((id) => id !== mail.id);
+      }
+    },
+    selectAll(mails) {
+      const selected = mails.map((mail) => mail.id);
+      this.current = [...new Set(this.current.concat(selected))];
+    },
+    deselectAll(mails) {
+      const deselected = new Set(mails.map((mails) => mails.id));
+      this.current = this.current.filter((id) => !deselected.has(id));
+    },
   },
 });
 
-export default $selection;
+export default selection;

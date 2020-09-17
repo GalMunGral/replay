@@ -1,11 +1,7 @@
 import { decorator as $$ } from "replay/utils";
 
 const IconButton = ({ type, onclick }) => [
-  <Button
-    onclick={onclick}
-    onmousedown={(e) => e.stopPropagation()}
-    onmouseup={(e) => e.stopPropagation()}
-  >
+  <Button onclick={onclick}>
     <Icon className={`fas fa-${type}`} />
   </Button>,
 ];

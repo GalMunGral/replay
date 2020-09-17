@@ -2,8 +2,8 @@ import {
   ActivationRecord,
   RenderFunction,
   AsyncRenderFunction,
-} from "./component";
-import { evaluate } from "./renderer";
+} from "./Component";
+import { evaluate } from "./Renderer";
 
 type Effect = () => void;
 
@@ -203,8 +203,10 @@ export class Scheduler {
             });
           })
           .catch((err) => {
-            if (__DEBUG__) {
-              LOG("[[Render]] CANCELED");
+            if (err === "CANCELED") {
+              console.warn("CANCELED");
+            } else {
+              console.error(err);
             }
           });
         return;

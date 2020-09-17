@@ -1,4 +1,4 @@
-import { Link, decorator as $$ } from "replay/utils";
+import { stop, decorator as $$ } from "replay/utils";
 import Checkbox from "./Checkbox";
 import IconButton from "./IconButton";
 
@@ -9,31 +9,28 @@ const MailItem = ({
   mail,
   folder,
   selected,
-  toggleItem,
-  deleteItem,
-  eventListeners,
+  actions: { toggleItem, deleteItem },
+  events,
 }) => {
   const { senderName, senderEmail, subject, content } = mail;
-  const isInTrash = folder === "trash";
+  const notTrash = folder !== "trash";
+  const senderInfo = senderName || senderEmail || "(no name)";
+  const title = format(subject, 30);
+  const preheader = `&nbsp;&mdash;&nbsp;${format(content, 50)}`;
+
   return [
-    <ListItem selected={selected} draggable={!isInTrash} {...eventListeners}>
-      {!isInTrash && <Checkbox checked={selected} onchange={toggleItem} />}
-      <SenderInfo>{senderName || senderEmail || "(no name)"}</SenderInfo>
+    <ListItem selected={selected} draggable={notTrash} {...events}>
+      {notTrash ? <Checkbox checked={selected} onchange={toggleItem} /> : null}
+      <SenderInfo>{senderInfo}</SenderInfo>
       <Summary>
-        <Title>{format(subject, 30)}</Title>
-        <Preheader innerHTML={`&nbsp;&mdash;&nbsp;${format(content, 50)}`} />
+        <Title>{title}</Title>
+        <Preheader innerHTML={preheader} />
       </Summary>
-      {!isInTrash && (
+      {notTrash ? (
         <Actions>
-          <IconButton
-            type="trash"
-            onclick={(e) => {
-              e.stopPropagation();
-              deleteItem();
-            }}
-          />
+          <IconButton type="trash" onclick={stop(deleteItem)} />
         </Actions>
-      )}
+      ) : null}
     </ListItem>,
   ];
 };

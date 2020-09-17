@@ -10,21 +10,7 @@ module.exports = (env) =>
       rules: [
         {
           test: /\.css$/,
-          exclude: /node_modules/,
-          use: [
-            MiniCssExtractPlugin.loader,
-            {
-              loader: "css-loader",
-              options: {
-                modules: true,
-              },
-            },
-          ],
-        },
-        {
-          test: /\.css$/,
-          include: /node_modules/,
-          use: [MiniCssExtractPlugin.loader, , "css-loader"],
+          use: [MiniCssExtractPlugin.loader, "css-loader"],
         },
         {
           test: /\.(png|svg|ico)$/,
@@ -45,5 +31,4 @@ module.exports = (env) =>
       }),
       new OptimizeCssAssetsPlugin(),
     ],
-    devtool: "source-map",
   });

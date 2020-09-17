@@ -1,5 +1,7 @@
+import { throttle } from "lodash";
 import { lazy } from "replay/core";
-import { Observer, Observable, Router, decorator as $$ } from "replay/utils";
+import { observer, observable, Router, decorator as $$ } from "replay/utils";
+import store from "../observables/store";
 import AppBar from "./AppBar";
 import DragImage from "./DragImage";
 import Debug from "./Debug";
@@ -11,9 +13,9 @@ const Editor = lazy(() => import("./Editor"));
 const folderExists = ({ folder }) =>
   ["inbox", "sent", "drafts", "trash"].includes(folder);
 
-const App = Observer((__, { $sidebar }) => [
+const App = observer(() => [
   <Container>
-    <AppBar toggle={() => ($sidebar.collapsed = !$sidebar.collapsed)} />
+    <AppBar />
     <Router>
       <route path="/:folder" validate={folderExists}>
         <Mailbox />
@@ -31,9 +33,22 @@ const App = Observer((__, { $sidebar }) => [
 ]);
 
 App.init = () => ({
-  $sidebar: new Observable({
+  store,
+  sidebar: observable({
     collapsed: false,
     hovered: false,
+    toggle() {
+      this.collapsed = !this.collapsed;
+    },
+  }),
+  dragState: observable({
+    isDragging: false,
+    x: 0,
+    y: 0,
+    setCoordinates: throttle(function (x, y) {
+      this.x = x;
+      this.y = y;
+    }, 33.33),
   }),
 });
 

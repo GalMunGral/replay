@@ -1,44 +1,32 @@
-import { Observer, Link, decorator as $$ } from "replay/utils";
-import $editor from "../observables/editor";
-import editorButtonIconImage from "../assets/images/create.png";
-import Dropzone from "./Dropzone";
-import { MenuItem, MenuIcon } from "./Menu";
+import { observer, decorator as $$ } from "replay/utils";
+import SidebarMenu from "./SidebarMenu";
+import editorButtonIcon from "../assets/images/create.png";
 
-const iconMap = {
-  inbox: "inbox",
-  sent: "paper-plane",
-  drafts: "scroll",
-};
-
-const Sidebar = Observer((__, { $sidebar, $route }) => {
-  const { collapsed, hovered } = $sidebar;
+const Sidebar = observer((__, { sidebar, route, store }) => {
+  const currentFolder = route.params.folder;
+  const { collapsed, hovered } = sidebar;
   const hidden = collapsed && !hovered;
+  const openEditor = () => store.dispatch("editor/openEditor");
+  const setHovered = (hovered) => () => (sidebar.hovered = hovered);
+
   return [
-    <Menu
+    <Container
       hidden={hidden}
-      onmouseenter={() => ($sidebar.hovered = true)}
-      onmouseleave={() => ($sidebar.hovered = false)}
+      onmouseenter={setHovered(true)}
+      onmouseleave={setHovered(false)}
     >
-      <EditorButton hidden={hidden} onclick={() => $editor.openEditor()}>
-        <ButtonIcon src={editorButtonIconImage} />
-        {!hidden && <ButtonText>Compose</ButtonText>}
+      <EditorButton hidden={hidden} onclick={openEditor}>
+        <ButtonIcon src={editorButtonIcon} />
+        {!hidden ? <ButtonText>Compose</ButtonText> : null}
       </EditorButton>
-      {...["inbox", "sent", "drafts"].map((folder) => (
-        <Link to={"/" + folder}>
-          <MenuItem hidden={hidden} activated={$route.params.folder === folder}>
-            <MenuIcon className={`fas fa-${iconMap[folder]}`} />
-            {!hidden && <span>{folder}</span>}
-          </MenuItem>
-        </Link>
-      ))}
-      <Dropzone hidden={hidden} />
-    </Menu>,
+      <SidebarMenu hidden={hidden} currentFolder={currentFolder} />
+    </Container>,
   ];
 });
 
 export default Sidebar;
 
-const Menu = $$.div`
+const Container = $$.div`
   grid-area: b;
   overflow: auto;
   transition: width 0.05s ease-out;

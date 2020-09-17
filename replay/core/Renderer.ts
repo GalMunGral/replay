@@ -5,8 +5,8 @@ import {
   RenderFunction,
   AsyncRenderFunction,
   DynamicScope,
-} from "./component";
-import { RenderTask } from "./scheduler";
+} from "./Component";
+import { RenderTask } from "./Scheduler";
 
 function shallowEquals(a: any, b: any): boolean {
   if (typeof a != typeof b) return false;

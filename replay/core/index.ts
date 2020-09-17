@@ -1,7 +1,7 @@
-import { Quasiquote, ActivationRecord } from "./component";
-import { Scheduler } from "./scheduler";
+import { Quasiquote, ActivationRecord } from "./Component";
+import { Scheduler } from "./Scheduler";
 
-export { lazy } from "./component";
+export { lazy } from "./Component";
 
 export function render(elements: Quasiquote[], container: HTMLElement): void {
   // Hack: Rendering `elements` under `container` is equivalent to rendering `[container, null, elements]`

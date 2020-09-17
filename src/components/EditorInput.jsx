@@ -1,26 +1,35 @@
-import { Observer, decorator as $$ } from "replay/utils";
+import { observer, observable, decorator as $$ } from "replay/utils";
 
-const EditorInput = Observer(
-  ({ value, setValue, label, placeholder }, { $self }) => {
-    const activated = $self.focused || value;
+const EditorInput = observer(
+  ({ value, setValue, label, placeholder }, { self }) => {
+    const activated = self.focused || value;
     return [
       <InputBox>
         {activated && <label>{label}</label>}
         <input
-          value={value}
           placeholder={!activated ? placeholder : ""}
-          onfocus={() => ($self.focused = true)}
-          onblur={() => ($self.focused = false)}
-          onchange={(e) => setValue(e.target.value)}
+          value={value}
+          oninput={(e) => setValue(e.target.value)}
+          onfocus={() => (self.focused = true)}
+          onblur={() => (self.focused = false)}
         />
       </InputBox>,
     ];
   }
 );
 
+EditorInput.init = () => ({
+  self: observable({
+    focused: false,
+  }),
+});
+
 export default EditorInput;
 
 const InputBox = $$.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   line-height: 1rem;
   font-size: 1rem;
   margin: 0 20px;
@@ -32,6 +41,7 @@ const InputBox = $$.div`
     margin-right: 5px;
   }
 `.$` > input {
+    flex: 1 1 auto;
     line-height: 1rem;
     font-size: 1rem;
     padding: 8px 0;

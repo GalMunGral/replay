@@ -1,10 +1,10 @@
-import { Context, RenderTask, Scheduler } from "./scheduler";
+import { Context, RenderTask, Scheduler } from "./Scheduler";
 
-export type Quasiquote = [
-  string | RenderFunction | AsyncRenderFunction, // type
-  Arguments, // props
-  string | Quasiquote[] // children
-];
+export interface Quasiquote extends Iterable<any> {
+  0: string | RenderFunction | AsyncRenderFunction; // type
+  1: Arguments; // props
+  2: string | Quasiquote[]; // children
+}
 
 export interface RenderFunction extends Function {
   (props: Arguments, scope: DynamicScope, context: RenderTask): Quasiquote[];
@@ -12,7 +12,7 @@ export interface RenderFunction extends Function {
     props: Arguments,
     scope: DynamicScope,
     context: RenderTask
-  ) => DynamicScope;
+  ) => DynamicScope | void;
   [key: string]: any;
 }
 

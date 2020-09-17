@@ -1,7 +1,7 @@
-import { decorator as $$ } from "replay/utils";
+import { decorator as $$, stop } from "replay/utils";
 
 const Checkbox = ({ checked, onchange }) => [
-  <Clickable onclick={(e) => e.stopPropagation()} onchange={onchange}>
+  <Clickable onclick={stop()} onchange={onchange}>
     <div>
       <Background checked={checked} />
       <CheckMark checked={checked}>

@@ -1,23 +1,34 @@
-import { Observer, Observable, decorator as $$ } from "replay/utils";
-import $editor from "../observables/editor";
+import { observer, decorator as $$, stop } from "replay/utils";
 import IconButton from "./IconButton";
 import EditorInput from "./EditorInput";
 import Space from "./Space";
 
-const Editor = Observer(() => {
-  const { minimized } = $editor;
-  const { recipientEmail, subject, content } = $editor;
+const Editor = observer((__, { store }) => {
+  const {
+    open,
+    minimized,
+    recipientEmail,
+    subject,
+    content: { value: content },
+  } = store.state.editor;
+
+  const methods = store.mapDispatch("editor", [
+    "setMinimized",
+    "saveDraft",
+    "setSubject",
+    "setRecipientEmail",
+    "sendMail",
+    "content/update",
+    "content/undo",
+    "content/redo",
+  ]);
+
   return [
-    $editor.open && (
+    open && (
       <Window>
-        <Header onclick={() => ($editor.minimized = !minimized)}>
+        <Header onclick={() => methods.setMinimized(!minimized)}>
           <span>New Message</span>
-          <CloseButton
-            onclick={() => {
-              $editor.saveDraft();
-              $editor.open = false;
-            }}
-          >
+          <CloseButton onclick={stop(methods.saveDraft)}>
             <i className="fas fa-times" />
           </CloseButton>
         </Header>
@@ -26,41 +37,25 @@ const Editor = Observer(() => {
             label="To:"
             placeholder="Recipient"
             value={recipientEmail}
-            setValue={(v) => ($editor.recipientEmail = v)}
+            setValue={methods.setRecipientEmail}
           />
           <EditorInput
             label="Subject:"
             placeholder="Subject"
             value={subject}
-            setValue={(v) => ($editor.subject = v)}
+            setValue={methods.setSubject}
           />
-          <TextArea
-            value={content}
-            oninput={(e) => $editor.updateHistory(e.target.value)}
-          />
+          <TextArea value={content} setValue={methods.contentUpdate} />
           <ButtonGroup>
-            <SendButton
-              onclick={() => {
-                $editor.sendMail();
-                $editor.open = false;
-              }}
-            >
-              Send
-            </SendButton>
-            <IconButton type="undo" onclick={() => $editor.undo()} />
-            <IconButton type="redo" onclick={() => $editor.redo()} />
+            <SendButton onclick={methods.sendMail}>Send</SendButton>
+            <IconButton type="undo" onclick={methods.contentUndo} />
+            <IconButton type="redo" onclick={methods.contentRedo} />
             <Space />
           </ButtonGroup>
         </Body>
       </Window>
     ),
   ];
-});
-
-EditorInput.init = () => ({
-  $self: new Observable({
-    focused: false,
-  }),
 });
 
 export default Editor;
@@ -120,7 +115,10 @@ const Body = $$.section`
   transition: all 0.2s;
 `;
 
-const TextArea = $$.textarea`
+const TextArea = $$(({ setValue, ...props }) => {
+  const getInput = (e) => e.target.value;
+  return [<textarea {...props} oninput={(e) => setValue(getInput(e))} />];
+})`
   --horizontal-margin: 20px;
   flex: 1 1 auto;
   margin: 0 var(--horizontal-margin);
