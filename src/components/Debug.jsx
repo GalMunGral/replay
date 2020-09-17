@@ -3,7 +3,7 @@ import { decorator as $$ } from "replay/utils";
 import googleLogo from "../assets/images/google.png";
 import robotImage from "../assets/images/robot.png";
 
-var someColor = "red";
+var someColor = "gray";
 
 const Debug = function () {
   return [
