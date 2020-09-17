@@ -36,6 +36,7 @@ const decorator: (
   const subruleRenderers: StringRenderer[] = [];
 
   const renderCSS = parseTemplateCSS(segments, ...fns);
+
   const Styled: StyleWrapper = (props, _scope, context) => {
     const declaration = renderCSS(props);
     let className: string;

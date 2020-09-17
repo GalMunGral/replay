@@ -94,7 +94,7 @@ export class RenderTask implements Context {
   constructor(public entry: ActivationRecord) {
     this.executor = (function* (context: RenderTask) {
       context.cursor = new ActivationRecord("_");
-      context.cursor.node = entry.firstNode.previousSibling;
+      context.cursor.node = entry.firstLeaf.node.previousSibling;
       const root = entry.clone(entry.parent, context);
       yield* evaluate(root, null, context);
       if (entry.parent) {
@@ -220,7 +220,7 @@ export class Scheduler {
   public requestUpdate(notified: Set<ActivationRecord>): void {
     if (__DEBUG__) {
       notified.forEach((record) => {
-        LOG(record, record.firstNode, record.lastNode);
+        LOG(record, record.firstLeaf.node, record.lastLeaf.node);
       });
     }
     notified.forEach((record) => {

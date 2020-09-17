@@ -1,4 +1,4 @@
-import { Quasiquote, ActivationRecord } from "./Component";
+import { Quasiquote, ActivationRecord, hostRenderFunction } from "./Component";
 import { Scheduler } from "./Scheduler";
 
 export { lazy } from "./Component";
@@ -14,6 +14,7 @@ export function render(elements: Quasiquote[], container: HTMLElement): void {
 
   // Hack: Use memoized props to simulate passing in props as arguments,
   // and use dirty bit to trigger re-render
+  entry.renderFunction = hostRenderFunction;
   entry.props = { children: elements };
   entry.dirty = true;
   Scheduler.instance.requestUpdate(new Set([entry]));
