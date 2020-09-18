@@ -2,7 +2,7 @@
 
 This project is highly inspired by React.
 
-The basic idea is that UI can be expressed as a composition of pure render functions that gets re-evaluated whenever relevant state changes, as opposed to instances that actively manage their internal states. The instances that are created are in fact the activation records (i.e. stack frames) that store information such as input arguments and local variables for each invocation of a render function. 
+The basic idea is that UI can be expressed as a composition of *pure* render functions that gets re-evaluated (in normal order, i.e. from the outside in, as opposed to applicative order in most programming languages) whenever relevant state changes, as opposed to instances that actively manage their internal states. The instances that are created are in fact the activation records (i.e. stack frames) that store information such as input arguments and local variables for each invocation of a render function. 
 
 The signature for such render functions  differs slightly from React:
 ```js
@@ -15,86 +15,16 @@ function SomeComponent(props, scope, context) {
     </AnotherComponent>
   )
 }
+SomeComponent.init = (props, scope) => {
+  scope.a = 'this lives in the dynamic scope';
+  return ({
+    b: 'this will be added to the scope too'
+  });
+}
 ```
+ 
 
-To introduce dynamically-scoped local varaibles, you can define a function that returns the (initial) local bindings &mdash; It has to be a function since each instance needs a separate copy. Later when the component function is invoked, this binding object will be passed as the second argument:
-
-
-
-```js
-const init = () => ({
-  /* Declare dynamic variables here */
-});
-
-const Component = ({ ...args }, { ...vars }) => [
-  /* Child Components */
-];
-
-Component.init = init;
-```
-
-## Lazy (Normal-Order) Evaluation of Functions
-
-The aforementioned equivalence of the view tree and the tree of virtual stack frames relies on a subtle premise that functions calls are evaluated in [**normal order**](https://mitpress.mit.edu/sites/default/files/sicp/full-text/sicp/book/node85.html). In _normal-order_ evaluation, expressions are reduced _from the outside in_ &mdash; that is, operators/functions are evaluated before operands/arguments &mdash; whereas in _applicative-order_ evaluation, arguments are fully evaluated before they are passed to functions. JavaScript, as the majority of programming languages, uses applicative order.
-
-Consider this example code:
-
-```js
-// Child.js
-const Child = ({ text, onclick }, { color }) =>
-  //// use transform
-  [p({ style: { color }, onclick }, text)];
-
-export default Child;
-```
-
-```js
-// Parent.js
-import { withContext } from 'lib';
-import Child from './Child';
-
-const local = () => ({
-  color: '#4285f4',
-  className: 'fancy'
-});
-
-const Parent = ({ onclick }, { className }) =>
-  //// use transform
-  [
-    h1('Exmaple'),
-    div({ className }, [
-      Child({ text: 'Hello', onclick });
-    ])
-  ]
-
-export default withContext(local)(Parent);
-```
-
-Using normal-order evaluation, the history of call stack would look like this (assuming that `div` calls `Child` internally):
-
-```js
-Parent
-Parent, h1
-Parent, div
-Parent, div, Child
-Parent, div, Child p
-```
-
-Whereas in JavaScript, the actual order is:
-
-```js
-Parent;
-Parent, h1;
-Parent, Child;
-Parent, Child, p;
-Parent, div;
-```
-
-which is not what we want.
-
-## Metaprogramming
-
-In a [homoiconic language](https://en.wikipedia.org/wiki/Homoiconicity) such as Lisp, one could easily simulate normal-order evaluation with [quoting](https://clojure.org/guides/learn/syntax#_delaying_evaluation_with_quoting). To illustrate what I mean, here is my adaptation of a snippet from [this article](https://github.com/reactjs/react-basic) in Clojure:
+One could easily simulate normal-order evaluation with quoting, i.e. in Clojure:
 
 ```clojure
 (defn name-box [name]
