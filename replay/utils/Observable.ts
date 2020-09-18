@@ -24,6 +24,7 @@ export class DefaultMap<K, V> extends Map<K, V> {
   }
 }
 
+// TODO CHECK
 const observerRegistry: DefaultMap<
   Object, // object
   DefaultMap<

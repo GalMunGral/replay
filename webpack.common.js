@@ -1,7 +1,8 @@
 const path = require("path");
-const { DefinePlugin, ProvidePlugin } = require("webpack");
+const { DefinePlugin } = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 const babelLoader = {
   loader: "babel-loader",
@@ -22,7 +23,6 @@ module.exports = (env) => ({
     extensions: [".ts", ".js", ".jsx"],
   },
   module: {
-    noParse: /lodash/,
     rules: [
       {
         test: /\.ts$/,
@@ -54,5 +54,6 @@ module.exports = (env) => ({
       title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
+    new BundleAnalyzerPlugin(),
   ],
 });

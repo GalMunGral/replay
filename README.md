@@ -2,27 +2,29 @@
 
 This project is highly inspired by React.
 
-The basic idea is that UI can be expressed as a composition of *pure* render functions that gets re-evaluated (in normal order, i.e. from the outside in, as opposed to applicative order in most programming languages) whenever relevant state changes, as opposed to instances that actively manage their internal states. The instances that are created are in fact the activation records (i.e. stack frames) that store information such as input arguments and local variables for each invocation of a render function. 
+The basic idea is that UI can be expressed as a composition of _pure_ render functions that gets re-evaluated (in normal order, i.e. from the outside in, as opposed to applicative order in most programming languages) whenever relevant state changes, as opposed to instances that actively manage their internal states. The instances that are created are in fact the activation records (i.e. stack frames) that store information such as input arguments and local variables for each invocation of a render function.
 
-The signature for such render functions  differs slightly from React:
+The signature for such render functions differs slightly from React:
+
 ```js
 function SomeComponent(props, scope, context) {
-  context.emit(() => { /* Some side effect */})
+  context.emit(() => {
+    /* Some side effect */
+  });
   return (
     <AnotherComponent someProp={scope.someVariableFromWayAbove}>
-      <SomeChild onclick={() => this.forceUpdate()}/>
+      <SomeChild onclick={() => this.forceUpdate()} />
       <SomeOtherChild {...moreProps} />
     </AnotherComponent>
-  )
+  );
 }
 SomeComponent.init = (props, scope) => {
-  scope.a = 'this lives in the dynamic scope';
-  return ({
-    b: 'this will be added to the scope too'
-  });
-}
+  scope.a = "this lives in the dynamic scope";
+  return {
+    b: "this will be added to the scope too",
+  };
+};
 ```
- 
 
 One could easily simulate normal-order evaluation with quoting, i.e. in Clojure:
 
@@ -70,29 +72,38 @@ One could easily simulate normal-order evaluation with quoting, i.e. in Clojure:
 
 ## Auxiliary Modules
 
-### observable: Reactivity
+### Observable + Observer
+
+The idea of using the observer pattern for reactivity is taken from Vue, but opt-in reactivity system that the router and state containers depend on.
 
 ```js
-const init = () =>  ({
-  state: observable({
-    count: 10
-  })
-});
+
 ```
 
 The `observable` function takes an object and returns a proxy with a `get` trap that registers the stack frame of the component functions that's currently running as a dependent (observer) of the property being accessed, and a `set` trap that schedules a re-render (re-evaluation) starting from that stack frame when the property value changes.
 
-### Decorator: Styling
+### Decorator
 
 ```js
-const RedButton = decor.button`
+const ColorfulComponent = $$(MyComponent)`
   background: red;
-`;
-
-const InvisibleRedButton = decor(RedButton)`
-  visibility: hidden;
-`;
+`.and`::after {
+  content: '';
+  color: blue;
+}`;
 ```
+
+For DOM components you can simply use object property syntax. The following are (almost) equivalent:
+
+```js
+const BlackButton1 = $$.button`background: black`;
+const BlackButton2 = $$('button')`background: black`;
+const BlackButton3 = $$(getHostRenderFunction('button'))`background: black'
+```
+
+which is (almost) equivalent to
+
+````
 
 This is inspired by styled-components. The name refers to the fact it "decorates" the component both in the sense that it creates a higher-order function that enhances the wrapped
 component function, and in the sense that it applies styles to the wrapped component.
@@ -123,7 +134,7 @@ const decor = (component) => (...args) => {
   };
   // ...
 };
-```
+````
 
 The scheduler can decide what to do with those thunks. For example, it could execute them synchronously, or it could add them to a _effect list_ to be commited later.
 
@@ -135,6 +146,7 @@ Using generators also allows for asynchronous rendering &mdash; which means that
 
 ![screenshot](screenshots/demo.png)
 
+![bundles](screenshots/bundles.png)
 
 ### Performance
 

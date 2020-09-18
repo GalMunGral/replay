@@ -1,4 +1,4 @@
-import { throttle } from "lodash";
+import throttle from "lodash/throttle";
 import { decorator as $$ } from "replay/utils";
 import googleLogo from "../assets/images/google.png";
 import robotImage from "../assets/images/robot.png";

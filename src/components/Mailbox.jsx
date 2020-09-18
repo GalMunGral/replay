@@ -70,6 +70,7 @@ const Mailbox = observer((__, { store, mailbox, route, dragState }) => {
   ];
 });
 
+// TODO CHECK
 const cache = new DefaultMap(() => new DefaultMap(() => null));
 
 Mailbox.init = (__, { route, store }) => {

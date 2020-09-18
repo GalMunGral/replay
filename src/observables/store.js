@@ -15,7 +15,7 @@ const store = createStore({
 
 store.dispatch(async (dispatch) => {
   const res = await fetch("/data.json");
-  const data = await res.json();
+  const data = (await res.json()).slice(0, 300);
   dispatch("mails/load", { folder: "inbox", data });
 });
 

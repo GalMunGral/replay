@@ -17,6 +17,7 @@ type Decorator = (
 ) => (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
 
 var nextClassId = 0;
+// TODO CHECK
 const usedDeclarations = new Map<string, string>();
 const usedRules = new Set<string>();
 

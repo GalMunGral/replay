@@ -3,7 +3,7 @@ import {
   RenderFunction,
   AsyncRenderFunction,
 } from "./Component";
-import { evaluate } from "./Renderer";
+import { update } from "./Renderer";
 
 type Effect = () => void;
 
@@ -78,14 +78,25 @@ export class RenderTask implements Context {
   public cursor: ActivationRecord;
   public stack: ActivationRecord[] = [];
   private executor: Generator<AsyncRenderFunction, void, RenderFunction>;
-  private effects: Effect[] = [];
+  public effects: Effect[] = [];
 
   constructor(public entry: ActivationRecord) {
     this.executor = (function* (context: RenderTask) {
       context.cursor = new ActivationRecord("_");
       context.cursor.node = entry.firstHostRecord.node.previousSibling;
+      // console.log(context.cursor.node);
       const root = entry.clone(entry.parent, context);
-      yield* evaluate(root, null, context);
+      const nodes = yield* update(root, null, context);
+      context.emit(() => {
+        let cur = context.cursor.node;
+        nodes.forEach((n) => {
+          // console.log(cur, n);
+          if (n.previousSibling !== cur) {
+            cur.after(n);
+          }
+          cur = n;
+        });
+      });
       if (entry.parent) {
         const parent = entry.parent;
         const children = parent.children;
@@ -126,6 +137,7 @@ export class Scheduler {
   private signaled = false;
   private currentTask: RenderTask = null;
   private continuation: Cancelable = null;
+  // TODO CHECK
   private pendingUpdates = new Set<ActivationRecord>();
 
   private run(deadline: IdleDeadline, input?: RenderFunction) {

@@ -102,9 +102,12 @@ export class ActivationRecord {
   public index = -1;
   public key?: string = null;
   public node: ChildNode = null;
+  public nodes: ChildNode[] = [];
   public firstChild: ActivationRecord = null;
   public lastChild: ActivationRecord = null;
   public dirty = false;
+
+  // TODO CHECK
   public subscriptions = new Set<Set<ActivationRecord>>();
 
   constructor(

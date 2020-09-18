@@ -139,6 +139,7 @@ export const Router: RenderFunction = observer(
 );
 
 Router.init = (props: RouterProps, scope: RouterScope, context) => {
+  // TODO CHECK
   const routeTable: RouteTable = new Map(
     props.children
       .filter((child) => child[0] === "route")
