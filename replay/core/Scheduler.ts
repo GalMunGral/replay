@@ -2,8 +2,7 @@ import {
   ActivationRecord,
   RenderFunction,
   AsyncRenderFunction,
-} from "./Component";
-import { update } from "./Renderer";
+} from "./Renderer";
 
 type Effect = () => void;
 
@@ -12,7 +11,7 @@ export interface Cancelable {
 }
 
 export interface Context {
-  emit(effect: Effect): void;
+  effect(effect: Effect): void;
 }
 
 export class CancelableExecution implements Cancelable {
@@ -60,7 +59,7 @@ export class CancelablePromise<T> implements Cancelable {
   public then(onFulfilled: (value: T) => any): Promise<unknown> {
     return this.promise.then((value: T) => {
       if (this.canceled) {
-        return Promise.reject("CANCELED");
+        return Promise.reject("promise CANCELED");
       }
       return onFulfilled(value);
     });
@@ -75,61 +74,63 @@ export class CancelablePromise<T> implements Cancelable {
 export class RenderTask implements Context {
   static nextId = 0;
   public id = RenderTask.nextId++;
-  public cursor: ActivationRecord;
-  public stack: ActivationRecord[] = [];
+  public root: ActivationRecord;
   private executor: Generator<AsyncRenderFunction, void, RenderFunction>;
   public effects: Effect[] = [];
 
   constructor(public entry: ActivationRecord) {
-    this.executor = (function* (context: RenderTask) {
-      context.cursor = new ActivationRecord("_");
-      context.cursor.node = entry.firstHostRecord.node.previousSibling;
-      // console.log(context.cursor.node);
-      const root = entry.clone(entry.parent, context);
-      const nodes = yield* update(root, null, context);
-      context.emit(() => {
-        let cur = context.cursor.node;
-        nodes.forEach((n) => {
-          // console.log(cur, n);
-          if (n.previousSibling !== cur) {
-            cur.after(n);
+    this.executor = function* () {
+      const context = this as RenderTask;
+      context.root = entry.clone(null, context);
+      const nodes: ChildNode[] = yield* context.root.update(null, context);
+      let prev = entry.firstHostRecord.node.previousSibling;
+      context.effect(() => {
+        nodes.forEach((node) => {
+          if (node.previousSibling !== prev) {
+            prev.after(node);
           }
-          cur = n;
+          prev = node;
         });
       });
       if (entry.parent) {
         const parent = entry.parent;
         const children = parent.children;
-        context.emit(() => {
-          children.set(entry.key, root);
+        context.effect(() => {
+          children.set(context.root.key, context.root);
           if (parent.firstChild === entry) {
-            parent.firstChild = root;
+            parent.firstChild = context.root;
           }
           if (parent.lastChild === entry) {
-            parent.lastChild = root;
+            parent.lastChild = context.root;
           }
         });
       }
-    })(this);
+    }.call(this);
   }
 
   public run(input?: RenderFunction) {
     return this.executor.next(input);
   }
 
-  public emit(effect: Effect): void {
-    this.effects.push(effect);
+  public effect(fn: Effect): void {
+    this.effects.push(fn);
   }
 
   public commit(): void {
-    this.effects.forEach((effect) => effect());
+    this.effects.forEach((fn) => fn());
+  }
+
+  destroy() {
+    Object.keys(this).forEach((key) => {
+      this[key] = null;
+    });
   }
 }
 
 export class Scheduler {
   static instance = new Scheduler();
   static context = {
-    emit(effect: Effect): void {
+    effect(effect: Effect): void {
       effect();
     },
   };
@@ -137,7 +138,6 @@ export class Scheduler {
   private signaled = false;
   private currentTask: RenderTask = null;
   private continuation: Cancelable = null;
-  // TODO CHECK
   private pendingUpdates = new Set<ActivationRecord>();
 
   private run(deadline: IdleDeadline, input?: RenderFunction) {
@@ -153,6 +153,7 @@ export class Scheduler {
               this.run(deadline)
             );
           } else {
+            this.currentTask.destroy();
             this.currentTask = null;
             this.continuation = null;
           }
@@ -181,34 +182,36 @@ export class Scheduler {
   }
 
   private nextUpdate(): ActivationRecord {
-    const sorted = [...this.pendingUpdates.values()].sort(
-      (a, b) => a.depth - b.depth
-    );
+    const sorted = [...this.pendingUpdates.values()]
+      .filter((record) => record.state === 1) // on the current tree
+      .sort((a, b) => a.depth - b.depth); // take the highest one
     const entry = sorted.shift();
-    this.pendingUpdates.delete(entry);
+    this.pendingUpdates = new Set(sorted);
     return entry;
   }
 
-  public requestUpdate(notified: Set<ActivationRecord>): void {
-    notified.forEach((record) => {
-      record.dirty = true;
-      this.pendingUpdates.add(record);
-    });
+  public cancelUpdate(entry: ActivationRecord): void {
+    this.pendingUpdates.delete(entry);
+  }
+
+  public requestUpdate(record: ActivationRecord): void {
+    this.pendingUpdates.add(record);
+
     if (!this.signaled) {
       this.signaled = true;
       queueMicrotask(() => {
         this.signaled = false;
-
-        // Cancellation cannot happen during a macrotask because `this.continuation` (set by previous task)
-        // *is* the current running task, which cannot be cancelled and will schedule a new task when it finishes.
-        // Cancellation needs to wait for this *new* task to be scheduled, at which point `this.continuation` is actually cancellable.
         if (this.currentTask) {
+          // Cancellation cannot happen during a macrotask because `this.continuation` (set by previous task)
+          // *is* the current running task, which cannot be cancelled and will schedule a new task when it finishes.
+          // Cancellation needs to wait for this *new* task to be scheduled, at which point `this.continuation` is actually cancellable.
           const entry = this.currentTask.entry;
+          this.currentTask.root?.destroy(Scheduler.context);
+          this.currentTask.destroy();
           this.currentTask = null;
-          this.continuation.cancel();
+          this.continuation?.cancel();
           this.pendingUpdates.add(entry);
         }
-
         const entry = this.nextUpdate();
         if (entry) {
           this.currentTask = new RenderTask(entry);
@@ -218,9 +221,5 @@ export class Scheduler {
         }
       });
     }
-  }
-
-  public cancelUpdate(entry: ActivationRecord): void {
-    this.pendingUpdates.delete(entry);
   }
 }

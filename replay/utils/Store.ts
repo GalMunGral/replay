@@ -1,4 +1,4 @@
-import { observable } from "replay/utils";
+import { observable } from "replay/core";
 
 interface ModuleStateLinkage {
   [module: string]: State<any>;
@@ -53,6 +53,15 @@ interface Store<T extends Object> {
 
 function immutable<T extends Object>(obj: T): T {
   if (typeof obj != "object" || obj == null) return obj;
+  if (
+    obj instanceof Array ||
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof WeakMap ||
+    obj instanceof WeakMap
+  ) {
+    return obj;
+  }
   return new Proxy(obj, {
     get(target, key, receiver) {
       const value = Reflect.get(target, key, receiver);
@@ -66,6 +75,16 @@ function immutable<T extends Object>(obj: T): T {
 }
 
 function dataonly<T extends Object>(obj: T): T {
+  if (typeof obj != "object" || obj == null) return obj;
+  if (
+    obj instanceof Array ||
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof WeakMap ||
+    obj instanceof WeakMap
+  ) {
+    return obj;
+  }
   return new Proxy(obj, {
     get(target, key, receiver) {
       const value = Reflect.get(target, key, receiver);
@@ -73,7 +92,7 @@ function dataonly<T extends Object>(obj: T): T {
         console.warn("Cannot access methods on a data-only object");
         return undefined;
       }
-      return value;
+      return dataonly(value);
     },
     ownKeys(target) {
       return Reflect.ownKeys(target).filter(
@@ -136,13 +155,16 @@ export function createStore<T extends Object>({
 }: StoreConfig<T>): Store<T> {
   let stateRef: StateReference<T>, dispatch: Dispatcher;
   if (typeof reducer == "function") {
-    stateRef = observable({
-      current: {
-        current: initialState,
-        past: [] as T[],
-        future: [] as T[],
-      } as HistorySnapshot<T>,
-    });
+    stateRef = observable(
+      {
+        current: {
+          current: initialState,
+          past: [] as T[],
+          future: [] as T[],
+        } as HistorySnapshot<T>,
+      },
+      1 // Only `stateRef` ITSELF is reactive because EACH SNAPSHOT IS IMMUTABLE.
+    );
     dispatch = (action, payload) => {
       // `set` trap of `state` proxy handles notifications automatically
       stateRef.current = withHistory(reducer)(stateRef.current, {

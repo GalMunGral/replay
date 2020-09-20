@@ -1,34 +1,23 @@
-import { observer, decorator as $$, stop } from "replay/utils";
+import { decorator as $$, stop } from "replay/utils";
 import IconButton from "./IconButton";
 import EditorInput from "./EditorInput";
 import Space from "./Space";
 
-const Editor = observer((__, { store }) => {
+const Editor = ({}, scope) => {
   const {
     open,
     minimized,
     recipientEmail,
     subject,
     content: { value: content },
-  } = store.state.editor;
-
-  const methods = store.mapDispatch("editor", [
-    "setMinimized",
-    "saveDraft",
-    "setSubject",
-    "setRecipientEmail",
-    "sendMail",
-    "content/update",
-    "content/undo",
-    "content/redo",
-  ]);
+  } = scope.editor;
 
   return [
     open && (
       <Window>
-        <Header onclick={() => methods.setMinimized(!minimized)}>
+        <Header onclick={() => scope.setMinimized(!minimized)}>
           <span>New Message</span>
-          <CloseButton onclick={stop(methods.saveDraft)}>
+          <CloseButton onclick={stop(scope.saveDraft)}>
             <i className="fas fa-times" />
           </CloseButton>
         </Header>
@@ -37,25 +26,65 @@ const Editor = observer((__, { store }) => {
             label="To:"
             placeholder="Recipient"
             value={recipientEmail}
-            setValue={methods.setRecipientEmail}
+            setValue={scope.setRecipientEmail}
           />
           <EditorInput
             label="Subject:"
             placeholder="Subject"
             value={subject}
-            setValue={methods.setSubject}
+            setValue={scope.setSubject}
           />
-          <TextArea value={content} setValue={methods.contentUpdate} />
+          <TextArea
+            value={content}
+            oninput={(e) => scope.contentUpdate(e.target.value)}
+          />
           <ButtonGroup>
-            <SendButton onclick={methods.sendMail}>Send</SendButton>
-            <IconButton type="undo" onclick={methods.contentUndo} />
-            <IconButton type="redo" onclick={methods.contentRedo} />
+            <SendButton onclick={scope.sendMail}>Send</SendButton>
+            <IconButton
+              type="undo"
+              onclick={scope.contentUndo}
+              onmousedown={scope.repeatUndo}
+              onmouseup={scope.stopRepeating}
+            />
+            <IconButton
+              type="redo"
+              onclick={scope.contentRedo}
+              onmousedown={scope.repeatRedo}
+              onmouseup={scope.stopRepeating}
+            />
             <Space />
           </ButtonGroup>
         </Body>
       </Window>
     ),
   ];
+};
+
+Editor.init = ({}, $this) => ({
+  timer: null,
+  get editor() {
+    return $this.store.state.editor;
+  },
+  ...$this.store.mapDispatch("editor", [
+    "setMinimized",
+    "saveDraft",
+    "setSubject",
+    "setRecipientEmail",
+    "sendMail",
+    "content/update",
+    "content/undo",
+    "content/redo",
+  ]),
+  repeatUndo() {
+    $this.timer = setInterval($this.contentUndo, 50);
+  },
+  repeatRedo() {
+    $this.timer = setInterval($this.contentRedo, 50);
+  },
+  stopRepeating() {
+    clearTimeout($this.timer);
+    $this.timer = null;
+  },
 });
 
 export default Editor;
@@ -115,10 +144,7 @@ const Body = $$.section`
   transition: all 0.2s;
 `;
 
-const TextArea = $$(({ setValue, ...props }) => {
-  const getInput = (e) => e.target.value;
-  return [<textarea {...props} oninput={(e) => setValue(getInput(e))} />];
-})`
+const TextArea = $$.textarea`
   --horizontal-margin: 20px;
   flex: 1 1 auto;
   margin: 0 var(--horizontal-margin);

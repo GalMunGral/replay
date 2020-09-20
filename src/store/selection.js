@@ -3,6 +3,10 @@ import { createStore } from "replay/utils";
 const selection = createStore({
   mutableState: {
     current: [], // immutable!
+    get selectedSet() {
+      console.log("MISS");
+      return new Set(this.current);
+    },
     reset() {
       this.current = [];
     },
@@ -12,7 +16,7 @@ const selection = createStore({
       }
     },
     deselect(mail) {
-      if (this.current.has(mail.id)) {
+      if (this.current.includes(mail.id)) {
         this.current = this.current.filter((id) => id !== mail.id);
       }
     },

@@ -8,12 +8,12 @@ The signature for such render functions differs slightly from React:
 
 ```js
 function SomeComponent(props, scope, context) {
-  context.emit(() => {
+  context.effect(() => {
     /* Some side effect */
   });
   return (
     <AnotherComponent someProp={scope.someVariableFromWayAbove}>
-      <SomeChild onclick={() => this.forceUpdate()} />
+      <SomeChild onclick={() => this.invalidate()} />
       <SomeOtherChild {...moreProps} />
     </AnotherComponent>
   );
@@ -72,7 +72,7 @@ One could easily simulate normal-order evaluation with quoting, i.e. in Clojure:
 
 ## Auxiliary Modules
 
-### Observable + Observer
+### OneTimeObservable + OneTimeObserver
 
 The idea of using the observer pattern for reactivity is taken from Vue, but opt-in reactivity system that the router and state containers depend on.
 
@@ -112,7 +112,7 @@ component function, and in the sense that it applies styles to the wrapped compo
 
 ### Batched Updates
 
-The setters of `observable`'s do not trigger re-renders synchronously. Instead, it addes all observing instances to a "update queue" that will be flushed _at the end of current event loop tick/iteration (i.e. after current task/macrotask)_. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
+The setters of `observable`'s do not trigger re-renders synchronously. Instead, it addes all observerStack instances to a "update queue" that will be flushed _at the end of current event loop tick/iteration (i.e. after current task/macrotask)_. This is implemented using `queueMicrotask`. The update queue is implemented using a `Set` so that each instance will only be added once no matter how many of its dependencies have changed or how many times those dependencies have changed.
 
 ### Priority Queue
 

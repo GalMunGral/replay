@@ -3,9 +3,8 @@ import {
   DynamicScope,
   Quasiquote,
   RenderFunction,
-} from "../core/Component";
+} from "../core/Renderer";
 import { decorator } from "./Decorator";
-import { observable, observer } from "./Observable";
 
 interface Route {
   regex: RegExp;
@@ -123,23 +122,23 @@ export const Redirect: RenderFunction = (
   // -> `Scheduler.requestUpdate`
   // -> (in microtask) current rendering is aborted
 
-  // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
-  context.emit(() => redirect(path));
+  // context.effect(() => redirect(path)); // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
+  redirect(path);
   return [];
 };
 
-export const Router: RenderFunction = observer(
-  ({ children }: RouterProps, { route }: RouterScope) => {
-    if (!Array.isArray(children)) return [null];
-    return children
-      .filter((child) => child[1].path === route.path)
-      .filter((child) => Array.isArray(child[2][0]))
-      .map((child) => child[2][0] as Quasiquote);
-  }
-);
+export const Router: RenderFunction = (
+  { children }: RouterProps,
+  { route }: RouterScope
+) => {
+  if (!Array.isArray(children)) return [null];
+  return children
+    .filter((child) => child[1].path === route.path)
+    .filter((child) => Array.isArray(child[2][0]))
+    .map((child) => child[2][0] as Quasiquote);
+};
 
-Router.init = (props: RouterProps, scope: RouterScope, context) => {
-  // TODO CHECK
+Router.init = (props: RouterProps, _this: RouterScope, context) => {
   const routeTable: RouteTable = new Map(
     props.children
       .filter((child) => child[0] === "route")
@@ -150,14 +149,14 @@ Router.init = (props: RouterProps, scope: RouterScope, context) => {
       })
   );
 
-  scope.route = observable(matchPath(routeTable));
+  window.onpopstate = () => {
+    Object.assign(_this.route, matchPath(routeTable));
+  };
 
-  context.emit(() => {
-    window.onpopstate = () => {
-      Object.assign(scope.route, matchPath(routeTable));
-    };
-    scope.deinit = () => {
+  return {
+    route: matchPath(routeTable),
+    deinit() {
       window.onpopstate = null;
-    };
-  });
+    },
+  };
 };

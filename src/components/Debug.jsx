@@ -5,7 +5,7 @@ import robotImage from "../assets/images/robot.png";
 
 var someColor = "gray";
 
-const Debug = function () {
+function Debug() {
   return [
     <div>{/* placeholder */}</div>,
     <Centered>
@@ -26,12 +26,12 @@ const Debug = function () {
         type="color"
         oninput={throttle((e) => {
           someColor = e.target.value;
-          this.forceUpdate();
+          this.invalidate();
         }, 30)}
       />
     </Centered>,
   ];
-};
+}
 
 export default Debug;
 

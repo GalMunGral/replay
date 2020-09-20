@@ -1,27 +1,41 @@
-import { observer, decorator as $$ } from "replay/utils";
+import { decorator as $$ } from "replay/utils";
 import SidebarMenu from "./SidebarMenu";
 import editorButtonIcon from "../assets/images/create.png";
 
-const Sidebar = observer((__, { sidebar, route, store }) => {
-  const currentFolder = route.params.folder;
-  const { collapsed, hovered } = sidebar;
-  const hidden = collapsed && !hovered;
-  const openEditor = () => store.dispatch("editor/openEditor");
-  const setHovered = (hovered) => () => (sidebar.hovered = hovered);
-
+const Sidebar = ({}, scope) => {
+  const { folder, hidden, mouseenter, mouseleave, openEditor } = scope;
   return [
     <Container
       hidden={hidden}
-      onmouseenter={setHovered(true)}
-      onmouseleave={setHovered(false)}
+      onmouseenter={mouseenter}
+      onmouseleave={mouseleave}
     >
       <EditorButton hidden={hidden} onclick={openEditor}>
         <ButtonIcon src={editorButtonIcon} />
         {!hidden ? <ButtonText>Compose</ButtonText> : null}
       </EditorButton>
-      <SidebarMenu hidden={hidden} currentFolder={currentFolder} />
+      <SidebarMenu hidden={hidden} />
     </Container>,
   ];
+};
+
+Sidebar.init = ({}, { sidebar, route, store }) => ({
+  get folder() {
+    return route.params.folder;
+  },
+  get hidden() {
+    const { collapsed, hovered } = sidebar;
+    return collapsed && !hovered;
+  },
+  mouseenter() {
+    sidebar.hovered = true;
+  },
+  mouseleave() {
+    sidebar.hovered = false;
+  },
+  openEditor() {
+    store.dispatch("editor/openEditor");
+  },
 });
 
 export default Sidebar;
