@@ -107,7 +107,7 @@ export function observable<T extends Object>(data: T, level = Infinity): T {
     data instanceof Map ||
     data instanceof Set ||
     data instanceof WeakMap ||
-    data instanceof WeakMap
+    data instanceof WeakSet
   ) {
     return data;
   }

@@ -58,7 +58,7 @@ function immutable<T extends Object>(obj: T): T {
     obj instanceof Map ||
     obj instanceof Set ||
     obj instanceof WeakMap ||
-    obj instanceof WeakMap
+    obj instanceof WeakSet
   ) {
     return obj;
   }
@@ -81,7 +81,7 @@ function dataonly<T extends Object>(obj: T): T {
     obj instanceof Map ||
     obj instanceof Set ||
     obj instanceof WeakMap ||
-    obj instanceof WeakMap
+    obj instanceof WeakSet
   ) {
     return obj;
   }

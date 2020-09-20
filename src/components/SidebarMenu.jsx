@@ -43,6 +43,7 @@ const SidebarMenu = ({ hidden }, scope) => {
 
 SidebarMenu.init = ({}, $this) => ({
   folders: ["inbox", "sent", "drafts"],
+  canDrop: false,
   get links() {
     return this.folders.map((folder) => ({
       name: folder,
@@ -51,7 +52,6 @@ SidebarMenu.init = ({}, $this) => ({
       className: `fas fa-${iconMap[folder]}`,
     }));
   },
-  canDrop: false,
   get dropzoneActivated() {
     return $this.route.params.folder === "trash";
   },

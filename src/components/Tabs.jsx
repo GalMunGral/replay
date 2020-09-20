@@ -29,6 +29,9 @@ const Tabs = ({}, { visible, tabs }) => {
 
 Tabs.init = ({}, { route, mailbox }) => ({
   categories: ["primary", "social", "promotions"],
+  get visible() {
+    return route.params.folder === "inbox";
+  },
   get tabs() {
     return this.categories.map((tab) => ({
       name: tab,
@@ -36,9 +39,6 @@ Tabs.init = ({}, { route, mailbox }) => ({
       active: tab === mailbox.state.tab,
       onclick: () => mailbox.dispatch("setTab", tab),
     }));
-  },
-  get visible() {
-    return route.params.folder === "inbox";
   },
 });
 
