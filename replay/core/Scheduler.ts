@@ -182,9 +182,12 @@ export class Scheduler {
   }
 
   private nextUpdate(): ActivationRecord {
+    // The ones higher up are always rendered first,
+    // because props are "pushed" downwards level by level and not "pulled" like observables,
+    // which means that they could be stale if a child updates before its parent.
     const sorted = [...this.pendingUpdates.values()]
       .filter((record) => record.state === 1) // on the current tree
-      .sort((a, b) => a.depth - b.depth); // take the highest one
+      .sort((a, b) => a.depth - b.depth);
     const entry = sorted.shift();
     this.pendingUpdates = new Set(sorted);
     return entry;
