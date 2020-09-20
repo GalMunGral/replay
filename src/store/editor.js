@@ -61,7 +61,7 @@ const editor = createStore({
     editDraft(draft) {
       this.saveDraft();
       this.id = draft.id;
-      this.recipientEmai = draft.recipientEmail;
+      this.recipientEmail = draft.recipientEmail;
       this.subject = draft.subject;
       content.dispatch("reset", { value: draft.content });
       this.minimized = false;

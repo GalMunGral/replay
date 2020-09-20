@@ -25,6 +25,12 @@ module.exports = (env) =>
         },
       ],
     },
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+        minSize: 5000,
+      },
+    },
     plugins: [
       new MiniCssExtractPlugin({
         filename: "[name].[contenthash].css",

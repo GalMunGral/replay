@@ -1,15 +1,15 @@
 import {
-  $$isHostRenderFunction,
+  $$isHostRenderer,
   Arguments,
   getHostRenderFunction,
   RenderFunction,
-} from "../core/Component";
+} from "../core/Renderer";
 
 type StringRenderer = (props: Arguments) => string;
 
 interface StyleWrapper extends RenderFunction {
   $: (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
-  [$$isHostRenderFunction]?: boolean;
+  [$$isHostRenderer]?: boolean;
 }
 
 type Decorator = (
@@ -17,6 +17,7 @@ type Decorator = (
 ) => (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
 
 var nextClassId = 0;
+// TODO CHECK
 const usedDeclarations = new Map<string, string>();
 const usedRules = new Set<string>();
 
@@ -49,7 +50,7 @@ const decorator: Decorator = (type) => {
       let className: string;
       if (!usedDeclarations.has(declaration)) {
         className = "s-" + (nextClassId++).toString(16);
-        context.emit(() => {
+        context.effect(() => {
           styleEl.sheet.insertRule(`.${className}{${declaration}}`);
           usedDeclarations.set(declaration, className);
         });
@@ -59,7 +60,7 @@ const decorator: Decorator = (type) => {
       for (let renderRule of subruleRenderers) {
         const rule = `.${className}${renderRule(props)}`;
         if (!usedRules.has(rule)) {
-          context.emit(() => {
+          context.effect(() => {
             styleEl.sheet.insertRule(rule);
             usedRules.add(rule);
           });
@@ -85,7 +86,7 @@ const decorator: Decorator = (type) => {
 
     return new Proxy(StyledComponent, {
       get(target, key, receiver) {
-        if (key === "name" || key === $$isHostRenderFunction) {
+        if (key === "name" || key === $$isHostRenderer) {
           return wrappedRenderFunction[key];
         }
         return Reflect.get(target, key, receiver);

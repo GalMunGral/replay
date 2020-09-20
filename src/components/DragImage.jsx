@@ -1,22 +1,26 @@
-import { observer, decorator as $$ } from "replay/utils";
+import { decorator as $$ } from "replay/utils";
 
-const DragImage = observer((__, { store, dragState }) => {
-  const { isDragging, x, y } = dragState;
-  const selected = store.state.selection.current;
-
+const DragImage = ({}, { style, message }) => {
   return [
-    <Box
-      style={{
-        visibility: isDragging ? "visible" : "hidden",
-        transform: `translate3d(${x}px, ${y}px, 0)`,
-      }}
-    >
+    <Box style={style}>
       <Icon className="fas fa-mail-bulk" />
-      <span>{`Move ${selected.length} ${
-        selected.length > 1 ? "items" : "item"
-      }`}</span>
+      <span>{message}</span>
     </Box>,
   ];
+};
+
+DragImage.init = ({}, { store, dragState }) => ({
+  get style() {
+    const { isDragging, x, y } = dragState;
+    return {
+      visibility: isDragging ? "visible" : "hidden",
+      transform: `translate3d(${x}px, ${y}px, 0)`,
+    };
+  },
+  get message() {
+    const selected = store.state.selection.current;
+    return `Move ${selected.length} ${selected.length > 1 ? "items" : "item"}`;
+  },
 });
 
 export default DragImage;

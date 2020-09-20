@@ -5,28 +5,38 @@ import IconButton from "./IconButton";
 const format = (s, length) =>
   s ? (s.length <= length ? s : s.slice(0, length) + "...") : "(empty)";
 
-const MailItem = ({
-  mail,
-  folder,
-  selected,
-  actions: { toggleItem, deleteItem },
-  events,
-}) => {
-  const { senderName, senderEmail, subject, content } = mail;
-  const notTrash = folder !== "trash";
-  const senderInfo = senderName || senderEmail || "(no name)";
-  const title = format(subject, 30);
-  const preheader = `&nbsp;&mdash;&nbsp;${format(content, 50)}`;
-
+const MailItem = (
+  {
+    mail,
+    folder,
+    selected,
+    toggleItem,
+    deleteItem,
+    onclick,
+    ondragstart,
+    ondrag,
+    ondragend,
+  },
+  { summarize }
+) => {
+  const { senderInfo, title, preheaderHtml } = summarize(mail);
+  const canDelete = folder !== "trash";
   return [
-    <ListItem selected={selected} draggable={notTrash} {...events}>
-      {notTrash ? <Checkbox checked={selected} onchange={toggleItem} /> : null}
+    <ListItem
+      selected={selected}
+      draggable={canDelete}
+      onclick={onclick}
+      ondragstart={ondragstart}
+      ondrag={ondrag}
+      ondragend={ondragend}
+    >
+      {canDelete ? <Checkbox checked={selected} onchange={toggleItem} /> : null}
       <SenderInfo>{senderInfo}</SenderInfo>
       <Summary>
         <Title>{title}</Title>
-        <Preheader innerHTML={preheader} />
+        <Preheader innerHTML={preheaderHtml} />
       </Summary>
-      {notTrash ? (
+      {canDelete ? (
         <Actions>
           <IconButton type="trash" onclick={stop(deleteItem)} />
         </Actions>
@@ -34,6 +44,17 @@ const MailItem = ({
     </ListItem>,
   ];
 };
+
+MailItem.init = () => ({
+  summarize(mail) {
+    const { senderName, senderEmail, subject, content } = mail;
+    return {
+      senderInfo: senderName || senderEmail || "(no name)",
+      title: format(subject, 30),
+      preheaderHtml: "&nbsp;&mdash;&nbsp;" + format(content, 50),
+    };
+  },
+});
 
 export default MailItem;
 

@@ -5,7 +5,7 @@ import selection from "./selection";
 
 const loggerMiddleware = (store) => (next) => (action, ...args) => {
   next(action, ...args);
-  LOG(`[Logger] ${action} =>`, store.getSnapshot());
+  // console.log(`[Logger] ${action} =>`, store.getSnapshot());
 };
 
 const store = createStore({

@@ -1,33 +1,10 @@
 import { decorator as $$ } from "replay/utils";
 
-const allTabs = ["primary", "social", "promotions"];
-
-const Tab = (props) => [
-  <Box {...props}>
-    <Icon className={`fas fa-${iconMap[props.name]}`} />
-    <p>{props.name}</p>{" "}
-  </Box>,
-];
-
-const Tabs = (__, { route, mailbox }) => {
-  const { folder: currentFolder } = route.params;
-  const { tab: currentTab } = mailbox.state;
-  return [
-    currentFolder === "inbox" ? (
-      <TabBar>
-        {...allTabs.map((tab) => (
-          <Tab
-            name={tab}
-            active={tab === currentTab}
-            onclick={() => mailbox.dispatch("setTab", tab)}
-          />
-        ))}
-      </TabBar>
-    ) : null,
-  ];
+const colorMap = {
+  primary: "#f44336",
+  social: "#2962ff",
+  promotions: "#2e7d32",
 };
-
-export default Tabs;
 
 const iconMap = {
   primary: "inbox",
@@ -35,11 +12,37 @@ const iconMap = {
   promotions: "tag",
 };
 
-const colorMap = {
-  primary: "#f44336",
-  social: "#2962ff",
-  promotions: "#2e7d32",
+const Tab = (props) => [
+  <Box {...props}>
+    <Icon className={props.iconClassName} />
+    <p>{props.name}</p>
+  </Box>,
+];
+
+const Tabs = ({}, { visible, tabs }) => {
+  return [
+    visible ? (
+      <TabBar>{...tabs.map((props) => <Tab {...props} />)}</TabBar>
+    ) : null,
+  ];
 };
+
+Tabs.init = ({}, { route, mailbox }) => ({
+  categories: ["primary", "social", "promotions"],
+  get tabs() {
+    return this.categories.map((tab) => ({
+      name: tab,
+      iconClassName: `fas fa-${iconMap[tab]}`,
+      active: tab === mailbox.state.tab,
+      onclick: () => mailbox.dispatch("setTab", tab),
+    }));
+  },
+  get visible() {
+    return route.params.folder === "inbox";
+  },
+});
+
+export default Tabs;
 
 const TabBar = $$.div`
   flex: 0 0 50px;

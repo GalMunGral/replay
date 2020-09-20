@@ -1,11 +1,10 @@
-import { throttle } from "lodash";
+import throttle from "lodash/throttle";
 import { lazy } from "replay/core";
-import { observer, observable, Router, decorator as $$ } from "replay/utils";
-import store from "../observables/store";
+import { Router, decorator as $$ } from "replay/utils";
+import store from "../store";
 import AppBar from "./AppBar";
 import DragImage from "./DragImage";
 import Debug from "./Debug";
-import { getHostRenderFunction } from "replay/core/Component";
 
 const Mailbox = lazy(() => import("./Mailbox"));
 const Detail = lazy(() => import("./Detail"));
@@ -14,7 +13,7 @@ const Editor = lazy(() => import("./Editor"));
 const folderExists = ({ folder }) =>
   ["inbox", "sent", "drafts", "trash"].includes(folder);
 
-const App = observer(() => [
+const App = () => [
   <Container>
     <AppBar />
     <Router>
@@ -31,26 +30,26 @@ const App = observer(() => [
     <Editor />
     <DragImage key="drag-image" />
   </Container>,
-]);
+];
 
 App.init = () => ({
   store,
-  sidebar: observable({
+  sidebar: {
     collapsed: false,
     hovered: false,
     toggle() {
       this.collapsed = !this.collapsed;
     },
-  }),
-  dragState: observable({
+  },
+  dragState: {
     isDragging: false,
     x: 0,
     y: 0,
     setCoordinates: throttle(function (x, y) {
       this.x = x;
       this.y = y;
-    }, 33.33),
-  }),
+    }, 40),
+  },
 });
 
 export default App;
