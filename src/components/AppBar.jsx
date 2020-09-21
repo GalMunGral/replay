@@ -50,11 +50,9 @@ const MenuButton = $$.button`
   background: none;
   outline: none;
   cursor: pointer;\
-
 `.$`:hover {
-    background: var(--light-gray);
-  }
-`;
+  background: var(--light-gray);
+}`;
 
 const AppLogo = $$.img`
   height: 40px;
@@ -84,12 +82,10 @@ const SearchBar = $$.div`
   transition: all 0.2s;
   display: flex;
   align-items: center;
-
 `.$`:focus-within {
-    box-shadow: 0 1px 4px 0px var(--gray);
-    background: white;
-  }
-`;
+  box-shadow: 0 1px 4px 0px var(--gray);
+  background: white;
+}`;
 
 const SearchIcon = $$.i`
   font-size: 1rem;

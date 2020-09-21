@@ -16,12 +16,9 @@ type Decorator = (
   type: string | RenderFunction
 ) => (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
 
-var nextClassId = 0;
-// TODO CHECK
-const usedDeclarations = new Map<string, string>();
-const usedRules = new Set<string>();
-
+const addedClasses = new Set<string>();
 const styleEl = document.createElement("style");
+styleEl.dataset.decorator = "";
 document.head.append(styleEl);
 
 function parseTemplateCSS(
@@ -29,47 +26,49 @@ function parseTemplateCSS(
   ...fns: StringRenderer[]
 ): StringRenderer {
   return (props: Arguments) => {
-    const result = [segments[0]];
-    for (let i = 0; i < fns.length; i++) {
-      result.push(fns[i](props));
-      result.push(segments[i + 1]);
-    }
-    return result.join("");
+    return fns.reduce(
+      (str, fn, i) => str + fn(props) + segments[i + 1],
+      segments[0]
+    );
   };
+}
+
+function generateHash(styleString: string): string {
+  return styleString
+    .split("")
+    .reduce((hash, char) => {
+      return ((hash << 5) - hash + char.charCodeAt(0)) | 0;
+    }, 0)
+    .toString(16);
 }
 
 const decorator: Decorator = (type) => {
   const wrappedRenderFunction =
     typeof type == "string" ? getHostRenderFunction(type) : type;
+
   return (segments, ...fns) => {
-    const subruleRenderers: StringRenderer[] = [];
-    const renderCSS = parseTemplateCSS(segments, ...fns);
+    const nestedRuleCompilers: StringRenderer[] = [];
+    const compileCSS = parseTemplateCSS(segments, ...fns);
 
     const StyledComponent: StyleWrapper = function (props, scope, context) {
-      const declaration = renderCSS(props);
-      let className: string;
-      if (!usedDeclarations.has(declaration)) {
-        className = "s-" + (nextClassId++).toString(16);
-        context.emit(() => {
-          styleEl.sheet.insertRule(`.${className}{${declaration}}`);
-          usedDeclarations.set(declaration, className);
-        });
-      } else {
-        className = usedDeclarations.get(declaration);
-      }
-      for (let renderRule of subruleRenderers) {
-        const rule = `.${className}${renderRule(props)}`;
-        if (!usedRules.has(rule)) {
-          context.emit(() => {
-            styleEl.sheet.insertRule(rule);
-            usedRules.add(rule);
+      const nestedRules = nestedRuleCompilers.map((fn) => fn(props));
+      const rules = ["{" + compileCSS(props) + "}", ...nestedRules];
+      const hash = generateHash(rules.join("\n"));
+      const className = wrappedRenderFunction.name + "-" + hash;
+
+      context.emit(() => {
+        if (!addedClasses.has(className)) {
+          rules.forEach((rule) => {
+            styleEl.sheet.insertRule("." + className + rule);
           });
+          addedClasses.add(className);
         }
-      }
+      });
+
       props = {
         ...props,
         className: props.className
-          ? [className, props.className].join(" ")
+          ? props.className + " " + className
           : className,
       };
       return wrappedRenderFunction.apply(this, [props, scope, context]);
@@ -79,8 +78,8 @@ const decorator: Decorator = (type) => {
       segments: TemplateStringsArray,
       ...fns: StringRenderer[]
     ): StyleWrapper {
-      const renderer = parseTemplateCSS(segments, ...fns);
-      subruleRenderers.push(renderer);
+      const fn = parseTemplateCSS(segments, ...fns);
+      nestedRuleCompilers.push(fn);
       return this;
     };
 

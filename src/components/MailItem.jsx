@@ -71,18 +71,16 @@ const ListItem = $$.div`
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-
 `.$`:active {
-    cursor: grabbing;
-  }
+  cursor: grabbing;
+}
 `.$`:hover {
-    background: ${({ selected }) => (selected ? "var(--highlight)" : "white")};
-    filter: brightness(0.95);
-  }
+  background: ${({ selected }) => (selected ? "var(--highlight)" : "white")};
+  filter: brightness(0.95);
+}
 `.$`:hover * {
-    visibility: visible;
-  }
-`;
+  visibility: visible;
+}`;
 
 const SenderInfo = $$.div`
   flex: 0 0 200px;

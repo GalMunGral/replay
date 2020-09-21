@@ -115,20 +115,18 @@ const MenuItem = $$.div`
   background: ${({ activated }) =>
     activated ? "var(--theme-light)" : "white"};
   transition: all 0.2s;
-
 `.$`:hover {
-    background: ${({ activated }) =>
-      activated ? "var(--theme-light)" : "var(--light-gray)"};
-  }
+  background: ${({ activated }) =>
+    activated ? "var(--theme-light)" : "var(--light-gray)"};
+}
 `.$`:active {
-    background: ${({ activated }) =>
-      activated ? "var(--theme-light)" : "var(--gray)"};
-  }
+  background: ${({ activated }) =>
+    activated ? "var(--theme-light)" : "var(--gray)"};
+}
 `.$` > i {
-    margin: 0 ${({ hidden }) => (hidden ? "0" : "20px")};
-    color: inherit;
-  }
+  margin: 0 ${({ hidden }) => (hidden ? "0" : "20px")};
+  color: inherit;
+}
 `.$` * {
-    pointer-events: none;
-  }
-`;
+  pointer-events: none;
+}`;

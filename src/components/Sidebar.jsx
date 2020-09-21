@@ -71,14 +71,12 @@ const EditorButton = $$.button`
   font-family: inherit;
   cursor: pointer;
   transition: box-shadow 0.2s;
-
 `.$`:hover {
-    box-shadow: 0 5px 10px 0 var(--gray);
-  }
+  box-shadow: 0 5px 10px 0 var(--gray);
+}
 `.$`:active {
-    background: var(--light-gray);
-  }
-`;
+  background: var(--light-gray);
+}`;
 
 const ButtonIcon = $$.img`
   --size: 32px;

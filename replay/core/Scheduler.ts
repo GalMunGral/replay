@@ -81,17 +81,21 @@ export class RenderTask implements Context {
   constructor(public entry: ActivationRecord) {
     this.executor = function* () {
       const context = this as RenderTask;
+
       context.root = entry.clone(null, context);
       const nodes: ChildNode[] = yield* context.root.render(null, context);
-      let prev = entry.firstHostRecord.node.previousSibling;
+
+      const parent = entry.lastHostRecord.node.parentNode;
+      const next = entry.lastHostRecord.node.nextSibling;
       context.emit(() => {
-        nodes.forEach((node) => {
-          if (node.previousSibling !== prev) {
-            prev.after(node);
+        nodes.reduceRight((next, cur) => {
+          if (!(cur.parentNode === parent && cur.nextSibling === next)) {
+            parent.insertBefore(cur, next);
           }
-          prev = node;
-        });
+          return cur;
+        }, next);
       });
+
       if (entry.parent) {
         const parent = entry.parent;
         const children = parent.children;

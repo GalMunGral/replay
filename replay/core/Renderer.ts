@@ -126,9 +126,6 @@ export class ActivationRecord implements OneTimeObserver {
             ? new Comment()
             : document.createElement(type)
           : document.createElement((type as RenderFunction).name);
-      if (this.node.nodeType == 1) {
-        (this.node as Element).append(new Text()); // dummy node
-      }
     }
   }
 
@@ -136,7 +133,7 @@ export class ActivationRecord implements OneTimeObserver {
     return this.isHostRecord ? this : this.firstChild?.firstHostRecord;
   }
 
-  private get lastHostRecord(): ActivationRecord {
+  public get lastHostRecord(): ActivationRecord {
     return this.isHostRecord ? this : this.lastChild?.lastHostRecord;
   }
 
@@ -215,7 +212,7 @@ export class ActivationRecord implements OneTimeObserver {
   }
 
   *diff(elements: Quasiquote[], context: RenderTask) {
-    const childNodes = [];
+    const childNodes: ChildNode[] = [];
     const oldChildren = this.children;
     this.children = new Map();
 
@@ -277,12 +274,13 @@ export class ActivationRecord implements OneTimeObserver {
     // Move or attach new DOM nodes
     if (this.isHostRecord) {
       context.emit(() => {
-        childNodes.reduce((prev, cur) => {
-          if (prev.nextSibling !== cur) {
-            prev.after(cur);
+        const parent = this.node as Element;
+        childNodes.reduceRight((next, cur) => {
+          if (!(cur.parentNode === parent && cur.nextSibling === next)) {
+            parent.insertBefore(cur, next);
           }
           return cur;
-        }, this.node.firstChild);
+        }, null);
       });
     }
 

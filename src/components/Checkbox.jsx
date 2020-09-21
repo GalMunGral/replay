@@ -62,25 +62,24 @@ const Clickable = $$.div`
   width: var(--size);
   height: var(--size);
   border-radius: calc(0.5 * var(--size));
-
 `.$`:hover {
-    background: ${({ checked }) => (checked ? "none" : "var(--light-gray)")};
-  }
+  background: ${({ checked }) => (checked ? "none" : "var(--light-gray)")};
+}
 `.$` > div {
-    flex: 0 0 auto;
-    position: relative;
-    width: 0.8rem;
-    height: 0.8rem;
-    margin: 5px;
-  }
+  flex: 0 0 auto;
+  position: relative;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: 5px;
+}
 `.$` > div > input {
-    opacity: 0;
-    width: 1rem;
-    height: 1rem;
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
-    cursor: pointer;
-  }
+  opacity: 0;
+  width: 1rem;
+  height: 1rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  cursor: pointer;
+}
 `;

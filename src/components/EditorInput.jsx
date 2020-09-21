@@ -41,19 +41,17 @@ const InputBox = $$.div`
   margin: 0 20px;
   padding: 0;
   border-bottom: 1px solid var(--light-gray);
-
 `.$` > label {
-    color: gray;
-    margin-right: 5px;
-  }
+  color: gray;
+  margin-right: 5px;
+}
 `.$` > input {
-    flex: 1 1 auto;
-    line-height: 1rem;
-    font-size: 1rem;
-    padding: 8px 0;
-    border: none;
-    outline: none;
-    background: white;
-    font-family: inherit;
-  }
-`;
+  flex: 1 1 auto;
+  line-height: 1rem;
+  font-size: 1rem;
+  padding: 8px 0;
+  border: none;
+  outline: none;
+  background: white;
+  font-family: inherit;
+}`;

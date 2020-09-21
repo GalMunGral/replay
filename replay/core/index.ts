@@ -15,7 +15,6 @@ export function render(elements: Quasiquote[], container: HTMLElement): void {
   entry.state = 1;
   entry.node = container;
   container.innerHTML = "";
-  container.append(new Text());
 
   // Hack: Use memoized props to simulate props passed in as arguments. Use dirty bit to trigger re-render.
   entry.renderFunction = getHostRenderFunction("body");

@@ -21,17 +21,15 @@ const Button = $$.button`
   height: var(--size);
   border-radius: calc(0.5 * var(--size));
   cursor: pointer;
-
 `.$`:hover {
-    background: var(--light-gray);
-  }
+  background: var(--light-gray);
+}
 `.$`:hover i {
-    filter: brightness(0.8);
-  }
+  filter: brightness(0.8);
+}
 `.$`:active {
-    background: var(--gray);
-  }
-`;
+  background: var(--gray);
+}`;
 
 const Icon = $$.i`
   color: gray;

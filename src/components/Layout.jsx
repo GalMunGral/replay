@@ -30,11 +30,10 @@ const Scrollable = $$.div`
   flex: 1 1 auto;
   overflow-y: auto;
   padding-bottom: 80px;
-
 `.$`::-webkit-scrollbar-thumb {
-    background: var(--gray);
-  }
+  background: var(--gray);
+}
 `.$`::-webkit-scrollbar {
-    width: 10px;
-  }
+  width: 10px;
+}
 `;

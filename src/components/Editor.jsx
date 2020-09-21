@@ -129,12 +129,10 @@ const CloseButton = $$.button`
   color: white;
   cursor: pointer;
   transition: all 0.2s;
-
 `.$`:hover {
-    color: var(--light-gray);
-    transform: scale(1.2);
-  }
-`;
+  color: var(--light-gray);
+  transform: scale(1.2);
+}`;
 
 const Body = $$.section`
   height: ${({ minimized }) => (minimized ? 0 : "60vh")};
@@ -177,9 +175,7 @@ const SendButton = $$.button`
   outline: none;
   cursor: pointer;
   transition: all 0.1s;
-
 `.$`:hover {
-    filter: brightness(1.2);
-    box-shadow: 0 0 3px 0 var(--blue);
-  }
-`;
+  filter: brightness(1.2);
+  box-shadow: 0 0 3px 0 var(--blue);
+}`;

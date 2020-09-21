@@ -93,29 +93,27 @@ export function redirect(path: string): void {
   window.dispatchEvent(new Event("popstate"));
 }
 
-export const Link: RenderFunction = decorator(
-  ({ to: path, className, children }: LinkProps) => {
-    if (!Array.isArray(children) || !children.length) return [null];
-    const child = children[0];
-    const onclick = child[1].onclick;
-    child[1].onclick = (e) => {
-      if (typeof onclick == "function") {
-        (onclick as Function)(e);
-      }
-      navigate(path);
-    };
-    child[1].className = [className, child[1].className].join(" ");
-    return [child];
-  }
-)`
+export const Link: RenderFunction = decorator(function Link({
+  to: path,
+  className,
+  children,
+}: LinkProps) {
+  if (!Array.isArray(children) || !children.length) return [null];
+  const child = children[0];
+  const onclick = child[1].onclick;
+  child[1].onclick = (e) => {
+    if (typeof onclick == "function") {
+      (onclick as Function)(e);
+    }
+    navigate(path);
+  };
+  child[1].className = [className, child[1].className].join(" ");
+  return [child];
+})`
   cursor: pointer;
 `;
 
-export const Redirect: RenderFunction = (
-  { to: path }: RedirectProps,
-  {},
-  context
-) => {
+export const Redirect: RenderFunction = ({ to: path }: RedirectProps) => {
   // `redirect` dispatches "popstate" event
   // -> `window.onpopstate` (sync) <---- EDGE CASE: this is undefined during initial render
   // -> `route` updated, set trap triggered
