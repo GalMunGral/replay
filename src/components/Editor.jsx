@@ -43,14 +43,14 @@ const Editor = ({}, scope) => {
             <IconButton
               type="undo"
               onclick={scope.contentUndo}
-              onmousedown={scope.repeatUndo}
-              onmouseup={scope.stopRepeating}
+              // onmousedown={scope.repeatUndo}
+              // onmouseup={scope.stopRepeating}
             />
             <IconButton
               type="redo"
               onclick={scope.contentRedo}
-              onmousedown={scope.repeatRedo}
-              onmouseup={scope.stopRepeating}
+              // onmousedown={scope.repeatRedo}
+              // onmouseup={scope.stopRepeating}
             />
             <Space />
           </ButtonGroup>

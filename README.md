@@ -1,10 +1,10 @@
 # Replay
 
-This project is highly inspired by React and Vue.
+This project is highly inspired by React and MobX.
 
-The basic idea is to express UI as a composition (evaluated in normal order, i.e. from the outside in, as opposed to applicative order) of pure functions that can be repeatedly invalidated, rolled back and re-evaluated - hence the name replay The component instances are the (virtual) stack frames that store information such as input arguments (props) and local variables (state) for all render function invocations.
+The basic idea is that rendering is a compilation process consisting of expanding macros (functional compoennts) into composition of primitives (DOM componnts) and translating them into DOM operations. The component instances are essentially managed stack frames that store arguments (props) and local variables (state) so that this process could be rolled back to any given point and start again from there.
 
-Dependencies can be modeled as a directed graph where stored properties are the sources, component instances are the sinks, and computed properties are internal nodse. Each path ending up on a component instance corresponds to the state of the (actual) call stack (in reverse) at some point during its render. Reactivity is implemented by applying the obserer pattern transitively (recursively) based on the directed dependency graph. The subscriptions only need to be one-time (think long-polling), i.e. the observers don't care about future _data_ but for _invalidation_ of previous data, and this only needs to happen once. Once it the new value is obtained, a new subscription would be made again for future invalidations.
+Dependencies form a directed graph where stored properties are the sources, component instances are the sinks, and computed properties are internal nodes. The paths of this graph coincides with the state of the actual call stack at some point during the evaluation. Mutations invalidate all previous computations (represented by nodes on the graph) reachable from the mutated source. The recursive dependency tracking and invalidation mechanism is implemented using the obserer pattern with an additional observer stack. The subscriptions need only be one-time (akin to long-polling), because the observers are not observing for new _data_ but for _invalidation_ of old data
 
 ## Demo Project
 

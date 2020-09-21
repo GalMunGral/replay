@@ -122,7 +122,7 @@ export const Redirect: RenderFunction = (
   // -> `Scheduler.requestUpdate`
   // -> (in microtask) current rendering is aborted
 
-  // context.effect(() => redirect(path)); // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
+  // context.emit(() => redirect(path)); // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
   redirect(path);
   return [];
 };

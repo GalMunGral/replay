@@ -55,7 +55,7 @@ const hostRenderer: RenderFunction = function (props, {}, context) {
       for (let [k, v] of Object.entries(value)) {
         k = k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
         if (!memoized.style || memoized.style[k] !== v) {
-          context.effect(() => {
+          context.emit(() => {
             (record.node as HTMLElement).style[k] = v;
           });
         }
@@ -63,7 +63,7 @@ const hostRenderer: RenderFunction = function (props, {}, context) {
     } else {
       // Other DOM properties
       if (value !== memoized[name]) {
-        context.effect(() => {
+        context.emit(() => {
           record.node[name] = value;
         });
       }
@@ -174,11 +174,11 @@ export class ActivationRecord implements OneTimeObserver {
     Scheduler.instance.cancelUpdate(this);
   }
 
-  public *update(props: Arguments, context: RenderTask) {
+  *render(props: Arguments, context: RenderTask) {
     props = props ?? this.props;
 
     if (shallowEquals(props, this.props) && !this.invalidated) {
-      context.effect(() => {
+      context.emit(() => {
         this.children.forEach((child) => {
           child.parent = this;
         });
@@ -197,7 +197,7 @@ export class ActivationRecord implements OneTimeObserver {
 
     if (this.type === "text" || this.type === "comment") {
       const textNode = this.node as CharacterData;
-      context.effect(() => {
+      context.emit(() => {
         textNode.textContent = elements as string;
       });
       roots = [this.node];
@@ -205,7 +205,7 @@ export class ActivationRecord implements OneTimeObserver {
       roots = yield* this.diff(elements as Quasiquote[], context);
     }
 
-    context.effect(() => {
+    context.emit(() => {
       this.state = 1;
       this.invalidated = false;
       this.props = props;
@@ -214,7 +214,7 @@ export class ActivationRecord implements OneTimeObserver {
     return roots;
   }
 
-  private *diff(elements: Quasiquote[], context: RenderTask) {
+  *diff(elements: Quasiquote[], context: RenderTask) {
     const childNodes = [];
     const oldChildren = this.children;
     this.children = new Map();
@@ -255,13 +255,13 @@ export class ActivationRecord implements OneTimeObserver {
       child.key = key;
       child.index = i;
 
-      const roots = yield* child.update(props, context);
+      const roots = yield* child.render(props, context);
       childNodes.push(...roots);
     }
 
     // Remove unused records and their DOM nodes
     oldChildren.forEach((child) => {
-      context.effect(() => {
+      context.emit(() => {
         if (child.isHostRecord) {
           child.node.remove();
         } else {
@@ -276,7 +276,7 @@ export class ActivationRecord implements OneTimeObserver {
 
     // Move or attach new DOM nodes
     if (this.isHostRecord) {
-      context.effect(() => {
+      context.emit(() => {
         childNodes.reduce((prev, cur) => {
           if (prev.nextSibling !== cur) {
             prev.after(cur);
@@ -297,7 +297,7 @@ export class ActivationRecord implements OneTimeObserver {
     clone.depth = clone.parent ? clone.parent.depth + 1 : 0;
     clone.subscriptions = new Set<OneTimeObservable>();
     clone.state = 0; // not mounted
-    context.effect(() => {
+    context.emit(() => {
       if (!this.isHostRecord) this.unobserve(clone);
       Object.keys(this).forEach((key) => (this[key] = null));
       this.state = 2; // cloned
@@ -310,7 +310,7 @@ export class ActivationRecord implements OneTimeObserver {
     this.children.forEach((c) => {
       if (c.parent === this) c.destroy(context);
     });
-    context.effect(() => {
+    context.emit(() => {
       if (!this.isHostRecord) {
         this.unobserve(null);
         if (

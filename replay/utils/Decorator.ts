@@ -50,7 +50,7 @@ const decorator: Decorator = (type) => {
       let className: string;
       if (!usedDeclarations.has(declaration)) {
         className = "s-" + (nextClassId++).toString(16);
-        context.effect(() => {
+        context.emit(() => {
           styleEl.sheet.insertRule(`.${className}{${declaration}}`);
           usedDeclarations.set(declaration, className);
         });
@@ -60,7 +60,7 @@ const decorator: Decorator = (type) => {
       for (let renderRule of subruleRenderers) {
         const rule = `.${className}${renderRule(props)}`;
         if (!usedRules.has(rule)) {
-          context.effect(() => {
+          context.emit(() => {
             styleEl.sheet.insertRule(rule);
             usedRules.add(rule);
           });

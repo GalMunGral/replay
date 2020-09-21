@@ -11,7 +11,7 @@ export interface Cancelable {
 }
 
 export interface Context {
-  effect(effect: Effect): void;
+  emit(emit: Effect): void;
 }
 
 export class CancelableExecution implements Cancelable {
@@ -42,7 +42,7 @@ export class CancelablePromise<T> implements Cancelable {
   // after its resolution has been handled and fresh cancelable has been set.
   // This canceled bit is used for the unlikely edge case where a cancellation (part of a microtask, see below)
   // happens right between the resolution of the promise and the execution of its callbacks,
-  // in which case the cancel token would have no effect, and the `onFulfilled` callback would be called.
+  // in which case the cancel token would have no emit, and the `onFulfilled` callback would be called.
   // Cancellation can be detected in this case by checking the canceled bit first and rejecting if its set.
 
   private canceled = false;
@@ -82,9 +82,9 @@ export class RenderTask implements Context {
     this.executor = function* () {
       const context = this as RenderTask;
       context.root = entry.clone(null, context);
-      const nodes: ChildNode[] = yield* context.root.update(null, context);
+      const nodes: ChildNode[] = yield* context.root.render(null, context);
       let prev = entry.firstHostRecord.node.previousSibling;
-      context.effect(() => {
+      context.emit(() => {
         nodes.forEach((node) => {
           if (node.previousSibling !== prev) {
             prev.after(node);
@@ -95,7 +95,7 @@ export class RenderTask implements Context {
       if (entry.parent) {
         const parent = entry.parent;
         const children = parent.children;
-        context.effect(() => {
+        context.emit(() => {
           children.set(context.root.key, context.root);
           if (parent.firstChild === entry) {
             parent.firstChild = context.root;
@@ -112,7 +112,7 @@ export class RenderTask implements Context {
     return this.executor.next(input);
   }
 
-  public effect(fn: Effect): void {
+  public emit(fn: Effect): void {
     this.effects.push(fn);
   }
 
@@ -130,8 +130,8 @@ export class RenderTask implements Context {
 export class Scheduler {
   static instance = new Scheduler();
   static context = {
-    effect(effect: Effect): void {
-      effect();
+    emit(emit: Effect): void {
+      emit();
     },
   };
 

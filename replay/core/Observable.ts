@@ -40,6 +40,23 @@ export function popObserver() {
   observerStack.pop();
 }
 
+export function autorun(fn: () => any): void {
+  const observer: OneTimeObserver = {
+    observeOnce(data: OneTimeObservable) {
+      data.observers.add(this);
+    },
+    invalidate() {
+      // Must wait until all invalidated data are marked
+      queueMicrotask(() => {
+        pushObserver(this);
+        fn();
+        popObserver();
+      });
+    },
+  };
+  observer.invalidate();
+}
+
 class LivePropertyDescriptor<T> implements OneTimeObserver, OneTimeObservable {
   public getValue: (receiver: any) => T;
   private memoized: T | Symbol = INVALIDATED;
@@ -78,10 +95,10 @@ class LivePropertyDescriptor<T> implements OneTimeObserver, OneTimeObservable {
   }
 
   public notifyObservers() {
-    console.group(this.key);
+    // console.group(this.key);
     this.observers.forEach((observer) => observer.invalidate());
     this.observers.clear(); // Subscriptions are one-time only
-    console.groupEnd();
+    // console.groupEnd();
   }
 }
 

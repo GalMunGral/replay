@@ -5,7 +5,7 @@ import {
 } from "./Renderer";
 
 export { lazy } from "./Renderer";
-export { observable } from "./Observable";
+export { observable, autorun } from "./Observable";
 
 export function render(elements: Quasiquote[], container: HTMLElement): void {
   // Hack: Rendering `elements` under `container` is equivalent to rendering `[container, null, elements]`

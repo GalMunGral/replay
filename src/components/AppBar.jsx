@@ -13,7 +13,7 @@ const AppBar = ({}, { sidebar }) => [
     </Group>
     <SearchBar>
       <SearchIcon className="fas fa-search" />
-      <SearchInput placeholder="Search mail" />
+      <SearchInput id="search" placeholder="Search mail" />
     </SearchBar>
     <Group />
   </Container>,

@@ -165,6 +165,7 @@ export function createStore<T extends Object>({
       },
       1 // Only `stateRef` ITSELF is reactive because EACH SNAPSHOT IS IMMUTABLE.
     );
+
     dispatch = (action, payload) => {
       // `set` trap of `state` proxy handles notifications automatically
       stateRef.current = withHistory(reducer)(stateRef.current, {
@@ -176,11 +177,12 @@ export function createStore<T extends Object>({
     // Raw observable/mutable state object is only available in this scope
     // Only methods invoked on this object directly can mutate its state
     // Both access to methods and mutations are blocked from the outside
-
     const protectedState = observable(mutableState);
+
     stateRef = {
       current: { current: dataonly(protectedState) } as HistorySnapshot<T>,
     };
+
     dispatch = (action, ...args) => {
       action = String(action);
       if (typeof protectedState[action] == "function") {

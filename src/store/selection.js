@@ -4,7 +4,6 @@ const selection = createStore({
   mutableState: {
     current: [], // immutable!
     get selectedSet() {
-      console.log("MISS");
       return new Set(this.current);
     },
     reset() {
