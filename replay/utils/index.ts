@@ -1,11 +1,11 @@
-import { RenderFunction } from "../core/Renderer";
+import { RenderFunction } from "../core/Record";
 
 export { decorator } from "./Decorator";
 export { Router, Link, Redirect, navigate, redirect } from "./Router";
 export { createStore, thunkMiddleware } from "./Store";
 
 export const Fragment: RenderFunction = ({ children }) => {
-  return Array.isArray(children) ? children : [null];
+  children.forEach((render) => render());
 };
 
 type EventModifier = (f: EventListener) => EventListener;

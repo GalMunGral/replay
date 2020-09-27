@@ -1,53 +1,29 @@
-import { Context, RenderTask, Scheduler } from "./Scheduler";
-import {
-  pushObserver,
-  popObserver,
-  OneTimeObservable,
-  OneTimeObserver,
-  observable,
-} from "./Observable";
+import { pushObserver, popObserver } from "./Observable";
+import { Arguments, Record, RenderFunction } from "./Record";
 
-export interface Quasiquote extends Iterable<any> {
-  0: string | RenderFunction | AsyncRenderFunction; // type
-  1: Arguments; // props
-  2: string | Quasiquote[]; // children
+class Stack<T> extends Array<T> {
+  top() {
+    return this[this.length - 1];
+  }
 }
 
-export interface RenderFunction extends Function {
-  (props: Arguments, scope: DynamicScope, context: RenderTask):
-    | string
-    | Quasiquote[];
-  init?: (
-    props: Arguments,
-    scope: DynamicScope,
-    context: RenderTask
-  ) => DynamicScope | void;
+interface RecordContext {
+  parent: Record;
+  props: Arguments;
+  children: (() => any)[];
+  oldChildren: Map<string, Record>;
+  prevChild: Record;
+  index: number;
 }
 
-export interface Arguments {
-  key?: string;
-  children?: string | Quasiquote[];
-  [key: string]: any;
-}
+export const recordContexts = new Stack<RecordContext>();
+export const hostContexts = new Stack<ChildNode[]>();
 
-export interface DynamicScope extends Object {
-  deinit?: () => void;
-  [key: string]: any;
-}
+var pending = false;
+const updateQueue = new Set<Record>();
 
-export interface AsyncRenderFunction {
-  isAsync: true;
-  resolver: ResolverFunction;
-}
-
-export type ResolverFunction = () => Promise<{ default: RenderFunction }>;
-
-export function lazy(resolver: ResolverFunction): AsyncRenderFunction {
-  return { isAsync: true, resolver };
-}
-
-const hostRenderer: RenderFunction = function (props, {}, context) {
-  const record: ActivationRecord = this;
+const hostRenderer: RenderFunction = function (props) {
+  const record: Record = this;
   const memoized = record.props;
   for (let [name, value] of Object.entries(props)) {
     if (name == "children") continue;
@@ -55,21 +31,24 @@ const hostRenderer: RenderFunction = function (props, {}, context) {
       for (let [k, v] of Object.entries(value)) {
         k = k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
         if (!memoized.style || memoized.style[k] !== v) {
-          context.emit(() => {
-            (record.node as HTMLElement).style[k] = v;
-          });
+          (record.node as HTMLElement).style[k] = v;
         }
       }
     } else {
       // Other DOM properties
       if (value !== memoized[name]) {
-        context.emit(() => {
-          record.node[name] = value;
-        });
+        record.node[name] = value;
       }
     }
   }
-  return props.children;
+  props.children.forEach((renderFunc) => {
+    const result = renderFunc();
+    if (result) {
+      __STEP_OVER__("text", {
+        textContent: String(result),
+      });
+    }
+  });
 };
 
 export const $$isHostRenderer = Symbol();
@@ -84,243 +63,200 @@ export function getHostRenderFunction(htmlTag: string): RenderFunction {
   });
 }
 
-function shallowEquals(a: any, b: any): boolean {
-  if (typeof a != typeof b) return false;
-  if (typeof a != "object" || a == null) return a == b;
-  if (Object.keys(a).length != Object.keys(b).length) return false;
-  for (let key of Object.keys(a)) {
-    if (a[key] !== b[key]) return false;
+// TODO: `shouldComponentUpdate`
+
+// function shallowEquals(a: any, b: any): boolean {
+//   if (typeof a != typeof b) return false;
+//   if (typeof a != "object" || a == null) return a == b;
+//   if (Object.keys(a).length != Object.keys(b).length) return false;
+//   for (let key of Object.keys(a)) {
+//     if (a[key] !== b[key]) return false;
+//   }
+//   return true;
+// }
+
+export function __STEP_INTO__(
+  type: string | RenderFunction,
+  props: Arguments = {}
+) {
+  const { parent, oldChildren, index, prevChild } = recordContexts.top();
+  const key = props.key ?? String(index);
+  let record: Record;
+
+  if (oldChildren.has(key) && oldChildren.get(key).type === type) {
+    // Reuse existing record
+    record = oldChildren.get(key);
+    oldChildren.delete(key);
+  } else {
+    // Create a new record
+    record = new Record(type, parent);
+    const f = (record.renderFunction =
+      typeof type == "string" ? getHostRenderFunction(type) : type);
+
+    // Initialize scope
+    if (typeof f.init == "function") {
+      const locals = f.init(props, record.scope) ?? {};
+      const descriptors = Object.getOwnPropertyDescriptors(locals);
+      Object.defineProperties(record.scope, descriptors);
+    }
   }
-  return true;
+
+  parent.children.set((record.key = key), record);
+  if (!prevChild) parent.firstChild = record;
+  parent.lastChild = record;
+
+  {
+    // Now that we have a node, we can start working on it.
+    const oldChildren = record.children;
+    record.children = new Map<string, Record>();
+    // Prepare for recurison
+    recordContexts.push({
+      parent: record,
+      props,
+      children: [],
+      oldChildren,
+      prevChild: null,
+      index: 0,
+    });
+    if (record.isHostRecord) {
+      hostContexts.push([]);
+    }
+  }
 }
 
-export class ActivationRecord implements OneTimeObserver {
-  private isHostRecord: boolean;
-  public renderFunction: RenderFunction;
-  public scope = observable({}) as DynamicScope;
-  public props: Arguments = {};
-  public children = new Map<string, ActivationRecord>();
-  public depth: number;
-  public index = -1;
-  public key?: string = null;
-  public node: ChildNode = null;
-  public firstChild: ActivationRecord = null;
-  public lastChild: ActivationRecord = null;
-  public state: number = 0;
-  private subscriptions = new Set<OneTimeObservable>();
-  private invalidated = false;
+export function __STEP_OUT__(_type?: string | RenderFunction) {
+  const currentContext = recordContexts.top();
+  const { parent: record, props, children } = currentContext;
 
-  constructor(
-    public type: string | RenderFunction | AsyncRenderFunction,
-    public parent: ActivationRecord = null
-  ) {
-    this.isHostRecord = typeof type == "string" || type[$$isHostRenderer];
-    this.depth = parent ? parent.depth + 1 : 0;
-    if (parent) Object.setPrototypeOf(this.scope, parent.scope);
-    if (this.isHostRecord) {
-      this.node =
-        typeof type == "string"
-          ? type == "text"
-            ? new Text()
-            : type == "comment"
-            ? new Comment()
-            : document.createElement(type)
-          : document.createElement((type as RenderFunction).name);
-    }
-  }
+  pushObserver(record);
+  props.children = children;
+  record.renderFunction.apply(record, [props, record.scope]);
+  popObserver();
 
-  public get firstHostRecord(): ActivationRecord {
-    return this.isHostRecord ? this : this.firstChild?.firstHostRecord;
-  }
-
-  public get lastHostRecord(): ActivationRecord {
-    return this.isHostRecord ? this : this.lastChild?.lastHostRecord;
-  }
-
-  private get childNodes(): ChildNode[] {
-    const childNodes = [];
-    const firstNode = this.firstHostRecord.node;
-    const lastNode = this.lastHostRecord.node;
-    let cur = firstNode;
-    while (cur !== lastNode) {
-      childNodes.push(cur);
-      cur = cur.nextSibling;
-    }
-    childNodes.push(cur);
-    return childNodes;
-  }
-
-  public observeOnce(data: OneTimeObservable): void {
-    data.observers.add(this);
-    this.subscriptions.add(data);
-  }
-
-  public invalidate() {
-    if (!this.invalidated) {
-      this.invalidated = true;
-      Scheduler.instance.requestUpdate(this);
-    }
-  }
-
-  private unobserve(clone: ActivationRecord): void {
-    this.subscriptions.forEach((data) => {
-      data.observers.delete(this);
-      if (clone) clone.observeOnce(data);
-    });
-    this.subscriptions.clear();
-    Scheduler.instance.cancelUpdate(this);
-  }
-
-  *render(props: Arguments, context: RenderTask) {
-    props = props ?? this.props;
-
-    if (shallowEquals(props, this.props) && !this.invalidated) {
-      context.emit(() => {
-        this.children.forEach((child) => {
-          child.parent = this;
-        });
-      });
-      return this.isHostRecord ? [this.node] : this.childNodes;
-    }
-
-    let elements: string | Quasiquote[];
-
-    pushObserver(this);
-    elements = this.renderFunction.apply(this, [props, this.scope, context]);
-    popObserver();
-    yield;
-
-    let roots: ChildNode[];
-
-    if (this.type === "text" || this.type === "comment") {
-      const textNode = this.node as CharacterData;
-      context.emit(() => {
-        textNode.textContent = elements as string;
-      });
-      roots = [this.node];
+  // Remove unused records and their DOM nodes
+  const { oldChildren } = currentContext;
+  oldChildren.forEach((child) => {
+    if (child.isHostRecord) {
+      child.node.remove();
     } else {
-      roots = yield* this.diff(elements as Quasiquote[], context);
-    }
-
-    context.emit(() => {
-      this.state = 1;
-      this.invalidated = false;
-      this.props = props;
-    });
-
-    return roots;
-  }
-
-  *diff(elements: Quasiquote[], context: RenderTask) {
-    const childNodes: ChildNode[] = [];
-    const oldChildren = this.children;
-    this.children = new Map();
-
-    for (let [i, element] of (elements as Quasiquote[]).entries()) {
-      if (!element) element = ["comment", {}, "[slot]"]; // empty
-      if (!Array.isArray(element)) element = ["text", {}, String(element)]; // raw text
-      const [type, props, children] = element;
-      props.children = children;
-
-      let child: ActivationRecord;
-
-      const key = props.key ?? String(i);
-      if (oldChildren.has(key) && oldChildren.get(key).type === type) {
-        // Reuse existing record
-        child = oldChildren.get(key).clone(this, context);
-        oldChildren.delete(key);
-      } else {
-        // Create a new record
-        child = new ActivationRecord(type, this);
-        const f = (child.renderFunction =
-          typeof type == "string"
-            ? getHostRenderFunction(type)
-            : typeof type == "object"
-            ? yield type
-            : type);
-        // Initialize dynamic scope
-        if (typeof f.init == "function") {
-          const locals = f.init(props, child.scope, context) ?? {};
-          const descriptors = Object.getOwnPropertyDescriptors(locals);
-          Object.defineProperties(child.scope, descriptors);
-        }
-      }
-
-      if (i == 0) this.firstChild = child;
-      if (i == elements.length - 1) this.lastChild = child;
-      this.children.set(key, child);
-      child.key = key;
-      child.index = i;
-
-      const roots = yield* child.render(props, context);
-      childNodes.push(...roots);
-    }
-
-    // Remove unused records and their DOM nodes
-    oldChildren.forEach((child) => {
-      context.emit(() => {
-        if (child.isHostRecord) {
-          child.node.remove();
-        } else {
-          child.childNodes.forEach((node) => {
-            node.remove();
-          });
-        }
-      });
-      child.destroy(context);
-    });
-    oldChildren.clear();
-
-    // Move or attach new DOM nodes
-    if (this.isHostRecord) {
-      context.emit(() => {
-        const parent = this.node as Element;
-        childNodes.reduceRight((next, cur) => {
-          if (!(cur.parentNode === parent && cur.nextSibling === next)) {
-            parent.insertBefore(cur, next);
-          }
-          return cur;
-        }, null);
+      child.childNodes.forEach((node) => {
+        node.remove();
       });
     }
+    child.destroy();
+  });
+  oldChildren.clear();
 
-    return this.isHostRecord ? [this.node] : childNodes;
-  }
-
-  public clone(parent: ActivationRecord, context: Context): ActivationRecord {
-    const clone: ActivationRecord = { ...this };
-    Object.setPrototypeOf(clone, ActivationRecord.prototype);
-    clone.children = new Map(this.children);
-    clone.parent = parent ?? this.parent;
-    clone.depth = clone.parent ? clone.parent.depth + 1 : 0;
-    clone.subscriptions = new Set<OneTimeObservable>();
-    clone.state = 0; // not mounted
-    context.emit(() => {
-      if (!this.isHostRecord) this.unobserve(clone);
-      Object.keys(this).forEach((key) => (this[key] = null));
-      this.state = 2; // cloned
-      clone.state = 1; // current
-    });
-    return clone;
-  }
-
-  public destroy(context: Context): void {
-    this.children.forEach((c) => {
-      if (c.parent === this) c.destroy(context);
-    });
-    context.emit(() => {
-      if (!this.isHostRecord) {
-        this.unobserve(null);
-        if (
-          // Check that it is not inherited
-          this.scope.hasOwnProperty("deinit") &&
-          typeof this.scope.deinit == "function"
-        ) {
-          this.scope.deinit();
-        }
+  // Move or attach new DOM nodes
+  if (record.isHostRecord) {
+    const childNodes = hostContexts.pop();
+    const parentNode = record.node as Element;
+    childNodes.reduceRight((next, cur) => {
+      if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
+        parentNode.insertBefore(cur, next);
       }
-      Object.keys(this).forEach((key) => (this[key] = null));
-      this.state = 3; // destroyed
-    });
+      return cur;
+    }, null);
+    const parentSiblings = hostContexts.top();
+    parentSiblings.push(parentNode);
+  }
+
+  record.props = props;
+  record.invalidated = false;
+  recordContexts.pop();
+  recordContexts.top().index++;
+  recordContexts.top().prevChild = record;
+}
+
+export function __RUN__(renderFunc: () => any) {
+  const currentContext = recordContexts.top();
+  currentContext.children.push(renderFunc);
+}
+
+export function __STEP_OVER__(
+  type: string | RenderFunction,
+  props?: Arguments
+) {
+  __STEP_INTO__(type, props);
+  __STEP_OUT__(type);
+}
+
+export function render(rootComponent: RenderFunction, container: Element) {
+  container.innerHTML = "";
+  hostContexts.push([]);
+  recordContexts.push({
+    parent: new Record("_"),
+    props: null,
+    children: [],
+    oldChildren: new Map<string, Record>(),
+    prevChild: new Record("_"),
+    index: 0,
+  });
+
+  __STEP_OVER__(rootComponent);
+
+  recordContexts.pop();
+  hostContexts.pop().forEach((node) => {
+    container.appendChild(node);
+  });
+}
+
+export function requestUpdate(record: Record) {
+  updateQueue.add(record);
+  if (!pending) {
+    queueMicrotask(flushUpdateQueue);
+    pending = true;
+  }
+}
+
+function update(entry: Record) {
+  const lastNode = entry.lastHostRecord.node;
+  const parent = lastNode.parentNode;
+  const next = lastNode.nextSibling;
+  hostContexts.push([]);
+
+  const oldChildren = entry.children;
+  entry.children = new Map<string, Record>();
+  recordContexts.push(
+    {
+      parent: null,
+      props: null,
+      children: null,
+      oldChildren: null,
+      prevChild: null, // `__STEP_OUT__` requires this
+      index: 0, // `__STEP_OUT__` requires this
+    },
+    {
+      parent: entry,
+      props: entry.props,
+      children: entry.props.children,
+      oldChildren,
+      prevChild: null,
+      index: 0,
+    }
+  );
+
+  __STEP_OUT__(entry.type);
+
+  const childNodes = hostContexts.pop();
+  childNodes.reduceRight((next, cur) => {
+    if (!(cur.parentNode === parent && cur.nextSibling === next)) {
+      parent.insertBefore(cur, next);
+    }
+    return cur;
+  }, next);
+
+  recordContexts.pop();
+}
+
+function flushUpdateQueue() {
+  pending = false;
+  const sortedTasks = [...updateQueue].sort((a, b) => a.depth - b.depth);
+  updateQueue.clear();
+
+  while (sortedTasks.length) {
+    const entry = sortedTasks.shift();
+    if (!entry.type) continue; // already destroyed
+    update(entry);
   }
 }

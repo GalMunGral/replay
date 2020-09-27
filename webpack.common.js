@@ -1,7 +1,7 @@
 const path = require("path");
-const { DefinePlugin } = require("webpack");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { DefinePlugin, ProvidePlugin } = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 const babelLoader = {
@@ -10,6 +10,8 @@ const babelLoader = {
     babelrcRoots: [".", "./node_modules/replay"],
   },
 };
+
+const replayCore = path.resolve(__dirname, "replay/core/index");
 
 module.exports = (env) => ({
   entry: "./src/index",
@@ -50,10 +52,16 @@ module.exports = (env) => ({
       __DEBUG__: Boolean(env?.debug),
       LOG: "console.debug",
     }),
+    new ProvidePlugin({
+      __STEP_INTO__: [replayCore, "__STEP_INTO__"],
+      __STEP_OUT__: [replayCore, "__STEP_OUT__"],
+      __STEP_OVER__: [replayCore, "__STEP_OVER__"],
+      __RUN__: [replayCore, "__RUN__"],
+    }),
     new HtmlWebpackPlugin({
       title: "Cmail",
       favicon: path.resolve(__dirname, "src/assets/favicon.ico"),
     }),
-    new BundleAnalyzerPlugin(),
+    // new BundleAnalyzerPlugin(),
   ],
 });

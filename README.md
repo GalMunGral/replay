@@ -1,5 +1,73 @@
 # Replay
 
+## What's New
+
+I'm experimenting with the concept of "incremental DOM". JSX now compiles to instructions:
+
+```js
+__STEP_INTO__(ListItem, {
+  selected: selected,
+  draggable: canDelete,
+  onclick: onclick,
+  ondragstart: ondragstart,
+  ondrag: ondrag,
+  ondragend: ondragend,
+});
+
+__RUN__(() =>
+  canDelete
+    ? __STEP_OVER__(_Checkbox__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        checked: selected,
+        onchange: toggleItem,
+      })
+    : __STEP_OVER__("comment", {})
+);
+
+__RUN__(
+  () => (
+    __STEP_INTO__(SenderInfo, {}),
+    __RUN__(() => senderInfo),
+    __STEP_OUT__(SenderInfo)
+  )
+);
+
+__RUN__(
+  () => (
+    __STEP_INTO__(Summary, {}),
+    __RUN__(
+      () => (
+        __STEP_INTO__(Title, {}), __RUN__(() => title), __STEP_OUT__(Title)
+      )
+    ),
+    __RUN__(() =>
+      __STEP_OVER__(Preheader, {
+        innerHTML: preheaderHtml,
+      })
+    ),
+    __STEP_OUT__(Summary)
+  )
+);
+
+__RUN__(() =>
+  canDelete
+    ? (__STEP_INTO__(Actions, {}),
+      __RUN__(() =>
+        __STEP_OVER__(_IconButton__WEBPACK_IMPORTED_MODULE_2__["default"], {
+          type: "trash",
+          onclick: Object(replay_utils__WEBPACK_IMPORTED_MODULE_0__["stop"])(
+            deleteItem
+          ),
+        })
+      ),
+      __STEP_OUT__(Actions))
+    : __STEP_OVER__("comment", {})
+);
+
+__STEP_OUT__(ListItem);
+```
+
+## Original README.md
+
 This project is highly inspired by React and MobX.
 
 The basic idea is that rendering is a compilation process consisting of expanding macros (functional components) into a composition of DOM render functions (DOM components) and translating them into DOM operations (add/remove/update). The component instances are essentially managed stack frames that store arguments (props) and local variables (state) so that this process could be rolled back to any given point and start again from there, erasing previous effects that are invalidated and reusing completed work whenever possible.

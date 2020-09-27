@@ -1,9 +1,5 @@
-import {
-  $$isHostRenderer,
-  Arguments,
-  getHostRenderFunction,
-  RenderFunction,
-} from "../core/Renderer";
+import { $$isHostRenderer, getHostRenderFunction } from "../core/Renderer";
+import { Arguments, RenderFunction } from "../core/Record";
 
 type StringRenderer = (props: Arguments) => string;
 
@@ -50,20 +46,18 @@ const decorator: Decorator = (type) => {
     const nestedRuleCompilers: StringRenderer[] = [];
     const compileCSS = parseTemplateCSS(segments, ...fns);
 
-    const StyledComponent: StyleWrapper = function (props, scope, context) {
+    const StyledComponent: StyleWrapper = function (props, scope) {
       const nestedRules = nestedRuleCompilers.map((fn) => fn(props));
       const rules = ["{" + compileCSS(props) + "}", ...nestedRules];
       const hash = generateHash(rules.join("\n"));
       const className = wrappedRenderFunction.name + "-" + hash;
 
-      context.emit(() => {
-        if (!addedClasses.has(className)) {
-          rules.forEach((rule) => {
-            styleEl.sheet.insertRule("." + className + rule);
-          });
-          addedClasses.add(className);
-        }
-      });
+      if (!addedClasses.has(className)) {
+        rules.forEach((rule) => {
+          styleEl.sheet.insertRule("." + className + rule);
+        });
+        addedClasses.add(className);
+      }
 
       props = {
         ...props,
@@ -71,7 +65,8 @@ const decorator: Decorator = (type) => {
           ? props.className + " " + className
           : className,
       };
-      return wrappedRenderFunction.apply(this, [props, scope, context]);
+
+      return wrappedRenderFunction.apply(this, [props, scope]);
     };
 
     StyledComponent.$ = function (

@@ -11,12 +11,13 @@ module.exports = (src) => {
 
   traverse(ast, {
     JSXElement(path) {
-      const name = path.node.openingElement.name.name;
+      const openingElement = path.node.openingElement;
+      const name = openingElement.name.name;
       const type = /^[a-z_]/.test(name)
         ? t.stringLiteral(name)
         : t.identifier(name);
       const props = t.objectExpression(
-        path.node.openingElement.attributes.map((attr) => {
+        openingElement.attributes.map((attr) => {
           return t.isJSXSpreadAttribute(attr)
             ? t.spreadElement(attr.argument)
             : t.objectProperty(
@@ -27,29 +28,38 @@ module.exports = (src) => {
               );
         })
       );
-      const children = t.arrayExpression(
-        path.node.children
-          .flatMap((child) => {
-            return t.isJSXText(child)
-              ? child.value.trim()
-                ? t.arrayExpression([
-                    t.stringLiteral("text"),
-                    t.objectExpression([]),
-                    t.stringLiteral(child.value),
-                  ])
-                : null // remove extraneous text nodes
-              : t.isJSXSpreadChild(child)
-              ? t.spreadElement(child.expression)
-              : t.isJSXExpressionContainer(child)
-              ? t.isJSXEmptyExpression(child.expression)
-                ? null // {/* ...comments */} -> null
-                : child.expression
-              : child;
-          })
-          .filter((x) => x)
-      );
-      const node = t.arrayExpression([type, props, children]);
-      path.replaceWith(node);
+      const children = path.node.children
+        .flatMap((expr) => {
+          return t.isJSXText(expr)
+            ? expr.value.trim()
+              ? t.stringLiteral(expr.value)
+              : null
+            : t.isJSXSpreadChild(expr)
+            ? expr.expression // No need to spread the results
+            : t.isJSXExpressionContainer(expr)
+            ? t.isJSXEmptyExpression(expr.expression)
+              ? null // {/* ...comments */} -> null
+              : expr.expression
+            : expr;
+        })
+        .filter((x) => x)
+        .map((expr) =>
+          t.callExpression(t.identifier("__RUN__"), [
+            t.arrowFunctionExpression([], expr),
+          ])
+        );
+
+      if (children.length) {
+        path.replaceWithMultiple([
+          t.callExpression(t.identifier("__STEP_INTO__"), [type, props]),
+          ...children,
+          t.callExpression(t.identifier("__STEP_OUT__"), [type]),
+        ]);
+      } else {
+        path.replaceWith(
+          t.callExpression(t.identifier("__STEP_OVER__"), [type, props])
+        );
+      }
     },
   });
 
