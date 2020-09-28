@@ -44,7 +44,7 @@ module.exports = (src) => {
         })
         .filter((x) => x)
         .map((expr) =>
-          t.callExpression(t.identifier("__RUN__"), [
+          t.callExpression(t.identifier("__CONTENT__"), [
             t.arrowFunctionExpression([], expr),
           ])
         );

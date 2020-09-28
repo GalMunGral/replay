@@ -56,7 +56,7 @@ module.exports = (env) => ({
       __STEP_INTO__: [replayCore, "__STEP_INTO__"],
       __STEP_OUT__: [replayCore, "__STEP_OUT__"],
       __STEP_OVER__: [replayCore, "__STEP_OVER__"],
-      __RUN__: [replayCore, "__RUN__"],
+      __CONTENT__: [replayCore, "__CONTENT__"],
     }),
     new HtmlWebpackPlugin({
       title: "Cmail",

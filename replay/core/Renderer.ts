@@ -184,7 +184,7 @@ export function __STEP_OUT__(_type?: string | RenderFunction) {
   recordContexts.top().prevChild = record;
 }
 
-export function __RUN__(renderFunc: () => any) {
+export function __CONTENT__(renderFunc: () => any) {
   const currentContext = recordContexts.top();
   currentContext.children.push(renderFunc);
 }
