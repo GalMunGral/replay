@@ -4,6 +4,14 @@ This project is highly inspired by React and MobX.
 
 The basic idea is that rendering is a compilation process consisting of expanding macros (templates) into code (description of the DOM) and then translating it into DOM operations (add/remove/update). The component instances caches the parameters (props and state) used in its evaluation and so that this process could be rolled back and start again from those points, erasing previous effects that are invalidated and reusing completed work whenever possible.
 
+Dependencies form a directed graph where stored properties are the sources, computed properties are internal nodes, and component instances are the sinks. Each path on this graph coincides with the state of the actual call stack at some point during the evaluation. Mutations invalidate all previous computations (represented by nodes) reachable from the affected source. This recursive dependency tracking and invalidation mechanism is implemented using the observer pattern with an additional observer stack. The subscriptions need only be one-time (analagous to long-polling), because the observers are not actually observing for incoming data, but rather invalidation of their own cached value.
+
+## Demo Project
+
+![screenshot](screenshots/demo.png)
+
+![async-rendering](screenshots/async.png)
+
 ### On dev branch
 
 Two steps (render + diff) are merged into one (diff). JSX now compiles to instructions that perform the diff directly, rather than creating vDOM nodes to be diffed by another procedure.
@@ -70,8 +78,6 @@ __RUN__(() =>
 __STEP_OUT__(ListItem);
 ```
 
-Dependencies form a directed graph where stored properties are the sources, computed properties are internal nodes, and component instances are the sinks. Each path on this graph coincides with the state of the actual call stack at some point during the evaluation. Mutations invalidate all previous computations (represented by nodes) reachable from the affected source. This recursive dependency tracking and invalidation mechanism is implemented using the observer pattern with an additional observer stack. The subscriptions need only be one-time (analagous to long-polling), because the observers are not actually observing for incoming data, but rather invalidation of their own cached value.
+This seems to have solved the memory leak?
 
-## Demo Project
-
-![screenshot](screenshots/demo.png)
+![memory-usage](screenshots/memory.png)
