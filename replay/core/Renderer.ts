@@ -63,17 +63,15 @@ export function getHostRenderFunction(htmlTag: string): RenderFunction {
   });
 }
 
-// TODO: `shouldComponentUpdate`
-
-// function shallowEquals(a: any, b: any): boolean {
-//   if (typeof a != typeof b) return false;
-//   if (typeof a != "object" || a == null) return a == b;
-//   if (Object.keys(a).length != Object.keys(b).length) return false;
-//   for (let key of Object.keys(a)) {
-//     if (a[key] !== b[key]) return false;
-//   }
-//   return true;
-// }
+function shallowEquals(a: any, b: any): boolean {
+  if (typeof a != typeof b) return false;
+  if (typeof a != "object" || a == null) return a == b;
+  if (Object.keys(a).length != Object.keys(b).length) return false;
+  for (let key of Object.keys(a)) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
+}
 
 export function __STEP_INTO__(
   type: string | RenderFunction,
@@ -128,37 +126,55 @@ export function __STEP_OUT__(_type?: string | RenderFunction) {
   const currentContext = recordContexts.top();
   const { parent: record, props, children } = currentContext;
 
-  pushObserver(record);
   props.children = children;
-  record.renderFunction.apply(record, [props, record.scope]);
-  popObserver();
 
-  // Remove unused records and their DOM nodes
-  const { oldChildren } = currentContext;
-  oldChildren.forEach((child) => {
-    if (child.isHostRecord) {
-      child.node.remove();
-    } else {
-      child.childNodes.forEach((node) => {
-        node.remove();
-      });
-    }
-    child.destroy();
-  });
-  oldChildren.clear();
+  const shouldUpdate =
+    record.invalidated || !shallowEquals(props, record.props);
 
-  // Move or attach new DOM nodes
-  if (record.isHostRecord) {
-    const childNodes = hostContexts.pop();
-    const parentNode = record.node as Element;
-    childNodes.reduceRight((next, cur) => {
-      if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
-        parentNode.insertBefore(cur, next);
+  if (shouldUpdate) {
+    pushObserver(record);
+    record.renderFunction.apply(record, [props, record.scope]);
+    popObserver();
+
+    // Remove unused records and their DOM nodes
+    const { oldChildren } = currentContext;
+    oldChildren.forEach((child) => {
+      if (child.isHostRecord) {
+        child.node.remove();
+      } else {
+        child.childNodes.forEach((node) => {
+          node.remove();
+        });
       }
-      return cur;
-    }, null);
-    const parentSiblings = hostContexts.top();
-    parentSiblings.push(parentNode);
+      child.destroy();
+    });
+    oldChildren.clear();
+
+    // Move or attach new DOM nodes
+    if (record.isHostRecord) {
+      const childNodes = hostContexts.pop();
+      const parentNode = record.node as Element;
+      childNodes.reduceRight((next, cur) => {
+        if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
+          parentNode.insertBefore(cur, next);
+        }
+        return cur;
+      }, null);
+      const parentSiblings = hostContexts.top();
+      parentSiblings.push(parentNode);
+    }
+  } else {
+    console.debug("Nothing changed. Skip updates.");
+
+    // No diffing on children. Reuse old ones.
+    record.children = currentContext.oldChildren;
+
+    // No reordering, but context still needs to be updated.
+    if (record.isHostRecord) {
+      hostContexts.pop(); // Pushed in `__STEP_INTO__`
+      const parentSiblings = hostContexts.top();
+      parentSiblings.push(record.node);
+    }
   }
 
   record.props = props;
