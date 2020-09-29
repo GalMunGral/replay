@@ -2,12 +2,11 @@ const path = require("path");
 
 module.exports = {
   entry: "./src/index",
-  contentBase: ["./public"],
+  contentBase: "./public",
   loaders: [
+    { test: /\.js$/, use: [] },
     { test: /\.ts$/, use: ["modulizer/ts-loader"] },
-    { test: /\.js$/, use: ["modulizer/js-loader"] },
     { test: /\.css$/, use: ["modulizer/css-loader"] },
-    { test: /\.png$/, use: ["modulizer/file-loader"] },
   ],
 };
 

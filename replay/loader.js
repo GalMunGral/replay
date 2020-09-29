@@ -3,10 +3,9 @@ const parser = require("@babel/parser");
 const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
 
-module.exports = (buffer, cb) => {
+module.exports = ({ code }, cb) => {
   try {
-    const src = buffer.toString("utf-8");
-    const ast = parser.parse(src, {
+    const ast = parser.parse(code, {
       sourceType: "module",
       plugins: ["jsx", "classProperties"],
     });
@@ -89,8 +88,9 @@ module.exports = (buffer, cb) => {
         }
       },
     });
-    const { code } = generate(ast);
-    cb(null, code);
+
+    const result = generate(ast);
+    cb(null, result.code);
   } catch (err) {
     cb(err);
   }

@@ -3,6 +3,7 @@ const fs = require("fs");
 const { transform } = require("@babel/core");
 const config = require("./config");
 
+const projectRoot = process.cwd();
 const filenames = ["", "index"];
 const extensions = ["", ...config.extensions];
 
@@ -12,7 +13,6 @@ function resolve(absolutePath) {
       try {
         const extended = path.join(absolutePath, filename) + extension;
         const resolved = require.resolve(extended);
-        console.log("resolved", resolved);
         return resolved;
       } catch {
         continue;
@@ -23,27 +23,38 @@ function resolve(absolutePath) {
 }
 
 const createImportTransformPlugin = (filePath) => {
-  const projectRoot = process.cwd();
   const currentDir = path.dirname(filePath);
+
+  function resolveModulePath(module) {
+    const modulePath = /^[./]/.test(module)
+      ? path.join(currentDir, module) // relative import
+      : path.join(projectRoot, "node_modules", module); // node module
+    const absolutePath = resolve(modulePath);
+    const relativePath = path.relative(projectRoot, absolutePath);
+    return "/" + relativePath;
+  }
+
   return () => ({
     visitor: {
       ImportDeclaration({ node }) {
-        const module = node.source.value;
-        const modulePath = /^[./]/.test(module)
-          ? path.join(currentDir, module) // relative import
-          : path.join(projectRoot, "node_modules", module); // node module
-        const absolutePath = resolve(modulePath);
-        const relativePath = path.relative(projectRoot, absolutePath);
-        node.source.value = "/" + relativePath;
-        console.log(module, "->", relativePath);
+        node.source.value = resolveModulePath(node.source.value);
+      },
+      ExportNamedDeclaration({ node }) {
+        if (node.source) {
+          // Check that this is a re-export
+          node.source.value = resolveModulePath(node.source.value);
+        }
+      },
+      ExportAllDeclaration({ node }) {
+        node.source.value = resolveModulePath(node.source.value);
       },
     },
   });
 };
 
-function transformESM(src, filePath, cb) {
+function transformESM({ code, filePath }, cb) {
   transform(
-    src,
+    code,
     {
       plugins: [
         require.resolve("@babel/plugin-proposal-class-properties"),
@@ -63,20 +74,30 @@ function load(filePath, cb) {
     if (rule.test.test(filePath)) {
       const loaderPipeline = rule.use.reduce(
         (next, loaderModule) => {
-          return (err, data) => {
+          return (err, code) => {
             if (err) return cb(err);
-            require(loaderModule)(data, next);
+            const loader = require(loaderModule);
+            loader({ code, filePath }, next);
           };
         },
-        (err, data) => {
+        (err, code) => {
           if (err) return cb(err);
-          transformESM(data, filePath, cb);
+          transformESM({ code, filePath }, cb);
         }
       );
-      return fs.readFile(filePath, loaderPipeline);
+      return fs.readFile(filePath, { encoding: "utf-8" }, loaderPipeline);
     }
   }
-  cb(`No loader configured for ${filePath}`);
+  // No loader found. Resolve the import to a URL.
+  const encoded = Buffer.from(filePath).toString("base64").slice(-10);
+  const filename = encoded + path.extname(filePath);
+  const outputPath = path.join(process.cwd(), config.contentBase, filename);
+  fs.copyFile(filePath, outputPath, (err) => {
+    if (err) return cb(err);
+    const url = "/" + filename;
+    const module = `export default "${url}"`;
+    cb(null, module);
+  });
 }
 
 module.exports = function serveModule(req, res, next) {
@@ -91,10 +112,7 @@ module.exports = function serveModule(req, res, next) {
 
   load(absolutePath, (err, src) => {
     // All errors that occurred during loading are handled here
-    if (err) {
-      console.error("######", err);
-      throw err;
-    }
+    if (err) throw err;
     res.setHeader("content-type", "text/javascript");
     res.end(src);
   });

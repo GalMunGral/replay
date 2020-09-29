@@ -30,7 +30,7 @@ const d = observable({
 
 function Debug({}, {}) {
   autorun(() => {
-    document.querySelector("#search").value = d.reversed;
+    // document.querySelector("#search").value = d.reversed;
   });
 
   return [
