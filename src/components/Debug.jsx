@@ -28,12 +28,11 @@ const d = observable({
   },
 });
 
-function Debug({}, {}, context) {
-  context.emit(() => {
-    autorun(() => {
-      document.querySelector("#search").value = d.reversed;
-    });
+function Debug({}, {}) {
+  autorun(() => {
+    document.querySelector("#search").value = d.reversed;
   });
+
   return [
     <div>{/* placeholder */}</div>,
     <Centered>

@@ -1,14 +1,17 @@
-import {
-  Arguments,
-  DynamicScope,
-  Quasiquote,
-  RenderFunction,
-} from "../core/Renderer";
+import { __STEP_OVER__, hostContexts } from "../core/Renderer";
+import { Arguments, DynamicScope, RenderFunction } from "../core/Record";
 import { decorator } from "./Decorator";
+
+interface RouteDef {
+  path: string;
+  validate: RouteValidator;
+  component: RenderFunction;
+}
 
 interface Route {
   regex: RegExp;
   validate: RouteValidator;
+  component: RenderFunction;
 }
 
 type RouteTable = Map<string, Route>;
@@ -24,21 +27,6 @@ interface RouteMatch {
   params: RouteMatchParams;
 }
 
-interface RouteProps extends Arguments {
-  path: string;
-  validate?: RouteValidator;
-}
-
-interface RouteElement extends Quasiquote {
-  0: "route";
-  1: RouteProps;
-  2: Quasiquote[];
-}
-
-interface RouterProps extends Arguments {
-  children: RouteElement[];
-}
-
 interface RouterScope extends DynamicScope {
   route: RouteMatch;
 }
@@ -46,7 +34,7 @@ interface RouterScope extends DynamicScope {
 interface LinkProps extends Arguments {
   to: string;
   className: string; // supplied by decorator
-  children: Quasiquote[];
+  children: ((...arg: any) => any)[];
 }
 
 interface RedirectProps extends Arguments {
@@ -98,63 +86,51 @@ export const Link: RenderFunction = decorator(function Link({
   className,
   children,
 }: LinkProps) {
-  if (!Array.isArray(children) || !children.length) return [null];
-  const child = children[0];
-  const onclick = child[1].onclick;
-  child[1].onclick = (e) => {
-    if (typeof onclick == "function") {
-      (onclick as Function)(e);
-    }
-    navigate(path);
-  };
-  child[1].className = [className, child[1].className].join(" ");
-  return [child];
+  hostContexts.push([]);
+  const render = children[0];
+  if (typeof render == "function") render();
+  const nodes = hostContexts.pop();
+  nodes.forEach((node: HTMLElement) => {
+    node.className = node.className + " " + className;
+    node.onclick = () => navigate(path);
+    hostContexts.top().push(node);
+  });
 })`
   cursor: pointer;
 `;
 
 export const Redirect: RenderFunction = ({ to: path }: RedirectProps) => {
-  // `redirect` dispatches "popstate" event
-  // -> `window.onpopstate` (sync) <---- EDGE CASE: this is undefined during initial render
-  // -> `route` updated, set trap triggered
-  // -> `Scheduler.requestUpdate`
-  // -> (in microtask) current rendering is aborted
-
-  // context.emit(() => redirect(path)); // Defer calls to `redirect` until the commit phase (after `window.onpopstate` is set)
-  redirect(path);
-  return [];
+  queueMicrotask(() => redirect(path));
 };
 
-export const Router: RenderFunction = (
-  { children }: RouterProps,
-  { route }: RouterScope
-) => {
-  if (!Array.isArray(children)) return [null];
-  return children
-    .filter((child) => child[1].path === route.path)
-    .filter((child) => Array.isArray(child[2][0]))
-    .map((child) => child[2][0] as Quasiquote);
-};
+export class Router {
+  private routeTable: RouteTable;
+  public RouterView: RenderFunction;
 
-Router.init = (props: RouterProps, _this: RouterScope, context) => {
-  const routeTable: RouteTable = new Map(
-    props.children
-      .filter((child) => child[0] === "route")
-      .map((route) => {
-        const { path, validate } = route[1];
+  constructor(routes: RouteDef[]) {
+    this.routeTable = new Map(
+      routes.map(({ path, validate, component }) => {
         const regex = compileRegExp(path);
-        return [path, { regex, validate }];
+        return [path, { regex, validate, component }];
       })
-  );
+    );
 
-  window.onpopstate = () => {
-    Object.assign(_this.route, matchPath(routeTable));
-  };
+    this.RouterView = ({}, { route }: RouterScope) => {
+      const matchedPath = route.path;
+      const matchedRoute = this.routeTable.get(matchedPath);
+      __STEP_OVER__(matchedRoute.component);
+    };
 
-  return {
-    route: matchPath(routeTable),
-    deinit() {
-      window.onpopstate = null;
-    },
-  };
-};
+    this.RouterView.init = ({}, $this: RouterScope) => {
+      window.onpopstate = () => {
+        Object.assign($this.route, matchPath(this.routeTable));
+      };
+      return {
+        route: matchPath(this.routeTable),
+        deinit() {
+          window.onpopstate = null;
+        },
+      };
+    };
+  }
+}

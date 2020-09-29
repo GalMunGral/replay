@@ -3,8 +3,8 @@ import SidebarMenu from "./SidebarMenu";
 import editorButtonIcon from "../assets/images/create.png";
 
 const Sidebar = ({}, scope) => {
-  const { folder, hidden, mouseenter, mouseleave, openEditor } = scope;
-  return [
+  const { hidden, mouseenter, mouseleave, openEditor } = scope;
+  return (
     <Container
       hidden={hidden}
       onmouseenter={mouseenter}
@@ -12,11 +12,11 @@ const Sidebar = ({}, scope) => {
     >
       <EditorButton hidden={hidden} onclick={openEditor}>
         <ButtonIcon src={editorButtonIcon} />
-        {!hidden ? <ButtonText>Compose</ButtonText> : null}
+        {!hidden ? <ButtonText>Compose</ButtonText> : <comment />}
       </EditorButton>
       <SidebarMenu hidden={hidden} />
-    </Container>,
-  ];
+    </Container>
+  );
 };
 
 Sidebar.init = ({}, { sidebar, route, store }) => ({

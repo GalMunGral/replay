@@ -15,12 +15,13 @@ const SidebarMenu = ({ hidden }, scope) => {
     ondragleave,
     ondrop,
   } = scope;
+
   return [
-    ...links.map(({ url, name, activated, className }) => (
+    links.forEach(({ url, name, activated, className }) => (
       <Link to={url}>
         <MenuItem hidden={hidden} activated={activated}>
           <MenuIcon className={className} />
-          {!hidden ? <span>{name}</span> : null}
+          {!hidden ? <span>{name}</span> : <comment />}
         </MenuItem>
       </Link>
     )),
@@ -35,7 +36,7 @@ const SidebarMenu = ({ hidden }, scope) => {
         ondrop={ondrop}
       >
         <MenuIcon className="fas fa-trash" />
-        {!hidden ? <span>trash</span> : null}
+        {!hidden ? <span>trash</span> : <comment />}
       </MenuItem>
     </Link>,
   ];
