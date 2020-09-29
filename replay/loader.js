@@ -3,57 +3,95 @@ const parser = require("@babel/parser");
 const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
 
-module.exports = (src) => {
-  const ast = parser.parse(src, {
-    sourceType: "module",
-    plugins: ["jsx", "classProperties"],
-  });
-
-  traverse(ast, {
-    JSXElement(path) {
-      const name = path.node.openingElement.name.name;
-      const type = /^[a-z_]/.test(name)
-        ? t.stringLiteral(name)
-        : t.identifier(name);
-      const props = t.objectExpression(
-        path.node.openingElement.attributes.map((attr) => {
-          return t.isJSXSpreadAttribute(attr)
-            ? t.spreadElement(attr.argument)
-            : t.objectProperty(
-                t.identifier(attr.name.name),
-                t.isJSXExpressionContainer(attr.value)
-                  ? attr.value.expression
-                  : attr.value
-              );
-        })
-      );
-      const children = t.arrayExpression(
-        path.node.children
-          .flatMap((child) => {
-            return t.isJSXText(child)
-              ? child.value.trim()
-                ? t.arrayExpression([
-                    t.stringLiteral("text"),
-                    t.objectExpression([]),
-                    t.stringLiteral(child.value),
-                  ])
-                : null // remove extraneous text nodes
-              : t.isJSXSpreadChild(child)
-              ? t.spreadElement(child.expression)
-              : t.isJSXExpressionContainer(child)
-              ? t.isJSXEmptyExpression(child.expression)
+module.exports = (buffer, cb) => {
+  try {
+    const src = buffer.toString("utf-8");
+    const ast = parser.parse(src, {
+      sourceType: "module",
+      plugins: ["jsx", "classProperties"],
+    });
+    traverse(ast, {
+      Program(path) {
+        const imports = [
+          t.importDeclaration(
+            [
+              t.importSpecifier(
+                t.identifier("__STEP_INTO__"),
+                t.identifier("__STEP_INTO__")
+              ),
+              t.importSpecifier(
+                t.identifier("__STEP_OUT__"),
+                t.identifier("__STEP_OUT__")
+              ),
+              t.importSpecifier(
+                t.identifier("__STEP_OVER__"),
+                t.identifier("__STEP_OVER__")
+              ),
+              t.importSpecifier(
+                t.identifier("__CONTENT__"),
+                t.identifier("__CONTENT__")
+              ),
+            ],
+            t.stringLiteral("replay/core")
+          ),
+        ];
+        path.node.body.unshift(...imports);
+      },
+      JSXElement(path) {
+        const openingElement = path.node.openingElement;
+        const name = openingElement.name.name;
+        const type = /^[a-z_]/.test(name)
+          ? t.stringLiteral(name)
+          : t.identifier(name);
+        const props = t.objectExpression(
+          openingElement.attributes.map((attr) => {
+            return t.isJSXSpreadAttribute(attr)
+              ? t.spreadElement(attr.argument)
+              : t.objectProperty(
+                  t.identifier(attr.name.name),
+                  t.isJSXExpressionContainer(attr.value)
+                    ? attr.value.expression
+                    : attr.value
+                );
+          })
+        );
+        const children = path.node.children
+          .flatMap((expr) => {
+            return t.isJSXText(expr)
+              ? expr.value.trim()
+                ? t.stringLiteral(expr.value)
+                : null
+              : t.isJSXSpreadChild(expr)
+              ? expr.expression // No need to spread the results
+              : t.isJSXExpressionContainer(expr)
+              ? t.isJSXEmptyExpression(expr.expression)
                 ? null // {/* ...comments */} -> null
-                : child.expression
-              : child;
+                : expr.expression
+              : expr;
           })
           .filter((x) => x)
-      );
-      const node = t.arrayExpression([type, props, children]);
-      path.replaceWith(node);
-    },
-  });
+          .map((expr) =>
+            t.callExpression(t.identifier("__CONTENT__"), [
+              t.arrowFunctionExpression([], expr),
+            ])
+          );
 
-  const { code } = generate(ast);
-
-  return code;
+        if (children.length) {
+          path.replaceWithMultiple([
+            t.callExpression(t.identifier("__STEP_INTO__"), [type, props]),
+            ...children,
+            t.callExpression(t.identifier("__STEP_OUT__"), [type]),
+          ]);
+        } else {
+          path.replaceWith(
+            t.callExpression(t.identifier("__STEP_OVER__"), [type, props])
+          );
+        }
+      },
+    });
+    const { code } = generate(ast);
+    cb(null, code);
+  } catch (err) {
+    cb(err);
+  }
 };

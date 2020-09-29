@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid/dist/esm-browser/index.js";
 import { createStore } from "replay/utils";
 import mails from "./mails";
 
