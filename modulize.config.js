@@ -1,12 +1,13 @@
 module.exports = {
   entry: "./src/index",
   contentBase: "./public",
-  mainFiles: ["index"],
-  extensions: [".ts", ".tsx", ".js", ".jsx"],
+  resolve: {
+    extensions: [".ts", ".js", ".jsx"],
+  },
   transforms: [
     { test: /\.jsx$/, use: ["replay/transform"] },
-    { test: /\.js$/, use: ["modulizer/transforms/commonjs"] },
+    { test: /\.js$/, use: ["modulizer/transforms/common-js"] },
     { test: /\.ts$/, use: ["modulizer/transforms/typescript"] },
-    { test: /\.css$/, use: ["modulizer/transforms/css"] },
+    { test: /\.css$/, use: ["modulizer/transforms/css-inline"] },
   ],
 };

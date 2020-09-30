@@ -1,35 +1,42 @@
 const path = require("path");
 
-module.exports = {
-  entry: "./src/index",
-  contentBase: "./public",
-};
-
-try {
-  const configPath = path.join(process.cwd(), "./modulize.config.js");
-  assign(module.exports, require(configPath));
-} catch {
-  console.warn("No config file found.");
-} finally {
-  console.info("Loaded config:\n", module.exports);
-}
-
 function isNonNullObject(val) {
   return typeof val == "object" && val != null;
 }
 
-function assign(a, b) {
-  Object.keys(b).forEach((key) => {
-    if (isNonNullObject(a[key]) && isNonNullObject(b[key])) {
-      if (Array.isArray(a[key]) && Array.isArray(b[key])) {
-        a[key] = [...new Set([...a[key], ...b[key]])];
-      } else if (Array.isArray(a) || Array.isArray(b)) {
-        a[key] = b[key];
+function merge(target, source) {
+  Object.keys(source).forEach((key) => {
+    if (isNonNullObject(target[key]) && isNonNullObject(source[key])) {
+      if (Array.isArray(target[key]) && Array.isArray(source[key])) {
+        target[key] = [...new Set([...target[key], ...source[key]])];
+      } else if (Array.isArray(target) || Array.isArray(source)) {
+        target[key] = source[key];
       } else {
-        assign(a[key], b[key]);
+        merge(target[key], source[key]);
       }
     } else {
-      a[key] = b[key];
+      target[key] = source[key];
     }
   });
+}
+
+module.exports = {
+  entry: "./src/index",
+  contentBase: ".",
+  resolve: {
+    mainFiles: ["index"],
+    extensions: [".js"],
+  },
+  transforms: [],
+};
+
+try {
+  merge(
+    module.exports,
+    require(path.join(process.cwd(), "./modulize.config.js"))
+  );
+} catch {
+  console.warn("No config file found.");
+} finally {
+  console.info("Loaded config:\n", module.exports);
 }

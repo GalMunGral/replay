@@ -2,10 +2,10 @@ const path = require("path");
 const fs = require("fs");
 const util = require("util");
 const config = require("./config");
-const transformCJS = require("./transforms/commonjs");
-const transformESM = require("./transforms/module");
-const transformFile = require("./transforms/file");
 const readFile = util.promisify(fs.readFile);
+const transformCJS = require("./transforms/common-js");
+const analyzeESM = require("./transforms/es-module");
+const exportURL = require("./transforms/file-url");
 
 const moduleCache = new Map(); // path -> content
 
@@ -50,7 +50,7 @@ function modulize(file, options = {}) {
 
   for (let rule of config.transforms) {
     if (rule.test.test(file.path)) {
-      return [transformESM, transformCJS, ...rule.use.map(require)]
+      return [analyzeESM, transformCJS, ...rule.use.map(require)]
         .reduceRight(
           (previous, transform) => previous.then(transform),
           original
@@ -70,7 +70,7 @@ function modulize(file, options = {}) {
   }
 
   // Failed to "modulize" the file. Export a URL instead.
-  transformFile(file).then((file) => send(file, options));
+  exportURL(file).then((jsFile) => send(jsFile, options));
 }
 
 function invalidateCache(file) {
