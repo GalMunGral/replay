@@ -3,13 +3,38 @@ const parser = require("@babel/parser");
 const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
 
-module.exports = (src) => {
-  const ast = parser.parse(src, {
+module.exports = (module) => {
+  const ast = parser.parse(module.content, {
     sourceType: "module",
     plugins: ["jsx", "classProperties"],
   });
-
   traverse(ast, {
+    Program(path) {
+      const imports = [
+        t.importDeclaration(
+          [
+            t.importSpecifier(
+              t.identifier("__STEP_INTO__"),
+              t.identifier("__STEP_INTO__")
+            ),
+            t.importSpecifier(
+              t.identifier("__STEP_OUT__"),
+              t.identifier("__STEP_OUT__")
+            ),
+            t.importSpecifier(
+              t.identifier("__STEP_OVER__"),
+              t.identifier("__STEP_OVER__")
+            ),
+            t.importSpecifier(
+              t.identifier("__CONTENT__"),
+              t.identifier("__CONTENT__")
+            ),
+          ],
+          t.stringLiteral("replay/core")
+        ),
+      ];
+      path.node.body.unshift(...imports);
+    },
     JSXElement(path) {
       const openingElement = path.node.openingElement;
       const name = openingElement.name.name;
@@ -63,7 +88,8 @@ module.exports = (src) => {
     },
   });
 
-  const { code } = generate(ast);
-
-  return code;
+  return {
+    ...module,
+    content: generate(ast).code,
+  };
 };

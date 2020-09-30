@@ -100,6 +100,7 @@ export const Link: RenderFunction = decorator(function Link({
 `;
 
 export const Redirect: RenderFunction = ({ to: path }: RedirectProps) => {
+  __STEP_OVER__("comment");
   queueMicrotask(() => redirect(path));
 };
 

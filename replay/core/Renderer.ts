@@ -122,7 +122,7 @@ export function __STEP_INTO__(
   }
 }
 
-export function __STEP_OUT__(_type?: string | RenderFunction) {
+export function __STEP_OUT__(type?: string | RenderFunction) {
   const currentContext = recordContexts.top();
   const { parent: record, props, children } = currentContext;
 
@@ -182,6 +182,7 @@ export function __STEP_OUT__(_type?: string | RenderFunction) {
   recordContexts.pop();
   recordContexts.top().index++;
   recordContexts.top().prevChild = record;
+  console.groupEnd();
 }
 
 export function __CONTENT__(renderFunc: () => any) {
@@ -212,6 +213,7 @@ export function render(rootComponent: RenderFunction, container: Element) {
   __STEP_OVER__(rootComponent);
 
   recordContexts.pop();
+
   hostContexts.pop().forEach((node) => {
     container.appendChild(node);
   });
