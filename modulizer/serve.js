@@ -7,19 +7,26 @@ const transformESM = require("./transforms/module");
 const transformFile = require("./transforms/file");
 const readFile = util.promisify(fs.readFile);
 
+const root = process.cwd();
+const served = new Set(); // file paths
+
 module.exports = function serve(file, stream, push) {
   function send(content) {
     if (push) {
-      const urlPath = "/" + path.relative(process.cwd(), file.path);
-      stream.pushStream({ ":path": urlPath }, (err, pushStream) => {
+      const url = "/" + path.relative(root, file.path);
+      stream.pushStream({ ":path": url }, (err, pushStream) => {
         if (err) throw err;
-        stream.respond({ "content-type": "text/javascript" });
+        pushStream.respond({
+          ":status": 200,
+          "content-type": "text/javascript",
+        });
         pushStream.end(content);
       });
     } else {
       stream.respond({ "content-type": "text/javascript" });
       stream.end(content);
     }
+    served.add(file.path);
   }
 
   const original = readFile(file.path, {
@@ -36,7 +43,17 @@ module.exports = function serve(file, stream, push) {
           (previous, transform) => previous.then(transform),
           original
         )
-        .then(({ content }) => send(content))
+        .then(({ content, deps }) => {
+          send(content);
+          console.log(deps);
+          //
+          // TODO: Enable HTTP/2 server push
+          //
+          // deps.forEach((filePath) => {
+          //   if (served.has(filePath)) return;
+          //   serve({ path: filePath }, stream, true);
+          // });
+        })
         .catch(console.error);
     }
   }

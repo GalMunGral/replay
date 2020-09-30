@@ -44,7 +44,7 @@ function handleRequest(stream, headers) {
       const partial = path.join(root, config.entry);
       const full = resolve(partial);
       const relative = "/" + path.relative(root, full);
-      stream.respond({ "content-type": "text/html" });
+      stream.respond({ "content-type": "text/html; charset=utf-8" });
       stream.end(`<script type="module" src="${relative}"></script>`);
     })
     .catch(() => {

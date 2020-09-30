@@ -4,18 +4,21 @@ const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
 const resolve = require("../resolve");
 
-const projectRoot = process.cwd();
+const root = process.cwd();
 
 module.exports = (file) => {
-  const currentDir = path.dirname(file.path);
+  const context = path.dirname(file.path);
+  const deps = new Set();
 
-  function resolveModulePath(dep) {
-    const modulePath = /^[./]/.test(dep)
-      ? path.join(currentDir, dep) // relative import
-      : path.join(projectRoot, "node_modules", dep); // node file
-    const absolutePath = resolve(modulePath);
-    const relativePath = path.relative(projectRoot, absolutePath);
-    return "/" + relativePath;
+  function resolveDep(resource) {
+    const filePath = resource.startsWith(".") // TODO: not sure about this
+      ? resolve(path.join(context, resource)) // relative import
+      : resolve(path.join(root, "node_modules", resource)); // node module
+
+    // Collect dependencies for HTTP/2 server push
+    deps.add(filePath);
+
+    return "/" + path.relative(root, filePath);
   }
 
   const ast = parser.parse(file.content, {
@@ -25,21 +28,18 @@ module.exports = (file) => {
 
   traverse(ast, {
     ImportDeclaration({ node }) {
-      node.source.value = resolveModulePath(node.source.value);
+      node.source.value = resolveDep(node.source.value);
     },
     ExportNamedDeclaration({ node }) {
       if (node.source) {
-        // Check that this is a re-export
-        node.source.value = resolveModulePath(node.source.value);
+        // Make sure this is a re-export
+        node.source.value = resolveDep(node.source.value);
       }
     },
     ExportAllDeclaration({ node }) {
-      node.source.value = resolveModulePath(node.source.value);
+      node.source.value = resolveDep(node.source.value);
     },
   });
 
-  return {
-    ...file,
-    content: generate(ast).code,
-  };
+  return { ...file, content: generate(ast).code, deps };
 };
