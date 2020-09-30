@@ -4,7 +4,7 @@
 
 ### Goodbye Module Bundler, Goodbye Virtual DOM
 
-I deleted webpack and wrote a server to serve individual ES modules (anything with a transform) with live reload.
+I deleted webpack and wrote a tool to serve individual ES modules (anything with a transform) with live reload.
 
 JSX now compiles to instructions that perform the diff directly, rather than creating vDOM nodes to be diffed by another procedure.
 
