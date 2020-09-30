@@ -100,10 +100,10 @@ function load(filePath, cb) {
   });
 }
 
-module.exports = function serveModule(req, res, next) {
+module.exports = function serveModule(stream, headers, next) {
   let absolutePath;
   try {
-    const partialPath = path.join(process.cwd(), req.url);
+    const partialPath = path.join(process.cwd(), headers[":path"]);
     absolutePath = resolve(partialPath);
   } catch {
     // Module not found
@@ -113,7 +113,7 @@ module.exports = function serveModule(req, res, next) {
   load(absolutePath, (err, src) => {
     // All errors that occurred during loading are handled here
     if (err) throw err;
-    res.setHeader("content-type", "text/javascript");
-    res.end(src);
+    stream.respond({ "content-type": "text/javascript" });
+    stream.end(src);
   });
 };

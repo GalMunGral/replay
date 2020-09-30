@@ -3,13 +3,17 @@ const fs = require("fs");
 const config = require("./config");
 const mime = require("mime-types");
 
-module.exports = (req, res, next) => {
+module.exports = (stream, headers, next) => {
   try {
-    const filePath = path.join(process.cwd(), config.contentBase, req.url);
+    const filePath = path.join(
+      process.cwd(),
+      config.contentBase,
+      headers[":path"]
+    );
     return fs.readFile(filePath, (err, data) => {
       if (err) return next();
-      res.setHeader("content-type", mime.lookup(filePath));
-      res.end(data);
+      stream.respond({ "content-type": mime.lookup(filePath) });
+      stream.end(data);
     });
   } catch {
     console.log("static file not found");
