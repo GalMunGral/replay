@@ -29,7 +29,7 @@ function handleRequest(stream, headers) {
       // Serve file as ES module
       const file = { path: path.join(root, url) };
       require.resolve(file.path);
-      serve(file, stream, false);
+      serve(file, { stream, push: false });
     })
     .catch(() => {
       // Serve file as an asset

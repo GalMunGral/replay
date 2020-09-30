@@ -7,26 +7,38 @@ const transformESM = require("./transforms/module");
 const transformFile = require("./transforms/file");
 const readFile = util.promisify(fs.readFile);
 
-const root = process.cwd();
-const served = new Set(); // file paths
+const moduleCache = new Map(); // file path => file content
+const processed = new Set(); // file paths
 
-module.exports = function serve(file, stream, push) {
-  function send(content) {
-    if (push) {
-      const url = "/" + path.relative(root, file.path);
-      stream.pushStream({ ":path": url }, (err, pushStream) => {
-        if (err) throw err;
-        pushStream.respond({
-          ":status": 200,
-          "content-type": "text/javascript",
-        });
-        pushStream.end(content);
-      });
-    } else {
-      stream.respond({ "content-type": "text/javascript" });
-      stream.end(content);
-    }
-    served.add(file.path);
+function send(file, options) {
+  const { stream, push } = options;
+  if (push) {
+    // Try caching for now
+    moduleCache.set(file.path, file);
+    console.log("Pushed:", file.path);
+    // const root = process.cwd();
+    // const url = "/" + path.relative(root, file.path);
+    // stream.pushStream({ ":path": url }, (err, pushStream) => {
+    //   if (err) throw err;
+    //   pushStream.respond({
+    //     ":status": 200,
+    //     "content-type": "text/javascript",
+    //   });
+    //   pushStream.end(file.content);
+    // });
+  } else {
+    stream.respond({ "content-type": "text/javascript" });
+    stream.end(file.content);
+  }
+  processed.add(file.path);
+}
+
+module.exports = function serve(file, options) {
+  if (moduleCache.has(file.path)) {
+    console.log("Hit:", file.path);
+    const cached = moduleCache.get(file.path);
+    send(cached, options);
+    return;
   }
 
   const original = readFile(file.path, {
@@ -43,23 +55,20 @@ module.exports = function serve(file, stream, push) {
           (previous, transform) => previous.then(transform),
           original
         )
-        .then(({ content, deps }) => {
-          send(content);
-          console.log(deps);
-          //
-          // TODO: Enable HTTP/2 server push
-          //
-          // deps.forEach((filePath) => {
-          //   if (served.has(filePath)) return;
-          //   serve({ path: filePath }, stream, true);
-          // });
+        .then((file) => {
+          send(file, options);
+
+          file.deps.forEach((path) => {
+            if (processed.has(path)) return;
+            // TODO: Enable HTTP/2 server push
+            const dep = { path };
+            serve(dep, { ...options, push: true });
+          });
         })
         .catch(console.error);
     }
   }
 
   // Failed to "modulize" the file. Export a URL instead.
-  transformFile(file).then(({ content }) => {
-    send(content);
-  });
+  transformFile(file).then((file) => send(file, options));
 };
