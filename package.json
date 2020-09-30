@@ -27,6 +27,7 @@
     "@fortawesome/fontawesome-free": "^5.14.0",
     "lodash": "^4.17.20",
     "replay": "file:replay",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "ws": "^7.3.1"
   }
 }

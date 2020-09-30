@@ -9,8 +9,9 @@ try {
   const configPath = path.join(process.cwd(), "./modulize.config.js");
   assign(module.exports, require(configPath));
 } catch {
+  console.warn("No config file found.");
 } finally {
-  console.log("loaded config:", module.exports);
+  console.info("Loaded config:\n", module.exports);
 }
 
 function isNonNullObject(val) {
