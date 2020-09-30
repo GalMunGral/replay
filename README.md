@@ -1,10 +1,12 @@
-# Replay
+# Replay + Modulizer
 
 ## What's new (on dev branch)
 
 ### Goodbye Module Bundler, Goodbye Virtual DOM
 
-I deleted webpack and wrote a tool to serve individual ES modules (anything with a transform) with live reload.
+I wrote a tool that serves ES modules over HTTP/2 (will add server push soon) with live reload.
+
+![modulizer](screenshots/http2.png)
 
 JSX now compiles to diff instructions directly.
 
