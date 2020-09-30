@@ -6,7 +6,7 @@
 
 I deleted webpack and wrote a tool to serve individual ES modules (anything with a transform) with live reload.
 
-JSX now compiles to instructions that perform the diff directly, rather than creating vDOM nodes to be diffed by another procedure.
+JSX now compiles to diff instructions directly.
 
 ```js
 __STEP_INTO__(ListItem, {
