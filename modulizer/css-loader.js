@@ -38,8 +38,13 @@ module.exports = ({ code, filePath }, cb) => {
     postcss([plugin])
       .process(code, { from: filePath })
       .then((result) => {
+        // BUGFIX: All backslashes need to be escaped when put inside a literal
+        // i.e. \ -> "\\"
+        const escapedCss = result.css.replace(/\\/g, "\\\\");
+        console.log(result.css);
+        console.log(escapedCss);
         const module = `
-        const style = \`${result.css}\`;
+        const style = \`${escapedCss}\`;
         const styleElement = document.createElement('style');
         styleElement.textContent = style;
         window.addEventListener('DOMContentLoaded', () => {
@@ -47,6 +52,7 @@ module.exports = ({ code, filePath }, cb) => {
         });
         export default style;
         `;
+        console.log(module);
         cb(null, module);
       });
   } catch (err) {
