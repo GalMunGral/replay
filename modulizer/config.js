@@ -3,11 +3,6 @@ const path = require("path");
 module.exports = {
   entry: "./src/index",
   contentBase: "./public",
-  loaders: [
-    { test: /\.js$/, use: [] },
-    { test: /\.ts$/, use: ["modulizer/ts-loader"] },
-    { test: /\.css$/, use: ["modulizer/css-loader"] },
-  ],
 };
 
 try {
