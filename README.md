@@ -76,6 +76,8 @@ This seems to have solved the memory leak?
 
 ![memory-usage](screenshots/memory.png)
 
+## Original README
+
 This project is highly inspired by React and MobX.
 
 The basic idea is that rendering is a compilation process consisting of expanding macros (templates) into code (description of the DOM) and then translating it into DOM operations (add/remove/update). The component instances caches the parameters (props and state) used in its evaluation and so that this process could be rolled back and start again from those points, erasing previous effects that are invalidated and reusing completed work whenever possible.
