@@ -9,6 +9,7 @@ const writeFile = util.promisify(fs.writeFile);
 const root = process.cwd();
 
 module.exports = (file) => {
+  const context = path.dirname(file.path);
   const tasks = [];
 
   const plugin = () => {
@@ -17,20 +18,19 @@ module.exports = (file) => {
       Declaration(decl) {
         const matches = decl.value.matchAll(/url\((.*?)\)/g);
         for (let match of matches) {
-          const relativePath = match[1]
-            .replace(/^['"`](.*)['"`]$/, "$1")
-            .replace(/[?#].*$/, ""); // Not sure about this
-          if (!relativePath.startsWith(".")) return;
-          const absolutePath = path.join(path.dirname(file.path), relativePath);
-          const filename = path.basename(absolutePath);
-          const url = "/" + filename;
-          decl.value = decl.value.replace(match[0], `url(${url})`);
-          const outputPath = path.join(
-            process.cwd(),
-            config.contentBase,
-            filename
-          );
-          tasks.push(copyFile(absolutePath, outputPath));
+          const resource = match[1]
+            .replace(/^['"`](.*)['"`]$/, "$1") // remove quotes
+            .replace(/[?#].*$/, ""); // remove queries and hashes
+          if (resource.startsWith(".")) {
+            const modulePath = path.join(context, resource);
+            const filename = path.basename(resource);
+            const outputPath = path.join(root, config.contentBase, filename);
+            tasks.push(copyFile(modulePath, outputPath));
+            decl.value = decl.value.replace(
+              /* original url */ match[0],
+              `url(/${filename})`
+            );
+          }
         }
       },
     };
