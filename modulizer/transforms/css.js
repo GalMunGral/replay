@@ -10,6 +10,7 @@ const root = process.cwd();
 
 module.exports = (file) => {
   const tasks = [];
+
   const plugin = () => {
     return {
       postcssPlugin: "transform-url",
