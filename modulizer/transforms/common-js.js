@@ -2,13 +2,13 @@ const util = require("util");
 const babel = require("@babel/core");
 const transform = util.promisify(babel.transform);
 
-module.exports = (module) =>
-  transform(module.content, {
+module.exports = (file) =>
+  transform(file.content, {
     plugins: [
       require.resolve("@babel/plugin-proposal-class-properties"),
       require.resolve("babel-plugin-transform-commonjs"),
     ],
   }).then(({ code }) => ({
-    ...module,
+    ...file,
     content: code,
   }));
