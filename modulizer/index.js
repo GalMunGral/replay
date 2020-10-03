@@ -9,7 +9,9 @@ const { debounce } = require("lodash");
 const config = require("./config");
 const resolve = require("./resolve");
 const modulize = require("./modulize");
+const bundle = require("./bundle");
 const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
@@ -57,7 +59,7 @@ const wss = new WebSocket.Server({ server, path: "/ws" })
 
 const debouncedReload = debounce((file) => {
   cache.delete(file.path);
-  modulize(file).then((file) => {
+  modulize(file.path).then((file) => {
     cache.set(file.path, file);
   });
   wss.clients.forEach((ws) => {
@@ -83,7 +85,7 @@ function handleRequest(stream, headers) {
       }
 
       console.info("Miss:", filePath);
-      return modulize({ path: filePath }).then((file) => {
+      return modulize(filePath).then((file) => {
         send(file, { stream, push: false });
         return file;
       });
@@ -98,6 +100,7 @@ function handleRequest(stream, headers) {
       });
     })
     .then((file) => {
+      if (process.argv[2] === "--bundle") return;
       // `file` could be either a module or asset.
       if (!watchers.has(file.path)) {
         const watcher = fs.watch(file.path, (event) => {
@@ -110,28 +113,40 @@ function handleRequest(stream, headers) {
     })
     .catch(() => {
       // Serve entry file
-      const entryPath = (() => {
-        const partial = path.join(root, config.entry);
-        const absolute = resolve(partial);
-        const relative = path.relative(root, absolute);
-        return "/" + relative;
-      })();
-
-      const wsClientPath = (() => {
-        const absolute = path.join(__dirname, "./ws-client.js");
-        const relative = path.relative(root, absolute);
-        return "/" + relative;
-      })();
-
-      const html = `
-        <script type="module" src="${entryPath}"></script>
-        <script type="module" src="${wsClientPath}"></script>
-      `;
-
-      stream.respond({ "content-type": "text/html; charset=utf-8" });
-      stream.end(html);
+      if (process.argv[2] === "--bundle") {
+        const entryPath = resolve(path.join(root, config.entry));
+        return bundle(entryPath)
+          .then((result) => {
+            const outputPath = path.join(root, config.contentBase, "bundle.js");
+            return writeFile(outputPath, result);
+          })
+          .then(() => {
+            const html = `<script src="/bundle.js"></script>`;
+            stream.respond({ "content-type": "text/html; charset=utf-8" });
+            stream.end(html);
+          });
+      } else {
+        const entryPath = (() => {
+          const partial = path.join(root, config.entry);
+          const absolute = resolve(partial);
+          const relative = path.relative(root, absolute);
+          return "/" + relative;
+        })();
+        const wsClientPath = (() => {
+          const absolute = path.join(__dirname, "./ws-client.js");
+          const relative = path.relative(root, absolute);
+          return "/" + relative;
+        })();
+        const html = `
+          <script type="module" src="${entryPath}"></script>
+          <script type="module" src="${wsClientPath}"></script>
+        `;
+        stream.respond({ "content-type": "text/html; charset=utf-8" });
+        stream.end(html);
+      }
     })
-    .catch(() => {
+    .catch((err) => {
+      console.log(err);
       stream.respond({ ":status": 404 });
       stream.end("Not Found");
     });
