@@ -8,10 +8,33 @@ const WebSocket = require("ws");
 const { debounce } = require("lodash");
 const config = require("./config");
 const resolve = require("./resolve");
-const { modulize, invalidateCache } = require("./modulize");
+const modulize = require("./modulize");
 const readFile = util.promisify(fs.readFile);
 
-const watchers = new Map(); // file path -> watcher
+const watchers = new Map(); // path -> watcher
+const cache = new Map(); // path -> content
+
+function send(file, options) {
+  const { stream, push } = options;
+  if (stream) {
+    if (push) {
+      // const root = process.cwd();
+      // const url = "/" + path.relative(root, file.path);
+      // stream.pushStream({ ":path": url }, (err, pushStream) => {
+      //   if (err) throw err;
+      //   pushStream.respond({
+      //     ":status": 200,
+      //     "content-type": "text/javascript",
+      //   });
+      //   pushStream.end(file.content);
+      // });
+    } else {
+      stream.respond({ "content-type": "text/javascript" });
+      stream.end(file.content);
+    }
+  }
+  cache.set(file.path, file);
+}
 
 const server = http2
   .createSecureServer({
@@ -33,7 +56,10 @@ const wss = new WebSocket.Server({ server, path: "/ws" })
   });
 
 const debouncedReload = debounce((file) => {
-  invalidateCache(file);
+  cache.delete(file.path);
+  modulize(file).then((file) => {
+    cache.set(file.path, file);
+  });
   wss.clients.forEach((ws) => {
     ws.send("UPDATE");
   });
@@ -46,10 +72,21 @@ function handleRequest(stream, headers) {
   Promise.resolve()
     .then(() => {
       // Serve file as ES module
-      const file = { path: path.join(root, url) };
-      require.resolve(file.path);
-      modulize(file, { stream, push: false });
-      return file;
+      const filePath = path.join(root, url);
+      require.resolve(filePath); // This could throw
+
+      if (cache.has(filePath)) {
+        console.info("Hit:", filePath);
+        const file = cache.get(filePath);
+        send(file, { stream, push: false });
+        return file;
+      }
+
+      console.info("Miss:", filePath);
+      return modulize({ path: filePath }).then((file) => {
+        send(file, { stream, push: false });
+        return file;
+      });
     })
     .catch(() => {
       // Serve file as an asset
