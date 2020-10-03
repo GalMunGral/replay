@@ -1,14 +1,46 @@
-const util = require("util");
-const babel = require("@babel/core");
-const transform = util.promisify(babel.transform);
+const path = require("path");
+const parser = require("@babel/parser");
+const t = require("@babel/types");
+const { default: traverse } = require("@babel/traverse");
+const { default: generate } = require("@babel/generator");
+const resolve = require("../resolve");
 
-module.exports = (file) =>
-  transform(file.content, {
-    plugins: [
-      require.resolve("@babel/plugin-proposal-class-properties"),
-      require.resolve("babel-plugin-transform-commonjs"),
-    ],
-  }).then(({ code }) => ({
+const root = process.cwd();
+function toModuleId(filePath) {
+  return "/" + path.relative(root, filePath);
+}
+
+module.exports = (file) => {
+  const context = path.dirname(file.path);
+  const deps = new Set();
+
+  function resolveDep(resource) {
+    const filePath = resource.startsWith(".") // TODO: not sure about this
+      ? resolve(path.join(context, resource)) // relative import
+      : resolve(path.join(root, "node_modules", resource)); // node module
+    deps.add(filePath); // -> this is for h2 server push
+    return toModuleId(filePath);
+  }
+
+  const ast = parser.parse(file.content, {
+    sourceType: "module",
+    plugins: ["jsx", "classProperties"],
+  });
+  traverse(ast, {
+    CallExpression({ node }) {
+      if (t.isIdentifier(node.callee) && node.callee.name === "require") {
+        if (t.isStringLiteral(node.arguments[0])) {
+          node.arguments[0].value = resolveDep(node.arguments[0].value);
+        }
+      }
+    },
+  });
+  const result = generate(ast);
+
+  return {
     ...file,
-    content: code,
-  }));
+    moduleId: toModuleId(file.path),
+    content: result.code,
+    deps,
+  };
+};

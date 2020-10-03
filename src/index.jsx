@@ -6,4 +6,6 @@ import "./assets/favicon.ico";
 import { render } from "replay/core";
 import App from "./components/App";
 
-render(App, document.body);
+document.addEventListener("DOMContentLoaded", () => {
+  render(App, document.body);
+});

@@ -6,7 +6,7 @@ module.exports = {
   },
   transforms: [
     { test: /\.jsx$/, use: ["replay/transform"] },
-    { test: /\.js$/, use: ["modulizer/transforms/common-js"] },
+    { test: /\.js$/, use: ["modulizer/transforms/cjs-esm"] },
     { test: /\.ts$/, use: ["modulizer/transforms/typescript"] },
     { test: /\.css$/, use: ["modulizer/transforms/css"] },
   ],
