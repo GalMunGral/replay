@@ -1,11 +1,13 @@
 import { decorator as $$ } from "replay/utils";
 
-const DragImage = ({}, { style, message }) => [
-  <Box style={style}>
-    <Icon className="fas fa-mail-bulk" />
-    <span>{message}</span>
-  </Box>,
-];
+const DragImage = ({}, { style, message }) => {
+  return [
+    <Box style={style}>
+      <Icon className="fas fa-mail-bulk" />
+      <span>{message}</span>
+    </Box>,
+  ];
+};
 
 DragImage.init = ({}, { store, dragState }) => ({
   get style() {

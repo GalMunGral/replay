@@ -1,4 +1,5 @@
 const path = require("path");
+const t = require("@babel/types");
 const parser = require("@babel/parser");
 const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
@@ -33,6 +34,12 @@ module.exports = (file) => {
       if (node.source) {
         // Make sure this is a re-export
         node.source.value = resolveDep(node.source.value);
+      }
+    },
+    CallExpression({ node }) {
+      // for dynamically imported module
+      if (t.isImport(node.callee) && t.isStringLiteral(node.arguments[0])) {
+        node.arguments[0].value = resolveDep(node.arguments[0].value);
       }
     },
   });

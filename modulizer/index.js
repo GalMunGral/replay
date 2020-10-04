@@ -90,7 +90,8 @@ function handleRequest(stream, headers) {
         return file;
       });
     })
-    .catch(() => {
+    .catch((err) => {
+      // console.log(err);
       // Serve file as an asset
       const file = { path: path.join(root, config.contentBase, url) };
       return readFile(file.path).then((content) => {
@@ -111,7 +112,8 @@ function handleRequest(stream, headers) {
         watchers.set(file.path, watcher);
       }
     })
-    .catch(() => {
+    .catch((err) => {
+      // console.log(err);
       // Serve entry file
       if (process.argv[2] === "--bundle") {
         const entryPath = resolve(path.join(root, config.entry));

@@ -4,26 +4,25 @@ import Layout from "./Layout";
 import IconButton from "./IconButton";
 
 const Detail = ({}, scope) => {
-  const { redirectUrl, mail } = scope;
-  if (!mail) return <Redirect to={redirectUrl} />;
-
+  const { redirectUrl, mail, senderInfo, recipientInfo, deleteButton } = scope;
   const { subject, content } = mail;
-  const { senderInfo, recipientInfo, deleteButton } = scope;
-  return [
-    <Sidebar />,
-    <Layout>
-      <Fragment>
-        <IconButton type="arrow-left" onclick={() => history.back()} />
-        {deleteButton()}
-      </Fragment>
-      <Main>
-        <Header>{subject}</Header>
-        <SenderInfo innerHTML={senderInfo} />
-        <RecipientInfo innerHTML={recipientInfo} />
-        <Body>{content}</Body>
-      </Main>
-    </Layout>,
-  ];
+  return !mail
+    ? [<Redirect to={redirectUrl} />]
+    : [
+        <Sidebar />,
+        <Layout>
+          <Fragment>
+            <IconButton type="arrow-left" onclick={() => history.back()} />
+            {deleteButton}
+          </Fragment>
+          <Main>
+            <Header>{subject}</Header>
+            <SenderInfo innerHTML={senderInfo} />
+            <RecipientInfo innerHTML={recipientInfo} />
+            <Body>{content}</Body>
+          </Main>
+        </Layout>,
+      ];
 };
 
 Detail.init = ({}, { route, store }) => ({
@@ -47,9 +46,8 @@ Detail.init = ({}, { route, store }) => ({
     return `To: ${recipientName}&nbsp;&lt;${recipientEmail}&gt;`;
   },
   get deleteButton() {
-    return route.params.folder !== "trash"
-      ? () => <IconButton type="trash" onclick={this.deleteAsync} />
-      : () => <comment />;
+    const button = <IconButton type="trash" onclick={this.deleteAsync} />;
+    return route.params.folder !== "trash" ? button : null;
   },
   deleteAsync() {
     const { folder, id } = route.params;

@@ -182,7 +182,6 @@ export function __STEP_OUT__(type?: string | RenderFunction) {
   recordContexts.pop();
   recordContexts.top().index++;
   recordContexts.top().prevChild = record;
-  console.groupEnd();
 }
 
 export function __CONTENT__(renderFunc: () => any) {

@@ -3,8 +3,8 @@ const parser = require("@babel/parser");
 const { default: traverse } = require("@babel/traverse");
 const { default: generate } = require("@babel/generator");
 
-module.exports = (module) => {
-  const ast = parser.parse(module.content, {
+module.exports = (file) => {
+  const ast = parser.parse(file.content, {
     sourceType: "module",
     plugins: ["jsx", "classProperties"],
   });
@@ -30,7 +30,7 @@ module.exports = (module) => {
               t.identifier("__CONTENT__")
             ),
           ],
-          t.stringLiteral("replay/core")
+          t.stringLiteral("replay-next/core")
         ),
       ];
       path.node.body.unshift(...imports);
@@ -89,7 +89,7 @@ module.exports = (module) => {
   });
 
   return {
-    ...module,
+    ...file,
     content: generate(ast).code,
   };
 };

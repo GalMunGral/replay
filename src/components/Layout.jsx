@@ -1,11 +1,11 @@
 import { decorator as $$ } from "replay/utils";
 
-const Layout = (props) => (
+const Layout = (props) => [
   <Container>
-    <ToolbarContainer>{props.children[0]()}</ToolbarContainer>
-    <Scrollable>{props.children[1]()}</Scrollable>
-  </Container>
-);
+    <ToolbarContainer>{props.children[0]}</ToolbarContainer>
+    <Scrollable>{props.children[1]}</Scrollable>
+  </Container>,
+];
 
 export default Layout;
 

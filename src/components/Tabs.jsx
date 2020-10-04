@@ -12,19 +12,20 @@ const iconMap = {
   promotions: "tag",
 };
 
-const Tab = (props) => (
+const Tab = (props) => [
   <Box {...props}>
     <Icon className={props.iconClassName} />
     <p>{props.name}</p>
-  </Box>
-);
+  </Box>,
+];
 
-const Tabs = ({}, { visible, tabs }) =>
-  visible ? (
-    <TabBar>{...tabs.forEach((props) => <Tab {...props} />)}</TabBar>
-  ) : (
-    <comment />
-  );
+const Tabs = ({}, { visible, tabs }) => {
+  return [
+    visible ? (
+      <TabBar>{...tabs.map((props) => <Tab {...props} />)}</TabBar>
+    ) : null,
+  ];
+};
 
 Tabs.init = ({}, { route, mailbox }) => ({
   categories: ["primary", "social", "promotions"],
