@@ -8,3 +8,7 @@ function require(moduleId) {
   }
   return module.exports;
 }
+
+function _import(moduleId) {
+  return Promise.resolve(require(moduleId));
+}

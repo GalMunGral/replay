@@ -29,6 +29,13 @@ module.exports = (file) => {
   traverse(ast, {
     CallExpression({ node }) {
       if (t.isIdentifier(node.callee) && node.callee.name === "require") {
+        // CommonJS `require`
+        if (t.isStringLiteral(node.arguments[0])) {
+          node.arguments[0].value = resolveDep(node.arguments[0].value);
+        }
+      } else if (t.isImport(node.callee)) {
+        // dynamic `import`
+        node.callee = t.identifier("_import");
         if (t.isStringLiteral(node.arguments[0])) {
           node.arguments[0].value = resolveDep(node.arguments[0].value);
         }
