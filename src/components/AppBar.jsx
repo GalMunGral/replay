@@ -1,7 +1,7 @@
 import { Link, decorator as $$ } from "replay/utils";
 import logo from "../assets/images/logo.png";
 
-const AppBar = ({}, { sidebar }) => [
+const AppBar = ({}, { sidebar }) => (
   <Container>
     <Group>
       <MenuButton onclick={() => sidebar.toggle()}>
@@ -16,8 +16,8 @@ const AppBar = ({}, { sidebar }) => [
       <SearchInput id="search" placeholder="Search mail" />
     </SearchBar>
     <Group />
-  </Container>,
-];
+  </Container>
+);
 
 export default AppBar;
 

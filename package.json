@@ -7,7 +7,7 @@
     "dev:debug": "npm run dev -- --env.debug",
     "dev:build": "webpack --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
-    "start": "serve public & npm run build"
+    "start": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -20,39 +20,13 @@
   },
   "homepage": "https://github.com/GalMunGral/replay#readme",
   "devDependencies": {
-    "@babel/core": "^7.9.6",
-    "@babel/generator": "^7.11.6",
-    "@babel/parser": "^7.11.5",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.4",
-    "@babel/plugin-proposal-optional-chaining": "^7.11.0",
-    "@babel/plugin-transform-runtime": "^7.11.5",
-    "@babel/preset-env": "^7.9.6",
-    "@babel/traverse": "^7.11.5",
-    "@babel/types": "^7.11.5",
-    "babel-loader": "^8.1.0",
-    "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^3.5.3",
-    "file-loader": "^6.0.0",
-    "html-webpack-plugin": "^4.3.0",
-    "mini-css-extract-plugin": "^0.9.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.3",
-    "raw-loader": "^4.0.1",
-    "style-loader": "^1.2.1",
-    "ts-loader": "^8.0.3",
-    "typescript": "^4.0.2",
-    "url-loader": "^4.1.0",
-    "webpack": "^4.43.0",
-    "webpack-bundle-analyzer": "^3.9.0",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0",
-    "webpack-merge": "^4.2.2"
+    "modulizer": "file:modulizer",
+    "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@babel/runtime": "^7.11.2",
-    "@babel/runtime-corejs3": "^7.11.2",
     "@fortawesome/fontawesome-free": "^5.14.0",
-    "core-js": "^3.6.5",
-    "replay": "file:replay"
+    "lodash": "^4.17.20",
+    "replay": "file:replay",
+    "uuid": "^8.3.0"
   }
 }

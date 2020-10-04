@@ -1,4 +1,4 @@
-import { observable } from "replay/core";
+import { observable } from "../core/Observable";
 
 interface ModuleStateLinkage {
   [module: string]: State<any>;

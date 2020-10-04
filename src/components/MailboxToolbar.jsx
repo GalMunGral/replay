@@ -15,7 +15,9 @@ const MailboxToolbar = function ({}, scope) {
   return [
     folder !== "trash" ? (
       <Checkbox checked={allSelected} onchange={toggleAll} />
-    ) : null,
+    ) : (
+      <comment />
+    ),
     <Space />,
     <PageRange>
       <PageRangeText innerHTML={rangeHTML} />

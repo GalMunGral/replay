@@ -5,7 +5,7 @@ import selection from "./selection";
 
 const loggerMiddleware = (store) => (next) => (action, ...args) => {
   next(action, ...args);
-  // console.log(`[Logger] ${action} =>`, store.getSnapshot());
+  console.log(`[Logger] ${action} =>`, store.getSnapshot());
 };
 
 const store = createStore({
@@ -15,7 +15,7 @@ const store = createStore({
 
 store.dispatch(async (dispatch) => {
   const res = await fetch("/data.json");
-  const data = await res.json();
+  const data = (await res.json()).slice(0);
   dispatch("mails/load", { folder: "inbox", data });
 });
 

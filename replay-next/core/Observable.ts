@@ -116,6 +116,7 @@ const liveDataRegistry: DefaultWeakMap<
 
 const $$isObservable = Symbol("observable");
 
+globalThis.observable = observable;
 export function observable<T extends Object>(data: T, level = Infinity): T {
   if (level === 0) return data;
   if (typeof data != "object" || data == null) return data;
