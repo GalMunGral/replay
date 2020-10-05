@@ -5,7 +5,6 @@ import Space from "./Space";
 
 const Editor = ({}, scope) => {
   const {
-    open,
     minimized,
     recipientEmail,
     subject,
@@ -13,50 +12,48 @@ const Editor = ({}, scope) => {
   } = scope.editor;
 
   return [
-    open && (
-      <Window>
-        <Header onclick={() => scope.setMinimized(!minimized)}>
-          <span>New Message</span>
-          <CloseButton onclick={stop(scope.saveDraft)}>
-            <i className="fas fa-times" />
-          </CloseButton>
-        </Header>
-        <Body minimized={minimized}>
-          <EditorInput
-            label="To:"
-            placeholder="Recipient"
-            value={recipientEmail}
-            setValue={scope.setRecipientEmail}
+    <Window>
+      <Header onclick={() => scope.setMinimized(!minimized)}>
+        <span>New Message</span>
+        <CloseButton onclick={stop(scope.saveDraft)}>
+          <i className="fas fa-times" />
+        </CloseButton>
+      </Header>
+      <Body minimized={minimized}>
+        <EditorInput
+          label="To:"
+          placeholder="Recipient"
+          value={recipientEmail}
+          setValue={scope.setRecipientEmail}
+        />
+        <EditorInput
+          label="Subject:"
+          placeholder="Subject"
+          value={subject}
+          setValue={scope.setSubject}
+        />
+        <TextArea
+          value={content}
+          oninput={(e) => scope.contentUpdate(e.target.value)}
+        />
+        <ButtonGroup>
+          <SendButton onclick={scope.sendMail}>Send</SendButton>
+          <IconButton
+            type="undo"
+            onclick={scope.contentUndo}
+            // onmousedown={scope.repeatUndo}
+            // onmouseup={scope.stopRepeating}
           />
-          <EditorInput
-            label="Subject:"
-            placeholder="Subject"
-            value={subject}
-            setValue={scope.setSubject}
+          <IconButton
+            type="redo"
+            onclick={scope.contentRedo}
+            // onmousedown={scope.repeatRedo}
+            // onmouseup={scope.stopRepeating}
           />
-          <TextArea
-            value={content}
-            oninput={(e) => scope.contentUpdate(e.target.value)}
-          />
-          <ButtonGroup>
-            <SendButton onclick={scope.sendMail}>Send</SendButton>
-            <IconButton
-              type="undo"
-              onclick={scope.contentUndo}
-              // onmousedown={scope.repeatUndo}
-              // onmouseup={scope.stopRepeating}
-            />
-            <IconButton
-              type="redo"
-              onclick={scope.contentRedo}
-              // onmousedown={scope.repeatRedo}
-              // onmouseup={scope.stopRepeating}
-            />
-            <Space />
-          </ButtonGroup>
-        </Body>
-      </Window>
-    ),
+          <Space />
+        </ButtonGroup>
+      </Body>
+    </Window>,
   ];
 };
 

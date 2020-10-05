@@ -5,6 +5,7 @@ import store from "../store";
 import AppBar from "./AppBar";
 import DragImage from "./DragImage";
 import Debug from "./Debug";
+import editor from "../store/editor";
 
 const Mailbox = lazy(() => import("./Mailbox"));
 const Detail = lazy(() => import("./Detail"));
@@ -13,7 +14,7 @@ const Editor = lazy(() => import("./Editor"));
 const folderExists = ({ folder }) =>
   ["inbox", "sent", "drafts", "trash"].includes(folder);
 
-const App = () => [
+const App = ({}, { editor }) => [
   <Container>
     <AppBar />
     <Router>
@@ -27,13 +28,16 @@ const App = () => [
         <Debug />
       </route>
     </Router>
-    <Editor />
+    {editor.open && <Editor />}
     <DragImage key="drag-image" />
   </Container>,
 ];
 
 App.init = () => ({
   store,
+  get editor() {
+    return store.state.editor;
+  },
   sidebar: {
     collapsed: false,
     hovered: false,
