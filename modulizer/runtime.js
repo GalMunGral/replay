@@ -3,12 +3,18 @@ var requests = new Map();
 var modules = new Map();
 
 function install(chunkURL) {
-  return new Promise((resolve) => {
-    requests.set(chunkURL, { resolve });
-    const script = document.createElement("script");
-    script.src = chunkURL;
-    document.head.appendChild(script);
-  });
+  if (!requests.has(chunkURL)) {
+    let _resolve;
+    const request = new Promise((resolve) => {
+      _resolve = resolve;
+      const script = document.createElement("script");
+      script.src = chunkURL;
+      document.head.appendChild(script);
+    });
+    request.resolve = _resolve;
+    requests.set(chunkURL, request);
+  }
+  return requests.get(chunkURL);
 }
 
 function require(moduleId) {

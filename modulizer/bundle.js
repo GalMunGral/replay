@@ -52,6 +52,7 @@ async function build(filePath, context, chunks, queue) {
     context.modules.set(filePath, moduleData);
   }
 
+  // modules in the same chunk -> DFS
   for (let filePath of moduleData.deps || []) {
     await build(
       filePath,
@@ -61,6 +62,7 @@ async function build(filePath, context, chunks, queue) {
     );
   }
 
+  // async chunks -> BFS
   for (let asyncEntry of moduleData.asyncDeps || []) {
     if (!chunks.async.has(asyncEntry) && !queue.includes(asyncEntry)) {
       // Not a existing chunk
@@ -69,7 +71,7 @@ async function build(filePath, context, chunks, queue) {
   }
 }
 
-async function bundle(entry) {
+module.exports = async function bundle(entry) {
   const chunks = {
     main: new ChunkData("main", entry),
     common: new ChunkData("common"),
@@ -77,10 +79,10 @@ async function bundle(entry) {
     async: new Map(),
   };
 
+  // DFS for modules within each chunk, BFS for chunks
   const queue = [];
-
-  await build(entry, chunks.main, chunks, queue); // initial chunk
-
+  // Main entry needs different treatment
+  await build(entry, chunks.main, chunks, queue);
   while (queue.length) {
     const asyncEntry = queue.shift();
     const asyncChunk = new ChunkData(
@@ -93,6 +95,4 @@ async function bundle(entry) {
   }
 
   emit(chunks);
-}
-
-module.exports = bundle;
+};
