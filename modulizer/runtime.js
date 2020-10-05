@@ -1,4 +1,15 @@
+var chunks = new Map();
+var requests = new Map();
 var modules = new Map();
+
+function install(chunkURL) {
+  return new Promise((resolve) => {
+    requests.set(chunkURL, { resolve });
+    const script = document.createElement("script");
+    script.src = chunkURL;
+    document.head.appendChild(script);
+  });
+}
 
 function require(moduleId) {
   const module = modules.get(moduleId);
@@ -9,6 +20,8 @@ function require(moduleId) {
   return module.exports;
 }
 
-function _import(moduleId) {
-  return Promise.resolve(require(moduleId));
+async function dynamicImport(entry) {
+  const chunkURL = chunks.get(entry);
+  await install(chunkURL);
+  return require(entry);
 }

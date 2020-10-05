@@ -11,7 +11,6 @@ const resolve = require("./resolve");
 const modulize = require("./modulize");
 const bundle = require("./bundle");
 const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
 
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
@@ -117,16 +116,11 @@ function handleRequest(stream, headers) {
       // Serve entry file
       if (process.argv[2] === "--bundle") {
         const entryPath = resolve(path.join(root, config.entry));
-        return bundle(entryPath)
-          .then((result) => {
-            const outputPath = path.join(root, config.contentBase, "bundle.js");
-            return writeFile(outputPath, result);
-          })
-          .then(() => {
-            const html = `<script src="/bundle.js"></script>`;
-            stream.respond({ "content-type": "text/html; charset=utf-8" });
-            stream.end(html);
-          });
+        return bundle(entryPath).then(() => {
+          const html = `<script src="/main.bundle.js"></script>`;
+          stream.respond({ "content-type": "text/html; charset=utf-8" });
+          stream.end(html);
+        });
       } else {
         const entryPath = (() => {
           const partial = path.join(root, config.entry);
@@ -139,10 +133,9 @@ function handleRequest(stream, headers) {
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
-        const html = `
-          <script type="module" src="${entryPath}"></script>
-          <script type="module" src="${wsClientPath}"></script>
-        `;
+        const html = `\
+<script type="module" src="${entryPath}"></script>
+<script type="module" src="${wsClientPath}"></script>`;
         stream.respond({ "content-type": "text/html; charset=utf-8" });
         stream.end(html);
       }

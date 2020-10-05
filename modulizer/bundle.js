@@ -1,46 +1,98 @@
-const util = require("util");
-const fs = require("fs");
 const path = require("path");
+const config = require("./config");
 const modulize = require("./modulize");
-const readFile = util.promisify(fs.readFile);
+const emit = require("./emit");
 
-function indent(str, size) {
-  return str.replace(/\n/g, "\n" + " ".repeat(size));
+const root = process.cwd();
+
+class ChunkData {
+  modules = new Map();
+  constructor(name, entry, async = false) {
+    this.name = name;
+    this.entry = entry;
+    this.async = async;
+  }
+
+  get outputPath() {
+    const filename = `${this.name}.bundle.js`;
+    return path.join(root, config.contentBase, filename);
+  }
+
+  get url() {
+    return `/${this.name}.bundle.js`;
+  }
 }
 
-async function build(filePath, modules, visited) {
-  if (visited.has(filePath)) return;
-  const { moduleId, content, deps } = await modulize(filePath, {
-    native: false,
-  });
-  const code = `
-modules.set("${moduleId}", {
-  exports: null,
-  init: function (module, exports, require) {
-    ${indent(content, 4)}
+async function build(filePath, context, chunks, queue) {
+  if (
+    // will have been installed by the main chunk
+    chunks.main.modules.has(filePath) ||
+    // will have been installed by the first async chunk
+    chunks.common.modules.has(filePath) ||
+    chunks.vendor.modules.has(filePath)
+  ) {
+    return;
   }
-});
-`;
-  modules.push(code);
-  visited.add(filePath);
-  if (deps) {
-    for (let depFilePath of deps) {
-      await build(depFilePath, modules, visited);
+
+  let moduleData;
+
+  for (let asyncChunk of chunks.async.values()) {
+    if (asyncChunk.modules.has(filePath)) {
+      moduleData = asyncChunk.modules.get(filePath);
+      chunks.common.modules.set(filePath, moduleData);
+      asyncChunk.modules.delete(filePath);
+      // A module can exist in at most one async chunk because
+      // the second time it is encountered it would be moved to 'common'
+      break;
     }
   }
-  return moduleId;
+
+  if (!moduleData) {
+    moduleData = await modulize(filePath, { native: false });
+    context.modules.set(filePath, moduleData);
+  }
+
+  for (let filePath of moduleData.deps || []) {
+    await build(
+      filePath,
+      /node_modules/.test(filePath) ? chunks.vendor : context,
+      chunks,
+      queue
+    );
+  }
+
+  for (let asyncEntry of moduleData.asyncDeps || []) {
+    if (!chunks.async.has(asyncEntry) && !queue.includes(asyncEntry)) {
+      // Not a existing chunk
+      queue.push(asyncEntry);
+    }
+  }
 }
 
-async function bundle(entryPath) {
-  const runtime = await readFile(path.join(__dirname, "./runtime.js"));
-  const modules = [];
-  try {
-    const moduleId = await build(entryPath, modules, new Set());
-    const boot = `require("${moduleId}")`;
-    return [runtime, ...modules, boot].join("\n");
-  } catch (err) {
-    console.log(err);
+async function bundle(entry) {
+  const chunks = {
+    main: new ChunkData("main", entry),
+    common: new ChunkData("common"),
+    vendor: new ChunkData("vendor"),
+    async: new Map(),
+  };
+
+  const queue = [];
+
+  await build(entry, chunks.main, chunks, queue); // initial chunk
+
+  while (queue.length) {
+    const asyncEntry = queue.shift();
+    const asyncChunk = new ChunkData(
+      `async-${chunks.async.size}`,
+      asyncEntry,
+      true
+    );
+    chunks.async.set(asyncEntry, asyncChunk);
+    await build(asyncEntry, asyncChunk, chunks, queue);
   }
+
+  emit(chunks);
 }
 
 module.exports = bundle;
