@@ -75,6 +75,7 @@ async function emitNonEntry(chunk) {
   const output = `\
 \
 ${emitChunkModules(chunk)}
+
 requests.get("${chunk.url}").resolve();`;
 
   await writeFile(chunk.outputPath, output);
