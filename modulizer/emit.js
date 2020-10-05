@@ -15,12 +15,11 @@ modules.set("${moduleId}", {
   init: function (module, exports, require) {
     ${indent(content, 4)}
   }
-});
-`;
+});`;
 }
 
 function emitChunkModules(chunk) {
-  return [...chunk.modules.values()].map(emitModule).join("\n");
+  return [...chunk.modules.values()].map(emitModule).join("\n\n");
 }
 
 function emitChunkURL(asyncChunk) {

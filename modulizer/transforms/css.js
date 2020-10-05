@@ -50,12 +50,16 @@ module.exports = (file) => {
   return Promise.all(tasks).then(() => {
     return {
       ...file,
-      content: `
-        const link = document.createElement('link');
-        link.rel = "stylesheet";
-        link.href = "/${filename}";
-        document.head.appendChild(link);
-      `,
+      content: `\
+\
+const link = document.createElement('link');
+link.rel = "stylesheet";
+link.href = "/${filename}";
+document.head.appendChild(link);
+
+export default "/${filename}";
+\
+`,
     };
   });
 
