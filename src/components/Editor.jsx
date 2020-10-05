@@ -5,14 +5,13 @@ import Space from "./Space";
 
 const Editor = ({}, scope) => {
   const {
-    open,
     minimized,
     recipientEmail,
     subject,
     content: { value: content },
   } = scope.editor;
 
-  return open ? (
+  return [
     <Window>
       <Header onclick={() => scope.setMinimized(!minimized)}>
         <span>New Message</span>
@@ -54,10 +53,8 @@ const Editor = ({}, scope) => {
           <Space />
         </ButtonGroup>
       </Body>
-    </Window>
-  ) : (
-    <text />
-  );
+    </Window>,
+  ];
 };
 
 Editor.init = ({}, $this) => ({

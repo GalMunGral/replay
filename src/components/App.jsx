@@ -1,35 +1,43 @@
 import throttle from "lodash/throttle";
+import { lazy } from "replay/core";
 import { Router, decorator as $$ } from "replay/utils";
 import store from "../store";
 import AppBar from "./AppBar";
 import DragImage from "./DragImage";
 import Debug from "./Debug";
-import Mailbox from "./Mailbox";
-import Detail from "./Detail";
-import Editor from "./Editor";
+import editor from "../store/editor";
+
+const Mailbox = lazy(() => import("./Mailbox"));
+const Detail = lazy(() => import("./Detail"));
+const Editor = lazy(() => import("./Editor"));
 
 const folderExists = ({ folder }) =>
   ["inbox", "sent", "drafts", "trash"].includes(folder);
 
-const router = new Router([
-  { path: "/:folder", validate: folderExists, component: Mailbox },
-  { path: "/:folder/:id", validate: folderExists, component: Detail },
-  { path: "/*", component: Debug },
-]);
-
-const RouterView = router.RouterView;
-
-const App = () => (
+const App = ({}, { editor }) => [
   <Container>
     <AppBar />
-    <RouterView />
-    <Editor />
+    <Router>
+      <route path="/:folder" validate={folderExists}>
+        <Mailbox />
+      </route>
+      <route path="/:folder/:id" validate={folderExists}>
+        <Detail />
+      </route>
+      <route path="/*">
+        <Debug />
+      </route>
+    </Router>
+    {editor.open && <Editor />}
     <DragImage key="drag-image" />
-  </Container>
-);
+  </Container>,
+];
 
 App.init = () => ({
   store,
+  get editor() {
+    return store.state.editor;
+  },
   sidebar: {
     collapsed: false,
     hovered: false,

@@ -1,10 +1,10 @@
 import { decorator as $$ } from "replay/utils";
 
-const IconButton = ({ type, onclick, onmousedown, onmouseup }) => (
+const IconButton = ({ type, onclick, onmousedown, onmouseup }) => [
   <Button onclick={onclick} onmousedown={onmousedown} onmouseup={onmouseup}>
     <Icon className={`fas fa-${type}`} />
-  </Button>
-);
+  </Button>,
+];
 
 export default IconButton;
 

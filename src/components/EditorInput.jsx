@@ -6,20 +6,18 @@ const EditorInput = (
 ) => {
   const activated = focused || value;
   const oninput = (e) => setValue(e.target.value);
-
-  return (
+  return [
     <InputBox>
-      {activated ? <label>{label}</label> : <comment />}
+      {activated ? <label>{label}</label> : null}
       <input
-        key="input"
         placeholder={activated ? "" : placeholder}
         value={value}
         oninput={oninput}
         onfocus={onfocus}
         onblur={onblur}
       />
-    </InputBox>
-  );
+    </InputBox>,
+  ];
 };
 
 EditorInput.init = ({}, $this) => ({

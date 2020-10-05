@@ -1,5 +1,5 @@
 {
-  "name": "replay",
+  "name": "replay-demo",
   "version": "1.2.0",
   "description": "",
   "scripts": {
@@ -27,6 +27,7 @@
     "@fortawesome/fontawesome-free": "^5.14.0",
     "lodash": "^4.17.20",
     "replay": "file:replay",
+    "replay-next": "file:replay-next",
     "uuid": "^8.3.0"
   }
 }

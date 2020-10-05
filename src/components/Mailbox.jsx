@@ -5,21 +5,23 @@ import Layout from "./Layout";
 import MailboxToolbar from "./MailboxToolbar";
 import Tabs from "./Tabs";
 
-const Mailbox = (__, { mailbox, mapDataToProps }) => [
-  <Sidebar />,
-  <Layout>
-    <MailboxToolbar />
-    <Fragment>
-      <Tabs />
-      {...mailbox.state.currentPage
-        .map(mapDataToProps)
-        .forEach((props, i) => <MailItem key={i} {...props} />)}
-    </Fragment>
-  </Layout>,
-];
+const Mailbox = (__, { mailbox, mapDataToProps }) => {
+  return [
+    <Sidebar />,
+    <Layout>
+      <MailboxToolbar />
+      <Fragment>
+        <Tabs />
+        {...mailbox.state.currentPage
+          .map(mapDataToProps)
+          .map((props, i) => <MailItem key={i} {...props} />)}
+      </Fragment>
+    </Layout>,
+  ];
+};
 
 Mailbox.init = ({}, { route, store, dragState }) => ({
-  mailbox: (window.store = createStore({
+  mailbox: createStore({
     mutableState: {
       tab: "primary",
       pageSize: 50,
@@ -68,7 +70,7 @@ Mailbox.init = ({}, { route, store, dragState }) => ({
         this.pageIndex = Math.max(this.pageIndex - 1, 0);
       },
     },
-  })),
+  }),
   mapDataToProps: (mail) => {
     const { folder } = route.params;
     const { selectedSet } = store.state.selection;

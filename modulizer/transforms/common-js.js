@@ -13,12 +13,13 @@ function toModuleId(filePath) {
 module.exports = (file) => {
   const context = path.dirname(file.path);
   const deps = new Set();
+  const asyncDeps = new Set();
 
-  function resolveDep(resource) {
+  function resolveDep(resource, async = false) {
     const filePath = resource.startsWith(".") // TODO: not sure about this
       ? resolve(path.join(context, resource)) // relative import
       : resolve(path.join(root, "node_modules", resource)); // node module
-    deps.add(filePath); // -> this is for h2 server push
+    (async ? asyncDeps : deps).add(filePath);
     return toModuleId(filePath);
   }
 
@@ -29,8 +30,15 @@ module.exports = (file) => {
   traverse(ast, {
     CallExpression({ node }) {
       if (t.isIdentifier(node.callee) && node.callee.name === "require") {
+        // CommonJS `require`
         if (t.isStringLiteral(node.arguments[0])) {
           node.arguments[0].value = resolveDep(node.arguments[0].value);
+        }
+      } else if (t.isImport(node.callee)) {
+        // dynamic `import`
+        node.callee = t.identifier("dynamicImport");
+        if (t.isStringLiteral(node.arguments[0])) {
+          node.arguments[0].value = resolveDep(node.arguments[0].value, true);
         }
       }
     },
@@ -42,5 +50,6 @@ module.exports = (file) => {
     moduleId: toModuleId(file.path),
     content: result.code,
     deps,
+    asyncDeps,
   };
 };

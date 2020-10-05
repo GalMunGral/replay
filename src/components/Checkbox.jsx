@@ -1,6 +1,6 @@
 import { decorator as $$, stop } from "replay/utils";
 
-const Checkbox = ({ checked, onchange }) => (
+const Checkbox = ({ checked, onchange }) => [
   <Clickable onclick={stop()} onchange={onchange}>
     <div>
       <Background checked={checked} />
@@ -9,8 +9,8 @@ const Checkbox = ({ checked, onchange }) => (
       </CheckMark>
       <input type="checkbox" checked={checked} />
     </div>
-  </Clickable>
-);
+  </Clickable>,
+];
 
 export default Checkbox;
 

@@ -11,7 +11,8 @@ const resolve = require("./resolve");
 const modulize = require("./modulize");
 const bundle = require("./bundle");
 const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
+
+const root = process.cwd();
 
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
@@ -46,16 +47,35 @@ const server = http2
     cert: fs.readFileSync(path.join(__dirname, "localhost-cert.pem")),
   })
   .on("error", (err) => console.error(err))
-  .on("stream", handleRequest)
-  .listen(8080, () => {
-    console.log("Modulizer listening on port 8080");
-  });
+  .on("stream", handleRequest);
 
 const wss = new WebSocket.Server({ server, path: "/ws" })
   .on("error", (err) => console.error(err))
   .on("connection", (ws) => {
     console.log("new connection", wss.clients.size, Date.now());
   });
+
+if (process.argv[2] === "--bundle") {
+  const entry = resolve(path.join(root, config.entry));
+  process.stdout.write("[MODULIZER] ...bundling\r");
+  const frames = ["/", "-", "\\", "|"];
+  let i = 0;
+  let spinner = setInterval(() => {
+    process.stdout.write(`[MODULIZER] ...bundling ${frames[i]}\r`);
+    i = (i + 1) % 4;
+  }, 32);
+  bundle(entry).then(() => {
+    clearInterval(spinner);
+    console.log("[MODULIZER] DONE".padEnd(30, " "));
+    server.listen(8080, () => {
+      console.log("Listening on port 8080");
+    });
+  });
+} else {
+  server.listen(8080, () => {
+    console.log("Listening on port 8080");
+  });
+}
 
 const debouncedReload = debounce((file) => {
   cache.delete(file.path);
@@ -68,7 +88,6 @@ const debouncedReload = debounce((file) => {
 }, 10);
 
 function handleRequest(stream, headers) {
-  const root = process.cwd();
   const url = headers[":path"];
 
   Promise.resolve()
@@ -90,7 +109,8 @@ function handleRequest(stream, headers) {
         return file;
       });
     })
-    .catch(() => {
+    .catch((err) => {
+      // console.log(err);
       // Serve file as an asset
       const file = { path: path.join(root, config.contentBase, url) };
       return readFile(file.path).then((content) => {
@@ -114,17 +134,9 @@ function handleRequest(stream, headers) {
     .catch(() => {
       // Serve entry file
       if (process.argv[2] === "--bundle") {
-        const entryPath = resolve(path.join(root, config.entry));
-        return bundle(entryPath)
-          .then((result) => {
-            const outputPath = path.join(root, config.contentBase, "bundle.js");
-            return writeFile(outputPath, result);
-          })
-          .then(() => {
-            const html = `<script src="/bundle.js"></script>`;
-            stream.respond({ "content-type": "text/html; charset=utf-8" });
-            stream.end(html);
-          });
+        const html = `<script src="/main.bundle.js"></script>`;
+        stream.respond({ "content-type": "text/html; charset=utf-8" });
+        stream.end(html);
       } else {
         const entryPath = (() => {
           const partial = path.join(root, config.entry);
@@ -137,10 +149,11 @@ function handleRequest(stream, headers) {
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
-        const html = `
-          <script type="module" src="${entryPath}"></script>
-          <script type="module" src="${wsClientPath}"></script>
-        `;
+
+        const html = `\
+<script type="module" src="${entryPath}"></script>
+<script type="module" src="${wsClientPath}"></script>`;
+
         stream.respond({ "content-type": "text/html; charset=utf-8" });
         stream.end(html);
       }

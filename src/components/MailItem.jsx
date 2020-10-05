@@ -21,33 +21,28 @@ const MailItem = (
 ) => {
   const { senderInfo, title, preheaderHtml } = summarize(mail);
   const canDelete = folder !== "trash";
-
-  <ListItem
-    selected={selected}
-    draggable={canDelete}
-    onclick={onclick}
-    ondragstart={ondragstart}
-    ondrag={ondrag}
-    ondragend={ondragend}
-  >
-    {canDelete ? (
-      <Checkbox checked={selected} onchange={toggleItem} />
-    ) : (
-      <comment />
-    )}
-    <SenderInfo>{senderInfo}</SenderInfo>
-    <Summary>
-      <Title>{title}</Title>
-      <Preheader innerHTML={preheaderHtml} />
-    </Summary>
-    {canDelete ? (
-      <Actions>
-        <IconButton type="trash" onclick={stop(deleteItem)} />
-      </Actions>
-    ) : (
-      <comment />
-    )}
-  </ListItem>;
+  return [
+    <ListItem
+      selected={selected}
+      draggable={canDelete}
+      onclick={onclick}
+      ondragstart={ondragstart}
+      ondrag={ondrag}
+      ondragend={ondragend}
+    >
+      {canDelete ? <Checkbox checked={selected} onchange={toggleItem} /> : null}
+      <SenderInfo>{senderInfo}</SenderInfo>
+      <Summary>
+        <Title>{title}</Title>
+        <Preheader innerHTML={preheaderHtml} />
+      </Summary>
+      {canDelete ? (
+        <Actions>
+          <IconButton type="trash" onclick={stop(deleteItem)} />
+        </Actions>
+      ) : null}
+    </ListItem>,
+  ];
 };
 
 MailItem.init = () => ({
