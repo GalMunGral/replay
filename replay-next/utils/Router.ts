@@ -86,15 +86,10 @@ export const Link: RenderFunction = decorator(function Link({
   className,
   children,
 }: LinkProps) {
-  hostContexts.push([]);
   const render = children[0];
-  if (typeof render == "function") render();
-  const nodes = hostContexts.pop();
-  nodes.forEach((node: HTMLElement) => {
-    node.className = node.className + " " + className;
-    node.onclick = () => navigate(path);
-    hostContexts.top().push(node);
-  });
+  if (typeof render == "function") {
+    render({ className, onclick: () => navigate(path) });
+  }
 })`
   cursor: pointer;
 `;

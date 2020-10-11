@@ -19,25 +19,30 @@ const SidebarMenu = ({ hidden }, scope) => {
   return [
     links.forEach(({ url, name, activated, className }) => (
       <Link to={url}>
-        <MenuItem hidden={hidden} activated={activated}>
-          <MenuIcon className={className} />
-          {!hidden ? <span>{name}</span> : <comment />}
-        </MenuItem>
+        {(linkProps) => (
+          <MenuItem {...linkProps} hidden={hidden} activated={activated}>
+            <MenuIcon className={className} />
+            {!hidden ? <span>{name}</span> : <comment />}
+          </MenuItem>
+        )}
       </Link>
     )),
     <Link to="/trash">
-      <MenuItem
-        hidden={hidden}
-        style={dropzoneStyle}
-        activated={dropzoneActivated}
-        ondragenter={ondragenter}
-        ondragover={prevent()} // to make it a valid drop target
-        ondragleave={ondragleave}
-        ondrop={ondrop}
-      >
-        <MenuIcon className="fas fa-trash" />
-        {!hidden ? <span>trash</span> : <comment />}
-      </MenuItem>
+      {(linkProps) => (
+        <MenuItem
+          {...linkProps}
+          hidden={hidden}
+          style={dropzoneStyle}
+          activated={dropzoneActivated}
+          ondragenter={ondragenter}
+          ondragover={prevent()} // to make it a valid drop target
+          ondragleave={ondragleave}
+          ondrop={ondrop}
+        >
+          <MenuIcon className="fas fa-trash" />
+          {!hidden ? <span>trash</span> : <comment />}
+        </MenuItem>
+      )}
     </Link>,
   ];
 };

@@ -56,7 +56,7 @@ const Editor = ({}, scope) => {
       </Body>
     </Window>
   ) : (
-    <text />
+    <comment />
   );
 };
 

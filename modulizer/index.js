@@ -57,23 +57,28 @@ const wss = new WebSocket.Server({ server, path: "/ws" })
     console.log("new connection", wss.clients.size, Date.now());
   });
 
-if (process.argv[2] === "--bundle") {
-  const entry = resolve(path.join(root, config.entry));
-  process.stdout.write("[MODULIZER] ...bundling\r");
-  const frames = ["/", "-", "\\", "|"];
-  let i = 0;
-  let spinner = setInterval(() => {
-    process.stdout.write(`[MODULIZER] ...bundling ${frames[i]}\r`);
-    i = (i + 1) % 4;
-  }, 32);
-  bundle(entry).then(() => {
+var browser;
+
+async function startServer() {
+  if (process.argv[2] === "--bundle") {
+    const entry = resolve(path.join(root, config.entry));
+    process.stdout.write("[MODULIZER] ...bundling\r");
+    const frames = ["/", "-", "\\", "|"];
+    let i = 0;
+    let spinner = setInterval(() => {
+      process.stdout.write(`[MODULIZER] ...bundling ${frames[i]}\r`);
+      i = (i + 1) % 4;
+    }, 32);
+    await bundle(entry);
     clearInterval(spinner);
     console.log("[MODULIZER] DONE".padEnd(30, " "));
-    server.listen(8080, () => {
-      console.log("Listening on port 8080");
-    });
+  }
+
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--allow-insecure-localhost"],
   });
-} else {
+
   server.listen(8080, () => {
     console.log("Listening on port 8080");
   });
@@ -88,18 +93,6 @@ const debouncedReload = debounce((file) => {
     ws.send("UPDATE");
   });
 }, 10);
-
-async function prerender(url) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--allow-insecure-localhost"],
-  });
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: "networkidle0" });
-  const html = await page.content();
-  await browser.close();
-  return html;
-}
 
 function handleRequest(stream, headers) {
   const url = headers[":path"];
@@ -143,53 +136,71 @@ function handleRequest(stream, headers) {
         watchers.set(file.path, watcher);
       }
     })
-    .catch(async function servePrerendered() {
-      const pathname = headers[":path"];
-      const url = new URL(pathname, "https://127.0.0.1:8080");
-      if (url.searchParams.has("__raw__")) {
-        throw "Requested by Puppeteer";
-      }
-      if (!pageCache.has(pathname)) {
-        url.searchParams.set("__raw__", true);
-        pageCache.set(pathname, await prerender(url));
-      }
-      stream.respond({ "content-type": "text/html; charset=utf-8" });
-      stream.end(pageCache.get(pathname));
-    })
-    .catch(function serveRaw(err) {
-      console.log(err);
-      // Serve entry file
+    .catch(function serveIndex() {
+      const minify = (str) => str.trim().replace(/(?<=>)\s+(?=<)/g, "");
+
       if (process.argv[2] === "--bundle") {
+        const pathname = headers[":path"];
+        const url = new URL(pathname, "https://127.0.0.1:8080");
+
+        if (!url.searchParams.has("__raw__")) {
+          throw url; // pre-render
+        }
+
         stream.respond({ "content-type": "text/html; charset=utf-8" });
-        stream.end(`
-          <body>
-            <div id="app"></div>
-            <script src="/main.bundle.js"></script>
-          </body>
-        `);
+        stream.end(
+          minify(`
+            <body>
+              <div id="app" ssr></div>
+              <script src="/main.bundle.js"></script>
+            </body>
+          `)
+        );
       } else {
+        // DEVELOPMENT MODE - DISABLE SSR
         const entryPath = (() => {
           const partial = path.join(root, config.entry);
           const absolute = resolve(partial);
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
+
         const wsClientPath = (() => {
           const absolute = path.join(__dirname, "./ws-client.js");
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
+
         stream.respond({ "content-type": "text/html; charset=utf-8" });
-        stream.end(`
-          <body>
-            <div id="app"></div>
-            <script type="module" src="${entryPath}"></script>
-            <script type="module" src="${wsClientPath}"></script>
-          </body>
-        `);
+        stream.end(
+          minify(`
+            <body>
+              <div id="app" no-ssr></div>
+              <script type="module" src="${entryPath}"></script>
+              <script type="module" src="${wsClientPath}"></script>
+            </body>
+          `)
+        );
       }
-      // console.log(err);
-      // stream.respond({ ":status": 404 });
-      // stream.end("Not Found");
+    })
+    .catch(async function SSR(url) {
+      if (!pageCache.has(url.href)) {
+        console.info("[SSR] Miss:", url.href);
+
+        url.searchParams.set("__raw__", 1);
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: "networkidle0" });
+        const renderedHTML = await page.content();
+        await page.close();
+        url.searchParams.delete("__raw__");
+
+        pageCache.set(url.href, renderedHTML);
+      } else {
+        console.info("[SSR] Hit:", url.href);
+      }
+      stream.respond({ "content-type": "text/html; charset=utf-8" });
+      stream.end(pageCache.get(url.href));
     });
 }
+
+startServer();

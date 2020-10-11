@@ -59,7 +59,10 @@ const decorator: Decorator = (type) => {
       context.emit(() => {
         if (!addedClasses.has(className)) {
           rules.forEach((rule) => {
-            styleEl.sheet.insertRule("." + className + rule);
+            // styleEl.sheet.insertRule("." + className + rule);
+            let cssText = "." + className + rule;
+            cssText = cssText.replace(/\s+ /g, " ");
+            styleEl.appendChild(new Text(cssText));
           });
           addedClasses.add(className);
         }

@@ -70,7 +70,9 @@ module.exports = (file) => {
         .filter((x) => x)
         .map((expr) =>
           t.callExpression(t.identifier("__CONTENT__"), [
-            t.arrowFunctionExpression([], expr),
+            t.isArrowFunctionExpression(expr) || t.isFunctionExpression(expr)
+              ? expr
+              : t.arrowFunctionExpression([], expr),
           ])
         );
 

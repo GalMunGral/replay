@@ -25,31 +25,16 @@ export class Record implements OneTimeObserver {
   public props: Arguments = {};
   public children = new Map<string, Record>();
   public depth: number;
+  public node: ChildNode;
   public firstChild: Record = null;
   public lastChild: Record = null;
   public subscriptions = new Set<OneTimeObservable>();
   public invalidated = false;
 
-  constructor(
-    public type: string | RenderFunction,
-    public parent?: Record,
-    public node?: ChildNode
-  ) {
-    this.isHostRecord = Boolean(
-      typeof type == "string" || type[$$isHostRenderer]
-    );
+  constructor(public type: string | RenderFunction, public parent?: Record) {
+    this.isHostRecord = !!(typeof type == "string" || type[$$isHostRenderer]);
     this.depth = parent ? parent.depth + 1 : 0;
     if (parent) Object.setPrototypeOf(this.scope, parent.scope);
-    if (this.isHostRecord && !node) {
-      this.node =
-        typeof type == "string"
-          ? type == "text"
-            ? new Text()
-            : type == "comment"
-            ? new Comment()
-            : document.createElement(type)
-          : document.createElement((type as RenderFunction).name);
-    }
   }
 
   public get firstHostRecord(): Record {

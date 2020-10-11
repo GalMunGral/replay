@@ -12,10 +12,7 @@ type Decorator = (
   type: string | RenderFunction
 ) => (segments: TemplateStringsArray, ...fns: StringRenderer[]) => StyleWrapper;
 
-const addedClasses = new Set<string>();
-const styleEl = document.createElement("style");
-styleEl.dataset.decorator = "";
-document.head.append(styleEl);
+var styleEl: HTMLStyleElement;
 
 function parseTemplateCSS(
   segments: TemplateStringsArray,
@@ -52,12 +49,27 @@ const decorator: Decorator = (type) => {
       const hash = generateHash(rules.join("\n"));
       const className = wrappedRenderFunction.name + "-" + hash;
 
-      if (!addedClasses.has(className)) {
-        rules.forEach((rule) => {
-          // styleEl.sheet.insertRule("." + className + rule);
-          styleEl.appendChild(new Text("." + className + rule + "\n"));
-        });
-        addedClasses.add(className);
+      if (!styleEl) {
+        if (globalThis.__HYDRATING__) {
+          styleEl = document.querySelector("style[decorator]");
+        } else {
+          styleEl = document.createElement("style");
+          styleEl.setAttribute("decorator", "");
+          document.head.append(styleEl);
+        }
+      }
+
+      // Store added classes on DOM for serialization
+
+      if (!styleEl.classList.contains(className)) {
+        if (!globalThis.__HYDRATING__) {
+          rules.forEach((rule) => {
+            let cssText = "." + className + rule;
+            cssText = cssText.replace(/\s+/g, " ");
+            styleEl.appendChild(new Text(cssText));
+          });
+        }
+        styleEl.classList.add(className);
       }
 
       props = {
