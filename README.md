@@ -1,6 +1,10 @@
 # Replay + Modulizer
 
-## What's new (on dev branch)
+## What's new
+### Module Bundler, Code Splitting, SSR
+- Simple code splitting: initial, async (`import()`), common, vendor
+- SSR is enabled when bundling
+- Currently only v2 implements hydration
 
 ### Goodbye Module Bundler, Goodbye Virtual DOM
 
