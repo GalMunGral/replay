@@ -4,6 +4,7 @@ const path = require("path");
 const util = require("util");
 const http2 = require("http2");
 const mime = require("mime-types");
+const puppeteer = require("puppeteer");
 const WebSocket = require("ws");
 const { debounce } = require("lodash");
 const config = require("./config");
@@ -16,6 +17,7 @@ const root = process.cwd();
 
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
+const pageCache = new Map(); // path -> pre-rendered HTML
 
 function send(file, options) {
   const { stream, push } = options;
@@ -55,23 +57,28 @@ const wss = new WebSocket.Server({ server, path: "/ws" })
     console.log("new connection", wss.clients.size, Date.now());
   });
 
-if (process.argv[2] === "--bundle") {
-  const entry = resolve(path.join(root, config.entry));
-  process.stdout.write("[MODULIZER] ...bundling\r");
-  const frames = ["/", "-", "\\", "|"];
-  let i = 0;
-  let spinner = setInterval(() => {
-    process.stdout.write(`[MODULIZER] ...bundling ${frames[i]}\r`);
-    i = (i + 1) % 4;
-  }, 32);
-  bundle(entry).then(() => {
+var browser;
+
+async function startServer() {
+  if (process.argv[2] === "--bundle") {
+    const entry = resolve(path.join(root, config.entry));
+    process.stdout.write("[MODULIZER] ...bundling\r");
+    const frames = ["/", "-", "\\", "|"];
+    let i = 0;
+    let spinner = setInterval(() => {
+      process.stdout.write(`[MODULIZER] ...bundling ${frames[i]}\r`);
+      i = (i + 1) % 4;
+    }, 32);
+    await bundle(entry);
     clearInterval(spinner);
     console.log("[MODULIZER] DONE".padEnd(30, " "));
-    server.listen(8080, () => {
-      console.log("Listening on port 8080");
-    });
+  }
+
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--allow-insecure-localhost"],
   });
-} else {
+
   server.listen(8080, () => {
     console.log("Listening on port 8080");
   });
@@ -91,7 +98,7 @@ function handleRequest(stream, headers) {
   const url = headers[":path"];
 
   Promise.resolve()
-    .then(() => {
+    .then(async function serveNativeModule() {
       // Serve file as ES module
       const filePath = path.join(root, url);
       require.resolve(filePath); // This could throw
@@ -104,22 +111,20 @@ function handleRequest(stream, headers) {
       }
 
       console.info("Miss:", filePath);
-      return modulize(filePath).then((file) => {
-        send(file, { stream, push: false });
-        return file;
-      });
+      const file = await modulize(filePath);
+      send(file, { stream, push: false });
+      return file;
     })
-    .catch((err) => {
+    .catch(async function serveStaticFile(err) {
       // console.log(err);
       // Serve file as an asset
       const file = { path: path.join(root, config.contentBase, url) };
-      return readFile(file.path).then((content) => {
-        stream.respond({ "content-type": mime.lookup(file.path) });
-        stream.end(content);
-        return file;
-      });
+      const content = await readFile(file.path);
+      stream.respond({ "content-type": mime.lookup(file.path) });
+      stream.end(content);
+      return file;
     })
-    .then((file) => {
+    .then(function watchFile(file) {
       if (process.argv[2] === "--bundle") return;
       // `file` could be either a module or asset.
       if (!watchers.has(file.path)) {
@@ -131,36 +136,71 @@ function handleRequest(stream, headers) {
         watchers.set(file.path, watcher);
       }
     })
-    .catch(() => {
-      // Serve entry file
+    .catch(function serveIndex() {
+      const minify = (str) => str.trim().replace(/(?<=>)\s+(?=<)/g, "");
+
       if (process.argv[2] === "--bundle") {
-        const html = `<script src="/main.bundle.js"></script>`;
+        const pathname = headers[":path"];
+        const url = new URL(pathname, "https://127.0.0.1:8080");
+
+        if (!url.searchParams.has("__raw__")) {
+          throw url; // pre-render
+        }
+
         stream.respond({ "content-type": "text/html; charset=utf-8" });
-        stream.end(html);
+        stream.end(
+          minify(`
+            <body>
+              <div id="app" ssr></div>
+              <script src="/main.bundle.js"></script>
+            </body>
+          `)
+        );
       } else {
+        // DEVELOPMENT MODE - DISABLE SSR
         const entryPath = (() => {
           const partial = path.join(root, config.entry);
           const absolute = resolve(partial);
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
+
         const wsClientPath = (() => {
           const absolute = path.join(__dirname, "./ws-client.js");
           const relative = path.relative(root, absolute);
           return "/" + relative;
         })();
 
-        const html = `\
-<script type="module" src="${entryPath}"></script>
-<script type="module" src="${wsClientPath}"></script>`;
-
         stream.respond({ "content-type": "text/html; charset=utf-8" });
-        stream.end(html);
+        stream.end(
+          minify(`
+            <body>
+              <div id="app" no-ssr></div>
+              <script type="module" src="${entryPath}"></script>
+              <script type="module" src="${wsClientPath}"></script>
+            </body>
+          `)
+        );
       }
     })
-    .catch((err) => {
-      console.log(err);
-      stream.respond({ ":status": 404 });
-      stream.end("Not Found");
+    .catch(async function SSR(url) {
+      if (!pageCache.has(url.href)) {
+        console.info("[SSR] Miss:", url.href);
+
+        url.searchParams.set("__raw__", 1);
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: "networkidle0" });
+        const renderedHTML = await page.content();
+        await page.close();
+        url.searchParams.delete("__raw__");
+
+        pageCache.set(url.href, renderedHTML);
+      } else {
+        console.info("[SSR] Hit:", url.href);
+      }
+      stream.respond({ "content-type": "text/html; charset=utf-8" });
+      stream.end(pageCache.get(url.href));
     });
 }
+
+startServer();

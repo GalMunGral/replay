@@ -8,7 +8,7 @@ const AppBar = ({}, { sidebar }) => (
         <MenuIcon className="fas fa-bars" />
       </MenuButton>
       <Link to="/inbox">
-        <AppLogo src={logo} alt="logo" />
+        {(linkProps) => <AppLogo {...linkProps} src={logo} alt="logo" />}
       </Link>
     </Group>
     <SearchBar>

@@ -88,6 +88,7 @@ export function __STEP_INTO__(
   } else {
     // Create a new record
     record = new Record(type, parent);
+
     const f = (record.renderFunction =
       typeof type == "string" ? getHostRenderFunction(type) : type);
 
@@ -96,6 +97,18 @@ export function __STEP_INTO__(
       const locals = f.init(props, record.scope) ?? {};
       const descriptors = Object.getOwnPropertyDescriptors(locals);
       Object.defineProperties(record.scope, descriptors);
+    }
+
+    if (record.isHostRecord) {
+      record.node = globalThis.__HYDRATING__
+        ? hostContexts.top().shift()
+        : typeof type == "string"
+        ? type == "text"
+          ? new Text()
+          : type == "comment"
+          ? new Comment()
+          : document.createElement(type)
+        : document.createElement((type as RenderFunction).name);
     }
   }
 
@@ -116,9 +129,6 @@ export function __STEP_INTO__(
       prevChild: null,
       index: 0,
     });
-    if (record.isHostRecord) {
-      hostContexts.push([]);
-    }
   }
 }
 
@@ -132,6 +142,15 @@ export function __STEP_OUT__(type?: string | RenderFunction) {
     record.invalidated || !shallowEquals(props, record.props);
 
   if (shouldUpdate) {
+    if (record.isHostRecord) {
+      if (globalThis.__HYDRATING__) {
+        const childNodes = Array.prototype.slice.call(record.node.childNodes);
+        hostContexts.push(childNodes);
+      } else {
+        hostContexts.push([]);
+      }
+    }
+
     pushObserver(record);
     record.renderFunction.apply(record, [props, record.scope]);
     popObserver();
@@ -152,16 +171,20 @@ export function __STEP_OUT__(type?: string | RenderFunction) {
 
     // Move or attach new DOM nodes
     if (record.isHostRecord) {
-      const childNodes = hostContexts.pop();
-      const parentNode = record.node as Element;
-      childNodes.reduceRight((next, cur) => {
-        if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
-          parentNode.insertBefore(cur, next);
-        }
-        return cur;
-      }, null);
-      const parentSiblings = hostContexts.top();
-      parentSiblings.push(parentNode);
+      if (globalThis.__HYDRATING__) {
+        hostContexts.pop();
+      } else {
+        const childNodes = hostContexts.pop();
+        const parentNode = record.node as Element;
+        childNodes.reduceRight((next, cur) => {
+          if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
+            parentNode.insertBefore(cur, next);
+          }
+          return cur;
+        }, null);
+        const parentSiblings = hostContexts.top();
+        parentSiblings.push(parentNode);
+      }
     }
   } else {
     console.debug("Nothing changed. Skip updates.");
@@ -197,9 +220,17 @@ export function __STEP_OVER__(
   __STEP_OUT__(type);
 }
 
-export function render(rootComponent: RenderFunction, container: Element) {
-  container.innerHTML = "";
-  hostContexts.push([]);
+export function render(rootComponent: RenderFunction, mountElement?: Element) {
+  globalThis.__HYDRATING__ = mountElement.hasAttribute("hydrate");
+
+  if (globalThis.__HYDRATING__) {
+    const childNodes = Array.prototype.slice.call(mountElement.childNodes);
+    hostContexts.push(childNodes);
+  } else {
+    mountElement.innerHTML = "";
+    hostContexts.push([]);
+  }
+
   recordContexts.push({
     parent: new Record("_"),
     props: null,
@@ -213,9 +244,27 @@ export function render(rootComponent: RenderFunction, container: Element) {
 
   recordContexts.pop();
 
-  hostContexts.pop().forEach((node) => {
-    container.appendChild(node);
-  });
+  if (globalThis.__HYDRATING__) {
+    // PRE-RENDERED: hydration complete
+    hostContexts.pop();
+    globalThis.__HYDRATING__ = false;
+  } else {
+    // NOT PRE-RENDERED
+    hostContexts.pop().forEach((node) => {
+      mountElement.appendChild(node);
+    });
+
+    if (mountElement.hasAttribute("ssr")) {
+      // CASE I: IN PUPPETEER -> 'ssr' mode
+      // bugfix: disable re-renders if in puppeteer
+      // mark the element
+      mountElement.setAttribute("hydrate", "");
+      globalThis.__FROZEN__ = true;
+    } else {
+      // CASE II: IN CLIENT BROWSER -> 'no-ssr' mode;
+      // DON'T DISABLE RE-RENDER IN THIS CASE
+    }
+  }
 }
 
 export function requestUpdate(record: Record) {
@@ -227,6 +276,12 @@ export function requestUpdate(record: Record) {
 }
 
 function update(entry: Record) {
+  if (globalThis.__FROZEN__) {
+    // Re-render is forbidden during SSR, because hydration requires
+    // that the HTML it receives matches the output of the initial render
+    return;
+  }
+
   const lastNode = entry.lastHostRecord.node;
   const parent = lastNode.parentNode;
   const next = lastNode.nextSibling;

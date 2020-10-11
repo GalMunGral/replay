@@ -3,11 +3,8 @@
   "version": "1.2.0",
   "description": "",
   "scripts": {
-    "dev": "webpack-dev-server --config webpack.dev.js",
-    "dev:debug": "npm run dev -- --env.debug",
-    "dev:build": "webpack --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js",
-    "start": "npm run build"
+    "dev": "modulize",
+    "start": "modulize --bundle"
   },
   "repository": {
     "type": "git",
