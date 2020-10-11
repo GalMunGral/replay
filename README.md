@@ -1,18 +1,24 @@
 # Replay + Modulizer
 
 ## What's new
+
 ### Module Bundler, Code Splitting, SSR
-- Simple code splitting: initial, async (`import()`), common, vendor
-- SSR is enabled when bundling
-- Currently only v2 implements hydration
+
+1. Bundler with simple code splitting (initial, async (`import()`), common, vendor (`node_modules/**/*`))
+   ![bundler](screenshots/bundler.png)
+
+2. Server-side rendering is enabled when bundling
+   ![ssr](screenshots/ssr.png)
+
+3. Currently only v2 implements hydration, but only v1 supports async components (and thereby code splitting)
 
 ### Goodbye Module Bundler, Goodbye Virtual DOM
 
-I wrote a tool that serves ES modules over HTTP/2 (will add server push soon) with live reload.
+1. I wrote a tool that serves ES modules over HTTP/2 (will add server push soon) with live reload.
 
 ![modulizer](screenshots/http2.png)
 
-JSX now compiles to diff instructions directly.
+2. JSX now compiles to diff instructions directly.
 
 ```js
 __STEP_INTO__(ListItem, {
@@ -76,7 +82,7 @@ __CONTENT__(() =>
 __STEP_OUT__(ListItem);
 ```
 
-This seems to have solved the memory leak?
+3. This seems to have solved the memory leak?
 
 ![memory-usage](screenshots/memory.png)
 
