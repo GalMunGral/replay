@@ -48,13 +48,14 @@ const decorator: Decorator = (type) => {
 
     const StyledComponent: StyleWrapper = function (props, scope) {
       const nestedRules = nestedRuleCompilers.map((fn) => fn(props));
-      const rules = ["{" + compileCSS(props) + "}", ...nestedRules];
+      const rules = [" {" + compileCSS(props) + "}", ...nestedRules];
       const hash = generateHash(rules.join("\n"));
       const className = wrappedRenderFunction.name + "-" + hash;
 
       if (!addedClasses.has(className)) {
         rules.forEach((rule) => {
-          styleEl.sheet.insertRule("." + className + rule);
+          // styleEl.sheet.insertRule("." + className + rule);
+          styleEl.appendChild(new Text("." + className + rule + "\n"));
         });
         addedClasses.add(className);
       }

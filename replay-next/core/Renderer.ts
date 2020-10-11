@@ -16,6 +16,12 @@ interface RecordContext {
   index: number;
 }
 
+const NORMAL = 1 << 0;
+const HYDRATE = 1 << 1;
+const SERIALIZE = 1 << 2;
+
+var renderMode;
+
 export const recordContexts = new Stack<RecordContext>();
 export const hostContexts = new Stack<ChildNode[]>();
 
@@ -87,7 +93,11 @@ export function __STEP_INTO__(
     oldChildren.delete(key);
   } else {
     // Create a new record
-    record = new Record(type, parent);
+    if (renderMode & NORMAL) {
+      record = new Record(type, parent);
+    } else if (renderMode & HYDRATE) {
+      record = new Record(type, parent, hostContexts.top().shift());
+    }
     const f = (record.renderFunction =
       typeof type == "string" ? getHostRenderFunction(type) : type);
 
@@ -116,9 +126,9 @@ export function __STEP_INTO__(
       prevChild: null,
       index: 0,
     });
-    if (record.isHostRecord) {
-      hostContexts.push([]);
-    }
+    // if (record.isHostRecord) {
+    //   hostContexts.push([]);
+    // }
   }
 }
 
@@ -132,6 +142,15 @@ export function __STEP_OUT__(type?: string | RenderFunction) {
     record.invalidated || !shallowEquals(props, record.props);
 
   if (shouldUpdate) {
+    if (record.isHostRecord) {
+      if (renderMode & NORMAL) {
+        hostContexts.push([]);
+      } else if (renderMode & HYDRATE) {
+        const childNodes = Array.prototype.slice.call(record.node.childNodes);
+        hostContexts.push(childNodes);
+      }
+    }
+
     pushObserver(record);
     record.renderFunction.apply(record, [props, record.scope]);
     popObserver();
@@ -152,16 +171,20 @@ export function __STEP_OUT__(type?: string | RenderFunction) {
 
     // Move or attach new DOM nodes
     if (record.isHostRecord) {
-      const childNodes = hostContexts.pop();
-      const parentNode = record.node as Element;
-      childNodes.reduceRight((next, cur) => {
-        if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
-          parentNode.insertBefore(cur, next);
-        }
-        return cur;
-      }, null);
-      const parentSiblings = hostContexts.top();
-      parentSiblings.push(parentNode);
+      if (renderMode & NORMAL) {
+        const childNodes = hostContexts.pop();
+        const parentNode = record.node as Element;
+        childNodes.reduceRight((next, cur) => {
+          if (!(cur.parentNode === parentNode && cur.nextSibling === next)) {
+            parentNode.insertBefore(cur, next);
+          }
+          return cur;
+        }, null);
+        const parentSiblings = hostContexts.top();
+        parentSiblings.push(parentNode);
+      } else if (renderMode & HYDRATE) {
+        hostContexts.pop();
+      }
     }
   } else {
     console.debug("Nothing changed. Skip updates.");
@@ -197,9 +220,21 @@ export function __STEP_OVER__(
   __STEP_OUT__(type);
 }
 
-export function render(rootComponent: RenderFunction, container: Element) {
-  container.innerHTML = "";
-  hostContexts.push([]);
+export function render(
+  rootComponent: RenderFunction,
+  container?: Element,
+  hydrate = false
+) {
+  renderMode = container ? (hydrate ? HYDRATE : NORMAL) : SERIALIZE;
+
+  if (renderMode & NORMAL) {
+    container.innerHTML = "";
+    hostContexts.push([]);
+  } else if (renderMode & HYDRATE) {
+    const childNodes = Array.prototype.slice.call(container.childNodes);
+    hostContexts.push(childNodes);
+  }
+
   recordContexts.push({
     parent: new Record("_"),
     props: null,
@@ -213,9 +248,13 @@ export function render(rootComponent: RenderFunction, container: Element) {
 
   recordContexts.pop();
 
-  hostContexts.pop().forEach((node) => {
-    container.appendChild(node);
-  });
+  if (renderMode & NORMAL) {
+    hostContexts.pop().forEach((node) => {
+      container.appendChild(node);
+    });
+  } else if (renderMode & HYDRATE) {
+    hostContexts.pop();
+  }
 }
 
 export function requestUpdate(record: Record) {
