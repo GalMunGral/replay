@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "replay": "file:replay",
     "replay-next": "file:replay-next",
     "uuid": "^8.3.0"
