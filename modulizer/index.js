@@ -14,6 +14,7 @@ const bundle = require("./bundle");
 const readFile = util.promisify(fs.readFile);
 
 const root = process.cwd();
+const contentBase = path.join(root, config.contentBase);
 
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
@@ -104,21 +105,21 @@ function handleRequest(stream, headers) {
       require.resolve(filePath); // This could throw
 
       if (cache.has(filePath)) {
-        console.info("Hit:", filePath);
+        // console.info("Hit:", filePath);
         const file = cache.get(filePath);
         send(file, { stream, push: false });
         return file;
       }
 
-      console.info("Miss:", filePath);
+      // console.info("Miss:", filePath);
       const file = await modulize(filePath);
       send(file, { stream, push: false });
       return file;
     })
     .catch(async function serveStaticFile(err) {
-      // console.log(err);
+      // console.log(err.message);
       // Serve file as an asset
-      const file = { path: path.join(root, config.contentBase, url) };
+      const file = { path: path.join(contentBase, url) };
       const content = await readFile(file.path);
       stream.respond({ "content-type": mime.lookup(file.path) });
       stream.end(content);
@@ -127,7 +128,7 @@ function handleRequest(stream, headers) {
     .then(function watchFile(file) {
       if (process.argv[2] === "--bundle") return;
       // `file` could be either a module or asset.
-      if (!watchers.has(file.path)) {
+      if (!watchers.has(file.path) && !file.path.startsWith(contentBase)) {
         const watcher = fs.watch(file.path, (event) => {
           if (event === "change") {
             debouncedReload(file);
@@ -165,11 +166,7 @@ function handleRequest(stream, headers) {
           return "/" + relative;
         })();
 
-        const wsClientPath = (() => {
-          const absolute = path.join(__dirname, "./ws-client.js");
-          const relative = path.relative(root, absolute);
-          return "/" + relative;
-        })();
+        const wsClientPath = "node_modules/modulizer/ws-client.js";
 
         stream.respond({ "content-type": "text/html; charset=utf-8" });
         stream.end(

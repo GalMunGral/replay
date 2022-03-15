@@ -5,10 +5,10 @@
 ### Module Bundler, Code Splitting, SSR
 
 1. Bundler with simple code splitting (initial, async (`import()`), common, vendor (`node_modules/**/*`))
-   ![bundler](screenshots/bundler.png)
+   ![bundler](assets/bundler.png)
 
 2. Server-side rendering is enabled when bundling
-   ![ssr](screenshots/ssr.png)
+   ![ssr](assets/ssr.png)
 
 3. Currently only v2 implements hydration, but only v1 supports async components (and thereby code splitting)
 
@@ -16,7 +16,7 @@
 
 1. I wrote a tool that serves ES modules over HTTP/2 (will add server push soon) with live reload.
 
-![modulizer](screenshots/http2.png)
+![modulizer](assets/http2.png)
 
 2. JSX now compiles to diff instructions directly.
 
@@ -84,7 +84,7 @@ __STEP_OUT__(ListItem);
 
 3. This seems to have solved the memory leak?
 
-![memory-usage](screenshots/memory.png)
+![memory-usage](assets/memory.png)
 
 ## Original README
 
@@ -96,6 +96,6 @@ Dependencies form a directed graph where stored properties are the sources, comp
 
 ## Demo Project
 
-![screenshot](screenshots/demo.png)
+![screenshot](assets/demo.png)
 
-![async-rendering](screenshots/async.png)
+![async-rendering](assets/async.png)

@@ -8,6 +8,13 @@ const analyzeESM = require("./transforms/es-module");
 const analyzeCJS = require("./transforms/common-js");
 const exportURL = require("./transforms/file-url");
 
+function requireFromWorkingDir(id) {
+  const resolved = require.resolve(id, {
+    paths: [process.cwd()],
+  });
+  return require(resolved);
+}
+
 function modulize(filePath, options = { native: true }) {
   const original = readFile(filePath, {
     encoding: "utf-8",
@@ -17,13 +24,18 @@ function modulize(filePath, options = { native: true }) {
   }));
   for (let rule of config.transforms) {
     if (rule.test.test(filePath)) {
-      const transforms = options.native
-        ? [analyzeESM, transformCJS, ...rule.use.map(require)]
-        : [analyzeCJS, transformESM, ...rule.use.map(require)];
-      return transforms.reduceRight(
-        (previous, transform) => previous.then(transform),
-        original
-      );
+      try {
+        const transforms = options.native
+          ? [analyzeESM, transformCJS, ...rule.use.map(requireFromWorkingDir)]
+          : [analyzeCJS, transformESM, ...rule.use.map(requireFromWorkingDir)];
+        return transforms.reduceRight(
+          (previous, transform) => previous.then(transform),
+          original
+        );
+      } catch (e) {
+        // console.log(process.cwd());
+        console.debug(e);
+      }
     }
   }
   // Failed to "modulize" the file. Export a URL instead.

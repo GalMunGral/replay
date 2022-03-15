@@ -1,0 +1,10 @@
+{
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "./install.sh"
+  },
+  "dependencies": {
+    "@replay/common": "file:../common",
+    "heap": "^0.2.6"
+  }
+}

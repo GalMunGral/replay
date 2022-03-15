@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "dev": "modulize",
+    "start": "modulize --bundle",
+    "install:replay": "cd node_modules/replay && npm install",
+    "install:modulizer": "cd node_modules/modulizer && npm install",
+    "postinstall": "npm run install:replay && npm run install:modulizer"
+  },
+  "devDependencies": {
+    "modulizer": "file:../modulizer",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.14.0",
+    "lodash": "^4.17.20",
+    "replay": "file:../replay-v3",
+    "uuid": "^8.3.0"
+  }
+}

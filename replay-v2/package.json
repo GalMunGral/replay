@@ -1,0 +1,9 @@
+{
+  "main": "index.js",
+  "devDependencies": {
+    "@babel/generator": "^7.17.7",
+    "@babel/parser": "^7.17.7",
+    "@babel/traverse": "^7.17.3",
+    "@babel/types": "^7.17.0"
+  }
+}

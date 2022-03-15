@@ -1,0 +1,5 @@
+{
+  "name": "@replay/babel-plugin-transform-elements",
+  "main": "index.js",
+  "author": "Wenqi He"
+}
