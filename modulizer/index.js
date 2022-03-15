@@ -16,6 +16,10 @@ const readFile = util.promisify(fs.readFile);
 const root = process.cwd();
 const contentBase = path.join(root, config.contentBase);
 
+if (!fs.existsSync(contentBase)) {
+  fs.mkdirSync(contentBase);
+}
+
 const watchers = new Map(); // path -> watcher
 const cache = new Map(); // path -> content
 const pageCache = new Map(); // path -> pre-rendered HTML
