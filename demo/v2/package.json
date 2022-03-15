@@ -7,13 +7,13 @@
     "postinstall": "npm run install:replay && npm run install:modulizer"
   },
   "devDependencies": {
-    "modulizer": "file:../modulizer",
+    "modulizer": "file:../../modulizer",
     "typescript": "^4.0.2"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
     "lodash": "^4.17.20",
-    "replay": "file:../replay-v3",
+    "replay": "file:../../replay/v2",
     "uuid": "^8.3.0"
   }
 }
