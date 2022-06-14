@@ -19,5 +19,5 @@ For v1:
 - Visit `http://localhost:8080`
 
 For v2 and v3:
-- You might need to install puppeteer manually: `cd node_modules/modulizer/node_modules/puppeteer && npm i`
-- Visit `https://localhost:8080` (**HTTPS is required**). You might need to disable browser security warnings.
+- You might need to install puppeteer manually: `cd modulizer/node_modules/puppeteer && npm i`
+- **HTTPS is required.** You might need to disable browser security warnings.
